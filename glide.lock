@@ -1,0 +1,41 @@
+hash: 17e2c462f6b1d6726faf87f2793d55c0b5910ab3493dca10bbeb34f347c27ee1
+updated: 2018-09-04T18:07:11.880792+09:00
+imports:
+- name: github.com/golang/protobuf
+  version: 1325a051a2753cd67556b182843b1b693d0854cd
+  subpackages:
+  - proto
+  - protobuf-gen-go
+  - ptypes/empty
+- name: github.com/grpc-ecosystem/go-grpc-middleware
+  version: e9c5d9645c437ab1b204cff969a2c0fb16cd4276
+  subpackages:
+  - auth
+  - logging/zap
+  - recovery
+  - tags
+  - util/metautils
+  - validator
+- name: github.com/inconshreveable/log15
+  version: 67afb5ed74ec82fd7ac8f49d27c509ac6f991970
+- name: github.com/kelseyhightower/envconfig
+  version: dd1402a4d99de9ac2f396cd6fcb957bc2c695ec1
+- name: github.com/pkg/errors
+  version: 816c9085562cd7ee03e7f8188a1cfd942858cded
+- name: github.com/stretchr/testify
+  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
+  subpackages:
+  - assert
+  - require
+- name: go.uber.org/multierr
+  version: ddea229ff1dff9e6fe8a6c0344ac73b09e81fce5
+- name: golang.org/x/crypto
+  version: a49355c7e3f8fe157a85be2f77e6e269a0f89602
+  subpackages:
+  - ed25519
+- name: google.golang.org/grpc
+  version: f3361fda2fe0734510c562684480f18ebb63ac33
+  subpackages:
+  - codes
+  - status
+testImports: []

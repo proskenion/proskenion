@@ -1,0 +1,28 @@
+package: github.com/proskenion/proskenion
+import:
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+  - ptypes/empty
+  - protobuf-gen-go
+- package: github.com/grpc-ecosystem/go-grpc-middleware
+  subpackages:
+  - auth
+  - logging/zap
+  - recovery
+  - tags
+  - util/metautils
+  - validator
+- package: google.golang.org/grpc
+  subpackages:
+  - codes
+  - status
+- package: github.com/kelseyhightower/envconfig
+- package: github.com/pkg/errors
+- package: golang.org/x/crypto/ed25519
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+  - require
+- package: go.uber.org/multierr
+- package: github.com/inconshreveable/log15
