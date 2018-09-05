@@ -1,0 +1,20 @@
+syntax = "proto3";
+package proskenion;
+
+/**
+ * Command
+ **/
+message Command {
+    oneof command {
+        Transfer transfer = 1;
+    }
+}
+
+/**
+ * Transfer Command は送金を行う。
+ **/
+message Transfer {
+    string srcAccountId = 1;
+    string destAccountId = 2;
+    int64 amount = 3;
+}

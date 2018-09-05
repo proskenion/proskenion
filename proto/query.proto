@@ -1,0 +1,29 @@
+syntax = "proto3";
+package proskenion;
+
+import "primitive.proto";
+import "objects.proto";
+
+message Query {
+    message Payload {
+        ObjectCode requstCode = 1;
+        string authorizerId = 2;
+        string targetId = 3;
+        int64 createdTime = 4;
+    }
+    Payload payload = 1;
+    Signature signature = 2;
+}
+
+
+message QueryResponse {
+    message Payload {
+        ObjectCode responseCode = 1;
+        oneof object {
+            Account account = 2;
+            Peer peer = 3;
+        }
+    }
+    Payload payload = 1;
+    Signature signature = 2;
+}

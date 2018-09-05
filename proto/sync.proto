@@ -1,0 +1,17 @@
+syntax = "proto3";
+package proskenion;
+
+import "block.proto";
+
+// Error は GRPC Error Code で返す
+message SyncRequest {
+   bytes blockHash = 1;
+}
+
+/**
+ * SyncGate は 同期を行うための通信
+ **/
+service SyncGate {
+    rpc Sync (SyncRequest) returns (stream Block);
+}
+

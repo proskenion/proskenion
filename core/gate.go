@@ -3,8 +3,8 @@ package core
 import . "github.com/proskenion/proskenion/core/model"
 
 type APIGate interface {
-	Tx(tx Transaction) error
-	Query(query Query) (QueryResponse, error)
+	Write(tx Transaction) error
+	Read(query Query) (QueryResponse, error)
 }
 
 type ConsensusGate interface {

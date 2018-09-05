@@ -1,0 +1,19 @@
+syntax = "proto3";
+package proskenion;
+
+enum ObjectCode {
+    AccountObjectCode = 0;
+    PeerObjectCode = 1;
+}
+
+message Account {
+    string accountId = 1;
+    string accountName = 2;
+    bytes publicKey = 3;
+    int64 amount = 4;
+}
+
+message Peer {
+    string address = 1;
+    bytes publicKey = 2;
+}
