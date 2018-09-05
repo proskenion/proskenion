@@ -1,0 +1,22 @@
+syntax = "proto3";
+package proskenion;
+
+import "transaction.proto";
+
+// Error は GRPC Error Code で返す
+message TxResponse {}
+
+/**
+ * TxGate は Client から Transaction を受け取る
+ **/
+service APIGate {
+    rpc Write (Transaction) returns (TxResponse);
+    rpc Read (Query) returns (QueryResponse);
+}
+
+//TODO
+/**
+service MultiSigGate {
+    rpc Send (Transaction) returns (TxResponse);
+}
+**/
