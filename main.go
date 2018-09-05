@@ -1,4 +1,4 @@
-package proskenion
+package main
 
 import "github.com/inconshreveable/log15"
 
