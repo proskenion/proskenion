@@ -32,6 +32,22 @@ func TestTransaction_Verfy(t *testing.T) {
 		tx := RandomValidTx(t)
 		assert.NoError(t, tx.Verify())
 	})
+	t.Run("success w valid sign ", func(t *testing.T) {
+		tx := RandomTx()
+		vpu1, vpr1 := RandomKeyPairs()
+		vpu2, vpr2 := RandomKeyPairs()
+		tx.Sign(vpu1, vpr1)
+		tx.Sign(vpu2, vpr2)
+		assert.NoError(t, tx.Verify())
+	})
+	t.Run("failed twice invalid sign ", func(t *testing.T) {
+		tx := RandomTx()
+		vpu1, vpr1 := RandomKeyPairs()
+		_, vpr2 := RandomKeyPairs()
+		tx.Sign(vpu1, vpr1)
+		tx.Sign(vpu1, vpr2)
+		assert.EqualError(t, errors.Cause(tx.Verify()), core.ErrCryptorVerify.Error())
+	})
 	t.Run("failed invalid signature", func(t *testing.T) {
 		tx := RandomInvalidTx(t)
 		assert.EqualError(t, errors.Cause(tx.Verify()), core.ErrCryptorVerify.Error())
