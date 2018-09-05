@@ -8,13 +8,16 @@ type Query interface {
 	Hash() (Hash, error)
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
+	Validate() error
 }
 
 type QueryPayload interface {
 	GetAuthorizerId() string
 	GetTargetId() string
 	GetCreatedTime() int64
-	GetRequest() ObjectCode
+	GetRequestCode() ObjectCode
+	Marshal() ([]byte, error)
+	Hash() (Hash, error)
 }
 
 type QueryResponse interface {
@@ -32,5 +35,4 @@ type QueryResponsePayload interface {
 	GetAccount() Account
 	Marshal() ([]byte, error)
 	Hash() (Hash, error)
-	Verify() error
 }

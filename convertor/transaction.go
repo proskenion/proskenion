@@ -67,7 +67,8 @@ func (t *Transaction) Sign(pubkey model.PublicKey, privkey model.PrivateKey) err
 	if t.Transaction == nil {
 		return errors.Errorf("proskenion.Transaction is nil")
 	}
-	t.Transaction.Signatures = append(t.Transaction.Signatures, &proskenion.Signature{PublicKey: []byte(pubkey), Signature: signature})
+	t.Transaction.Signatures = append(t.Transaction.Signatures,
+		&proskenion.Signature{PublicKey: []byte(pubkey), Signature: signature})
 	return nil
 }
 
