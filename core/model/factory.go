@@ -13,10 +13,25 @@ type ModelFactory interface {
 	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
 	NewPeer(address string, pubkey PublicKey) Peer
 	NewTxBuilder() TxBuilder
+	NewQueryBuilder() QueryBuilder
+	NewQueryResponseBuilder() QueryResponseBuilder
 }
 
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
 	Transfer(srcAccountId string, destAccountId string, amount int64) TxBuilder
 	Build() Transaction
+}
+
+type QueryBuilder interface {
+	AuthorizerId(string) QueryBuilder
+	TargetId(string) QueryBuilder
+	CreatedTime(int64) QueryBuilder
+	RequestCode(code ObjectCode) QueryBuilder
+	Build() Query
+}
+
+type QueryResponseBuilder interface {
+	Account(Account) QueryResponseBuilder
+	Build() QueryResponse
 }

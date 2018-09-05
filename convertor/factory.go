@@ -7,15 +7,16 @@ import (
 )
 
 type ModelFactory struct {
-	cryptor   core.Cryptor
-	executor  core.CommandExecutor
-	validator core.CommandValidator
+	cryptor          core.Cryptor
+	executor         core.CommandExecutor
+	commandValidator core.CommandValidator
+	queryValidator   core.QueryValidator
 }
 
 func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
-	validator core.CommandValidator) model.ModelFactory {
-	return &ModelFactory{cryptor, executor, validator}
+	cmdValidator core.CommandValidator, queryValidator core.QueryValidator) model.ModelFactory {
+	return &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
 }
 
 func (f *ModelFactory) NewBlock(height int64,
@@ -75,7 +76,28 @@ func (f *ModelFactory) NewTxBuilder() model.TxBuilder {
 		},
 		f.cryptor,
 		f.executor,
-		f.validator,
+		f.commandValidator,
+	}
+}
+
+func (f *ModelFactory) NewQueryBuilder() model.QueryBuilder {
+	return &QueryBuilder{
+		&proskenion.Query{
+			Payload:   &proskenion.Query_Payload{},
+			Signature: &proskenion.Signature{},
+		},
+		f.cryptor,
+		f.queryValidator,
+	}
+}
+
+func (f *ModelFactory) NewQueryResponseBuilder() model.QueryResponseBuilder {
+	return &QueryResponseBuilder{
+		&proskenion.QueryResponse{
+			Payload:   &proskenion.QueryResponse_Payload{},
+			Signature: &proskenion.Signature{},
+		},
+		f.cryptor,
 	}
 }
 
@@ -108,4 +130,56 @@ func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, amount i
 func (t *TxBuilder) Build() model.Transaction {
 	return &Transaction{t.Transaction,
 		t.cryptor, t.executor, t.validator}
+}
+
+type QueryBuilder struct {
+	*proskenion.Query
+	cryptor   core.Cryptor
+	validator core.QueryValidator
+}
+
+func (q *QueryBuilder) AuthorizerId(authorizerId string) model.QueryBuilder {
+	q.Query.Payload.AuthorizerId = authorizerId
+	return q
+}
+
+func (q *QueryBuilder) TargetId(targetId string) model.QueryBuilder {
+	q.Query.Payload.TargetId = targetId
+	return q
+}
+
+func (q *QueryBuilder) CreatedTime(time int64) model.QueryBuilder {
+	q.Query.Payload.CreatedTime = time
+	return q
+}
+
+func (q *QueryBuilder) RequestCode(code model.ObjectCode) model.QueryBuilder {
+	q.Query.Payload.RequstCode = proskenion.ObjectCode(code)
+	return q
+}
+
+func (q *QueryBuilder) Build() model.Query {
+	return &Query{q.Query, q.cryptor, q.validator}
+}
+
+type QueryResponseBuilder struct {
+	*proskenion.QueryResponse
+	cryptor core.Cryptor
+}
+
+func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuilder {
+	q.QueryResponse.Payload.Object = &proskenion.QueryResponse_Payload_Account{
+		Account: &proskenion.Account{
+			AccountId:   ac.GetAccountId(),
+			AccountName: ac.GetAccountName(),
+			PublicKeys:  model.BytesListFromPublicKeys(ac.GetPublicKeys()),
+			Amount:      ac.GetAmount(),
+		},
+	}
+	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_AccountObjectCode
+	return q
+}
+
+func (q *QueryResponseBuilder) Build() model.QueryResponse {
+	return &QueryResponse{q.QueryResponse, q.cryptor}
 }
