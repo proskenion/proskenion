@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
+	"github.com/proskenion/proskenion/query"
 	"math/rand"
 	"strconv"
 )
@@ -14,6 +15,7 @@ func NewTestFactory() model.ModelFactory {
 		crypto.NewEd25519Sha256Cryptor(),
 		command.NewCommandExecutor(),
 		command.NewCommandValidator(),
+		query.NewQueryValidator(),
 	)
 }
 

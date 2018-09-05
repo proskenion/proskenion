@@ -211,3 +211,31 @@ func TestNewPeer(t *testing.T) {
 		})
 	}
 }
+
+func TestModelFactory_NewQueryBuilder(t *testing.T) {
+	t.Run("case 1 account query", func(t *testing.T) {
+		builder := NewTestFactory().NewQueryBuilder()
+		query := builder.CreatedTime(1).
+			TargetId("a").
+			AuthorizerId("b").
+			RequestCode(model.AccountObjectCode).
+			Build()
+		assert.Equal(t, int64(1), query.GetPayload().GetCreatedTime())
+		assert.Equal(t, "a", query.GetPayload().GetTargetId())
+		assert.Equal(t, "b", query.GetPayload().GetAuthorizerId())
+		assert.Equal(t, model.AccountObjectCode, query.GetPayload().GetRequestCode())
+	})
+}
+
+func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
+	t.Run("case 1 account query", func(t *testing.T) {
+		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int63())
+		builder := NewTestFactory().NewQueryResponseBuilder()
+		res := builder.Account(expAc).Build()
+		actAc := res.GetPayload().GetAccount()
+		assert.Equal(t, expAc.GetAccountId(), actAc.GetAccountId())
+		assert.Equal(t, expAc.GetAccountName(), actAc.GetAccountName())
+		assert.Equal(t, expAc.GetPublicKeys(), actAc.GetPublicKeys())
+		assert.Equal(t, expAc.GetAmount(), actAc.GetAmount())
+	})
+}

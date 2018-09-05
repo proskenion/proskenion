@@ -1,10 +1,16 @@
 package query
 
-import "github.com/proskenion/proskenion/core/model"
+import (
+	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
+)
 
-type QueryValidator struct {
+type QueryValidator struct{}
+
+func NewQueryValidator() core.QueryValidator {
+	return &QueryValidator{}
 }
 
-func Validate(query model.Query) error {
+func (q *QueryValidator) Validate(query model.Query) error {
 	return nil
 }
