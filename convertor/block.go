@@ -1,32 +1,23 @@
 package convertor
 
 import (
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 )
 
 type Block struct {
 	*proskenion.Block
-}
-
-type BlockPayload struct {
-	*proskenion.Block_Payload
+	cryptor core.Cryptor
 }
 
 func (b *Block) GetPayload() model.BlockPayload {
 	if b.Block != nil {
-		return &BlockPayload{b.Payload}
+		return &BlockPayload{b.Payload, b.cryptor}
 	}
-	return &BlockPayload{nil}
-}
-
-func (b *Block) GetTransactions() []model.Transaction {
-	ret := make([]model.Transaction, len(b.Transactions))
-	for id, tx := range b.Transactions {
-		ret[id] = &Transaction{tx}
-	}
-	return ret
+	return &BlockPayload{nil, b.cryptor}
 }
 
 func (b *Block) GetSignature() model.Signature {
@@ -36,57 +27,61 @@ func (b *Block) GetSignature() model.Signature {
 	return &Signature{nil}
 }
 
-func (b *Block) GetHash() ([]byte, error) {
-	//TODO 毎回 sha256計算したほうが一気にやるよりはやそう？
-	result, err := b.GetPayload().GetHash()
-	if err != nil {
-		return nil, errors.Wrapf(model.ErrBlockPayloadGetHash, err.Error())
-	}
-	for _, tx := range b.GetTransactions() {
-		// Unexpeted Can not cast Transaction of GetTransactions()
-		hash, err := CalcHashFromProto(tx.(*Transaction))
-		if err != nil {
-			return nil, errors.Wrapf(model.ErrTransactionGetHash, err.Error())
-		}
-		result = append(result, hash...)
-	}
-	return CalcHash(result), nil
+func (b *Block) Marshal() ([]byte, error) {
+	return proto.Marshal(b.Block)
+}
+
+func (b *Block) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, b.Block)
+}
+
+func (b *Block) Hash() (model.Hash, error) {
+	return b.cryptor.Hash(b)
 }
 
 func (b *Block) Verify() error {
-	hash, err := b.GetHash()
+	return b.cryptor.Verify(b.GetSignature().GetPublicKey(), b.GetPayload(), b.GetSignature().GetSignature())
+}
+
+func (b *Block) Sign(pubKey model.PublicKey, privKey model.PrivateKey) error {
+	signature, err := b.cryptor.Sign(b.GetPayload(), privKey)
 	if err != nil {
-		return errors.Wrapf(model.ErrBlockGetHash, err.Error())
+		return errors.Wrapf(core.ErrCryptorSign, err.Error())
 	}
-	if b.Signature == nil {
-		return errors.Wrapf(model.ErrInvalidSignature, "Signature is nil")
-	}
-	if err = Verify(b.Signature.Pubkey, hash, b.Signature.Signature); err != nil {
-		return errors.Wrapf(ErrCryptoVerify, err.Error())
-	}
+	b.Signature = &proskenion.Signature{PublicKey: pubKey, Signature: signature}
 	return nil
 }
 
-func (b *Block) Sign(pubKey []byte, privKey []byte) error {
-	hash, err := b.GetHash()
-	if err != nil {
-		return errors.Wrapf(model.ErrBlockGetHash, err.Error())
-	}
-	signature, err := Sign(privKey, hash)
-	if err != nil {
-		return errors.Wrapf(ErrCryptoSign, err.Error())
-	}
-	if err := Verify(pubKey, hash, signature); err != nil {
-		return errors.Wrapf(ErrCryptoVerify, err.Error())
-	}
-	b.Signature = &proskenion.Signature{Pubkey: pubKey, Signature: signature}
-	return nil
+type BlockPayload struct {
+	*proskenion.Block_Payload
+	cryptor core.Cryptor
 }
 
-func (h *BlockPayload) GetHash() ([]byte, error) {
-	return CalcHashFromProto(h)
+func (p *BlockPayload) Marshal() ([]byte, error) {
+	return proto.Marshal(p.Block_Payload)
 }
 
-func (p *Proposal) GetBlock() model.Block {
-	return &Block{p.Block}
+func (p *BlockPayload) Hash() (model.Hash, error) {
+	return p.cryptor.Hash(p)
+}
+
+func (p *BlockPayload) GetPreBlockHash() model.Hash {
+	if p.Block_Payload == nil {
+		return nil
+	}
+	return p.Block_Payload.GetPreBlockHash()
+}
+
+func (p *BlockPayload) GetMerkleHash() model.Hash {
+	if p.Block_Payload == nil {
+		return nil
+	}
+	return p.Block_Payload.GetMerkleHash()
+}
+
+func (p *BlockPayload) GetTxsHash() model.Hash {
+	if p.Block_Payload == nil {
+		return nil
+	}
+	return p.Block_Payload.GetTxsHash()
 }

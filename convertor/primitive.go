@@ -1,9 +1,14 @@
 package convertor
 
 import (
-	"github.com/satellitex/bbft/proto"
+	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/proto"
 )
 
 type Signature struct {
-	*bbft.Signature
+	*proskenion.Signature
+}
+
+func (s *Signature) GetPublicKey() model.PublicKey {
+	return s.Signature.GetPublicKey()
 }

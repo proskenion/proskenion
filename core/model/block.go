@@ -28,7 +28,6 @@ type BlockPayload interface {
 	GetHeight() int64
 	GetPreBlockHash() Hash
 	GetCreatedTime() int64
-	GetCommitTime() int64
 	GetMerkleHash() Hash
 	GetTxsHash() Hash
 	GetRound() int32

@@ -5,8 +5,8 @@ type Query interface {
 	GetSignature() Signature
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	Hash() ([]byte, error)
-	Sign(pubKey []byte, privKey []byte) error
+	Hash() (Hash, error)
+	Sign(PublicKey, PrivateKey) error
 	Verify() error
 }
 
@@ -22,8 +22,8 @@ type QueryResponse interface {
 	GetSignature() Signature
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	Hash() ([]byte, error)
-	Sign(pubKey []byte, privKey []byte) error
+	Hash() (Hash, error)
+	Sign(PublicKey, PrivateKey) error
 	Verify() error
 }
 
@@ -31,6 +31,6 @@ type QueryResponsePayload interface {
 	ResponseCode() ObjectCode
 	GetAccount() Account
 	Marshal() ([]byte, error)
-	Hash() ([]byte, error)
+	Hash() (Hash, error)
 	Verify() error
 }
