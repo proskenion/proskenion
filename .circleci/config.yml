@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: /go/src/github.com/poskenion/poskenion
+    working_directory: /go/src/github.com/proskenion/proskenion
     docker:
       - image: satellitex/bbft
         environment:
@@ -10,18 +10,18 @@ jobs:
       - restore_cache:
           key: bbft-{{ .Branch }}-{{ checksum "glide.lock" }}
           paths:
-            - /go/src/github.com/poskenion/poskenion/vendor
+            - /go/src/github.com/proskenion/proskenion/vendor
       - run:
           name: glide install
           command: |
-            vendor_dir=/go/src/github.com/poskenion/poskenion/vendor
+            vendor_dir=/go/src/github.com/proskenion/proskenion/vendor
             if [ ! -s $vendor_dir ]; then
               glide install
             fi
       - save_cache:
           key: bbft-{{ .Branch }}-{{ checksum "glide.lock" }}
           paths:
-          - /go/src/github.com/poskenion/poskenion/vendor
+          - /go/src/github.com/proskenion/proskenion/vendor
       - run:
           name: protoc
           command: make proto
