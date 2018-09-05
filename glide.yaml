@@ -26,3 +26,4 @@ import:
   - require
 - package: go.uber.org/multierr
 - package: github.com/inconshreveable/log15
+- package: github.com/go-stack/stack

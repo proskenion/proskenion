@@ -1,12 +1,18 @@
-hash: 17e2c462f6b1d6726faf87f2793d55c0b5910ab3493dca10bbeb34f347c27ee1
-updated: 2018-09-04T18:07:11.880792+09:00
+hash: 1f081b0b2332d44f1b2316ef54df4286b9dca6c4e5dc4a71cbca63db4cef94ba
+updated: 2018-09-05T15:59:05.974632+09:00
 imports:
+- name: github.com/go-stack/stack
+  version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
 - name: github.com/golang/protobuf
   version: 1325a051a2753cd67556b182843b1b693d0854cd
   subpackages:
   - proto
   - protobuf-gen-go
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
   - ptypes/empty
+  - ptypes/timestamp
 - name: github.com/grpc-ecosystem/go-grpc-middleware
   version: e9c5d9645c437ab1b204cff969a2c0fb16cd4276
   subpackages:
@@ -20,6 +26,10 @@ imports:
   version: 67afb5ed74ec82fd7ac8f49d27c509ac6f991970
 - name: github.com/kelseyhightower/envconfig
   version: dd1402a4d99de9ac2f396cd6fcb957bc2c695ec1
+- name: github.com/mattn/go-colorable
+  version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
+- name: github.com/mattn/go-isatty
+  version: 3fb116b820352b7f0c281308a4d6250c22d94e27
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: github.com/stretchr/testify
@@ -33,9 +43,57 @@ imports:
   version: a49355c7e3f8fe157a85be2f77e6e269a0f89602
   subpackages:
   - ed25519
+- name: golang.org/x/net
+  version: 039a4258aec0ad3c79b905677cceeab13b296a77
+  subpackages:
+  - context
+  - http/httpguts
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - trace
+- name: golang.org/x/sys
+  version: 1b2967e3c290b7c545b3db0deeda16e9be4f98a2
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: 0605a8320aceb4207a5fb3521281e17ec2075476
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/genproto
+  version: e92b116572682a5b432ddd840aeaba2a559eeff1
+  subpackages:
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
   version: f3361fda2fe0734510c562684480f18ebb63ac33
   subpackages:
+  - balancer
+  - balancer/base
+  - balancer/roundrobin
   - codes
+  - connectivity
+  - credentials
+  - encoding
+  - encoding/proto
+  - grpclog
+  - internal
+  - internal/backoff
+  - internal/channelz
+  - internal/envconfig
+  - internal/grpcrand
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - resolver
+  - resolver/dns
+  - resolver/passthrough
+  - stats
   - status
+  - tap
+  - transport
 testImports: []
