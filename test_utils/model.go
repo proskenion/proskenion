@@ -6,8 +6,10 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/query"
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"strconv"
+	"testing"
 )
 
 func NewTestFactory() model.ModelFactory {
@@ -33,25 +35,32 @@ func RandomInvalidSig() model.Signature {
 	return NewTestFactory().NewSignature(pub, sig)
 }
 
-/*
-func RandomValidTx(t *testing.T) model.Transaction {
-	validPub, validPriv := crypto.NewEd25519Sha256Cryptor().NewKeyPairs()
-	tx, err := convertor.NewTxModelBuilder().
-		Message(RandomStr()).
-		Sign(validPub, validPriv).
+func RandomTx() model.Transaction {
+	tx := NewTestFactory().NewTxBuilder().
+		CreatedTime(rand.Int63()).
+		Transfer(RandomStr(), RandomStr(), rand.Int63()).
 		Build()
+	return tx
+}
+
+func RandomValidTx(t *testing.T) model.Transaction {
+	validPub, validPriv := RandomKeyPairs()
+	tx := RandomTx()
+	err := tx.Sign(validPub, validPriv)
 	require.NoError(t, err)
 	return tx
 }
 
 func RandomInvalidTx(t *testing.T) model.Transaction {
-	tx, err := convertor.NewTxModelBuilder().
-		Message(RandomStr()).
-		Signature(RandomInvalidSig()).
-		Build()
+	pub, _ := RandomKeyPairs()
+	_, pri := RandomKeyPairs()
+	tx := RandomTx()
+	err := tx.Sign(pub, pri)
 	require.NoError(t, err)
 	return tx
 }
+
+/*
 
 func RandomValidTxs(t *testing.T) []model.Transaction {
 	txs := make([]model.Transaction, 30)

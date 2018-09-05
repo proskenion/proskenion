@@ -72,7 +72,7 @@ func (f *ModelFactory) NewTxBuilder() model.TxBuilder {
 	return &TxBuilder{
 		&proskenion.Transaction{
 			Payload:    &proskenion.Transaction_Payload{},
-			Signatures: []*proskenion.Signature{},
+			Signatures: make([]*proskenion.Signature,0),
 		},
 		f.cryptor,
 		f.executor,

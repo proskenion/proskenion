@@ -27,11 +27,3 @@ type Cryptor interface {
 	Verify(publicKey PublicKey, hasher Hasher, signature []byte) error
 	NewKeyPairs() (PublicKey, PrivateKey)
 }
-
-func MustHash(hasher Hasher) Hash {
-	hash, err := hasher.Hash()
-	if err != nil {
-		panic("Unexpected Hash : " + err.Error())
-	}
-	return hash
-}

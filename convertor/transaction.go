@@ -50,7 +50,7 @@ func (t *Transaction) Hash() (model.Hash, error) {
 
 func (t *Transaction) GetSignatures() []model.Signature {
 	if t.Transaction == nil {
-		return []model.Signature{}
+		return make([]model.Signature,0)
 	}
 	ret := make([]model.Signature, len(t.Signatures))
 	for i, sig := range t.Transaction.GetSignatures() {
@@ -77,7 +77,7 @@ func (t *Transaction) Verify() error {
 		return errors.Wrapf(ErrInvalidSignatures, "Signatures length is 0")
 	}
 	for i, signature := range t.GetSignatures() {
-		if signature == nil {
+		if signature.GetSignature() == nil {
 			return errors.Wrapf(model.ErrInvalidSignature, "%d-th Signature is nil", i)
 		}
 		if err := t.cryptor.Verify(signature.GetPublicKey(), t.GetPayload(), signature.GetSignature()); err != nil {
