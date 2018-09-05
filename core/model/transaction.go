@@ -4,7 +4,7 @@ import "github.com/pkg/errors"
 
 var (
 	ErrInvalidTransaction = errors.Errorf("Failed Invalid Transaction")
-	ErrTransactionGetHash = errors.Errorf("Failed Transaction GetHash")
+	ErrTransactionHash = errors.Errorf("Failed Transaction Hash")
 	ErrTransactionVerify  = errors.Errorf("Failed Transaction Verify")
 )
 
@@ -13,13 +13,13 @@ type Transaction interface {
 	GetSignatures() []Signature
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	GetHash() ([]byte, error)
+	Hash() ([]byte, error)
 	Sign(pubKey []byte, privKey []byte) error
 	Verify() error
 }
 
 type TransactionPayload interface {
 	Marshal() ([]byte, error)
-	GetHash() ([]byte, error)
+	Hash() ([]byte, error)
 	GetCommands() []Command
 }
