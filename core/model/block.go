@@ -4,12 +4,12 @@ import "github.com/pkg/errors"
 
 var (
 	ErrInvalidBlock = errors.Errorf("Failed Invalid Block")
-	ErrBlockGetHash = errors.Errorf("Failed Block GetHash")
+	ErrBlockHash = errors.Errorf("Failed Block Hash")
 	ErrBlockVerify  = errors.Errorf("Failed Block Verify")
 	ErrBlockSign    = errors.Errorf("Failed Block Sign")
 
 	ErrInvalidBlockHeader = errors.Errorf("Failed Invalid BlockHeader")
-	ErrBlockHeaderGetHash = errors.Errorf("Failed BlockHeader GetHash")
+	ErrBlockHeaderHash = errors.Errorf("Failed BlockHeader Hash")
 
 	ErrInvalidProposal = errors.Errorf("Failed Invalid Proposal")
 )
@@ -17,7 +17,7 @@ var (
 type Block interface {
 	GetPayload() BlockPayload
 	GetSignature() Signature
-	GetHash() (Hash, error)
+	Hash() (Hash, error)
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	Verify() error
@@ -33,5 +33,5 @@ type BlockPayload interface {
 	GetTxsHash() Hash
 	GetRound() int32
 	Marshal() ([]byte, error)
-	GetHash() (Hash, error)
+	Hash() (Hash, error)
 }
