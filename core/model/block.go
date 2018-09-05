@@ -21,7 +21,7 @@ type Block interface {
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	Verify() error
-	Sign(pubKey PublicKey, privKey PrivateKey) error
+	Sign(PublicKey, PrivateKey) error
 }
 
 type BlockPayload interface {

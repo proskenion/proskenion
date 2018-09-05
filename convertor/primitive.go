@@ -10,5 +10,8 @@ type Signature struct {
 }
 
 func (s *Signature) GetPublicKey() model.PublicKey {
+	if s.Signature == nil {
+		return nil
+	}
 	return s.Signature.GetPublicKey()
 }
