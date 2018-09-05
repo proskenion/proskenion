@@ -1,22 +1,17 @@
 syntax = "proto3";
 package proskenion;
 
-import "transaction.proto";
+import "block.proto";
 
 // Error は GRPC Error Code で返す
-message TxResponse {}
+message SyncRequest {
+   bytes blockHash = 1;
+}
 
 /**
- * TxGate は Client から Transaction を受け取る
+ * SyncGate は 同期を行うための通信
  **/
-service APIGate {
-    rpc Write (Transaction) returns (TxResponse);
-    rpc Read (Query) returns (QueryResponse);
+service SyncGate {
+    rpc Sync (SyncRequest) returns (stream Block);
 }
 
-//TODO
-/**
-service MultiSigGate {
-    rpc Send (Transaction) returns (TxResponse);
-}
-**/

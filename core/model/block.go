@@ -15,7 +15,7 @@ var (
 )
 
 type Block interface {
-	GetHeader() BlockHeader
+	GetPayload() BlockPayload
 	GetSignature() Signature
 	GetHash() (Hash, error)
 	Marshal() ([]byte, error)
@@ -24,7 +24,7 @@ type Block interface {
 	Sign(pubKey PublicKey, privKey PrivateKey) error
 }
 
-type BlockHeader interface {
+type BlockPayload interface {
 	GetHeight() int64
 	GetPreBlockHash() Hash
 	GetCreatedTime() int64

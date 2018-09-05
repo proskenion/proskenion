@@ -11,9 +11,9 @@ type Query interface {
 }
 
 type QueryPayload interface {
-	GetAuthorizer() string
+	GetAuthorizerId() string
 	GetTargetId() string
-	GetCreatedAt() int64
+	GetCreatedTime() int64
 	GetRequest() ObjectCode
 }
 

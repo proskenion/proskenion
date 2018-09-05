@@ -1,0 +1,17 @@
+syntax = "proto3";
+package proskenion;
+
+import "primitive.proto";
+import "commands.proto";
+
+/**
+ * Transaction は Client が送信する取引の内容を記述したもの。
+ * 中身は TODO
+ **/
+message Transaction {
+    message Payload {
+        repeated Command commands = 1;
+    }
+    Payload payload = 1;
+    repeated Signature signatures = 2;
+}

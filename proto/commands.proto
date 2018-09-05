@@ -1,29 +1,20 @@
 syntax = "proto3";
 package proskenion;
 
-import "primitive.proto";
-import "transaction.proto";
-
+/**
+ * Command
+ **/
+message Command {
+    oneof command {
+        Transfer transfer = 1;
+    }
+}
 
 /**
- * Block の構造
- * height : 現在のBlockのHeight+1
- * transactions : Transaction の集合（列)
- * createdTime : Blockを生成した時間(リーダーがProposalを生成した時間であり、Commitされた時間ではない)
- * commitTime : BlockをCommitされるべき時間(合意形成におけるそのRoundの終わりの時間)
- * preBlockHash : 現在の Block の Hash
- * signature : 現在のラウンドにおけるリーダーのSignature (hash = headerのHash + transactionsの累積Hash)
+ * Transfer Command は送金を行う。
  **/
-message Block {
-    message Payload {
-        int64 Height = 1;
-        bytes preBlockHash = 2;
-        int64 createdTime = 3;
-        bytes merkleHash = 4;
-        bytes txsHash = 5;
-        int32 round = 6;
-    }
-    Header header = 1;
-    repeated Transaction transactions = 2;
-    Signature signature = 3;
+message Transfer {
+    string srcAccountId = 1;
+    string destAccountId = 2;
+    int64 amount = 3;
 }
