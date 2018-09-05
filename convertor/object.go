@@ -5,6 +5,17 @@ import (
 	"github.com/proskenion/proskenion/proto"
 )
 
+type Account struct {
+	*proskenion.Account
+}
+
+func (a *Account) GetPublicKeys() []model.PublicKey {
+	if a.Account == nil {
+		return nil
+	}
+	return model.PublicKeysFromBytesSlice(a.Account.GetPublicKeys())
+}
+
 type Peer struct {
 	*proskenion.Peer
 }

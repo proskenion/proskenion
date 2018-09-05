@@ -10,6 +10,7 @@ var (
 type ModelFactory interface {
 	NewBlock(height int64, preBlockHash Hash, createdTime int64, merkleHash Hash, txsHash Hash, round int32) Block
 	NewSignature(pubkey PublicKey, signature []byte) Signature
+	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
 	NewPeer(address string, pubkey PublicKey) Peer
 	NewTxBuilder() TxBuilder
 }

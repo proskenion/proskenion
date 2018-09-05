@@ -47,6 +47,17 @@ func (f *ModelFactory) NewSignature(pubkey model.PublicKey, signature []byte) mo
 	}
 }
 
+func (f *ModelFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, amount int64) model.Account {
+	return &Account{
+		&proskenion.Account{
+			AccountId:   accountId,
+			AccountName: accountName,
+			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
+			Amount:      amount,
+		},
+	}
+}
+
 func (f *ModelFactory) NewPeer(address string, pubkey model.PublicKey) model.Peer {
 	return &Peer{
 		&proskenion.Peer{

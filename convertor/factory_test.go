@@ -4,6 +4,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"testing"
 )
 
@@ -130,6 +131,50 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransfer().GetDestAccountId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetAmount())
 	})
+}
+
+func TestNewAccount(t *testing.T) {
+	for _, c := range []struct {
+		name        string
+		accountId   string
+		accountName string
+		pubkeys     []model.PublicKey
+		amount      int64
+	}{
+		{
+			"case 1",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{RandomByte()},
+			rand.Int63(),
+		}, {
+			"case 2",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{RandomByte()},
+			rand.Int63(),
+		}, {
+			"case 3",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{RandomByte(), RandomByte(), RandomByte(), RandomByte()},
+			rand.Int63(),
+		}, {
+			"case 4",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{},
+			rand.Int63(),
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.amount)
+			assert.Equal(t, c.accountId, ac.GetAccountId())
+			assert.Equal(t, c.accountName, ac.GetAccountName())
+			assert.Equal(t, c.pubkeys, ac.GetPublicKeys())
+			assert.Equal(t, c.amount, ac.GetAmount())
+		})
+	}
 }
 
 func TestNewPeer(t *testing.T) {
