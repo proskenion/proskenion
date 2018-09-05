@@ -98,3 +98,6 @@ modules.xml
 
 ### protobuf output file ###
 *.pb.*
+
+## bin ###
+bin/
