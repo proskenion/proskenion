@@ -7,6 +7,21 @@ import (
 	"sync"
 )
 
+type DBAnMemory struct {
+	dba map[string]DBA
+}
+
+func NewDBAnMemory() DB {
+	return &DBAnMemory{make(map[string]DBA)}
+}
+
+func (db *DBAnMemory) DBA(table string) DBA {
+	if _, ok := db.dba[table]; !ok {
+		db.dba[table] = NewDBAOnMemory()
+	}
+	return db.dba[table]
+}
+
 type syncMapApplyBytes struct {
 	*sync.Map
 }
@@ -34,17 +49,17 @@ type DBAOnMemory struct {
 	db *syncMapApplyBytes
 }
 
-func (d *DBAOnMemory) Begin() DBATx {
-	return &DBAOnMemoryTx{d.db, newSyncMapApplyBytes()}
+func (d *DBAOnMemory) Begin() (DBATx, error) {
+	return &DBAOnMemoryTx{d.db, newSyncMapApplyBytes()}, nil
 }
 
 func (d *DBAOnMemory) Load(key Marshaler, value Unmarshaler) error {
-	tx := d.Begin()
+	tx, _ := d.Begin()
 	return tx.Load(key, value)
 }
 
 func (d *DBAOnMemory) Store(key Marshaler, value Marshaler) error {
-	tx := d.Begin()
+	tx, _ := d.Begin()
 	if err := tx.Store(key, value); err != nil {
 		return err
 	}
@@ -87,15 +102,15 @@ func (t *DBAOnMemoryTx) Load(key Marshaler, value Unmarshaler) error {
 	if v, ok := t.tmp.Load(k); ok {
 		return t.castAndUnmarshal(v, value)
 	}
-	return errors.Wrapf(ErrNotFoundLoad, hex.EncodeToString(k))
+	return errors.Wrapf(ErrDBANotFoundLoad, hex.EncodeToString(k))
 }
 
 func (t *DBAOnMemoryTx) checkDuplicate(key []byte) error {
 	if _, ok := t.origin.Load(key); ok {
-		return errors.Wrap(ErrDuplicateStore, hex.EncodeToString(key))
+		return errors.Wrap(ErrDBADuplicateStore, hex.EncodeToString(key))
 	}
 	if _, ok := t.tmp.Load(key); ok {
-		return errors.Wrap(ErrDuplicateStore, hex.EncodeToString(key))
+		return errors.Wrap(ErrDBADuplicateStore, hex.EncodeToString(key))
 	}
 	return nil
 }
