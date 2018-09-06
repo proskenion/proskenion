@@ -7,7 +7,8 @@ import (
 
 var (
 	ErrMarshal       = errors.Errorf("Failed Marshal")
-	ErrHash       = errors.Errorf("Failed Hash")
+	ErrUnmarshal     = errors.Errorf("Failed Unmarshal")
+	ErrHash          = errors.Errorf("Failed Hash")
 	ErrCryptorHash   = errors.Errorf("Failed Cryptor Hash")
 	ErrCryptorSign   = errors.Errorf("Failed Cryptor Sign")
 	ErrCryptorVerify = errors.Errorf("Failed Cryptor Verify")
@@ -15,6 +16,10 @@ var (
 
 type Marshaler interface {
 	Marshal() ([]byte, error)
+}
+
+type Unmarshaler interface {
+	Unmarshal([]byte) error
 }
 
 type Hasher interface {
