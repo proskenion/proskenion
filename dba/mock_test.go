@@ -6,11 +6,11 @@ import (
 )
 
 func TestDBAOnMemory_StoreAndLoad(t *testing.T) {
-	dba := NewDBAOnMemory()
-	testDBA_Store_Load(t, dba)
+	db := NewDBAnMemory()
+	testDBA_Store_Load(t, db.DBA("test"))
 }
 
 func TestDBAOnMemoryTx_StoreAndLoad(t *testing.T) {
-	dba := NewDBAOnMemory()
-	testDBATx_Store_Load(t, dba)
+	db := NewDBAnMemory()
+	testDBATx_Store_Load(t, db.DBA("test"))
 }

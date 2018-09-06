@@ -1,0 +1,5 @@
+# config.yaml default
+db:
+ path: database
+ kind: sqlite3
+ name: db

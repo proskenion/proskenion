@@ -3,9 +3,14 @@ package core
 import "github.com/pkg/errors"
 
 var (
-	ErrDuplicateStore = errors.Errorf("Failed Duplicate Store")
-	ErrNotFoundLoad = errors.Errorf("Failed Load not found")
+	ErrDBADuplicateStore = errors.Errorf("Failed DBA Duplicate Store")
+	ErrDBANotFoundLoad   = errors.Errorf("Failed DBA Load not found")
+	ErrDBABeginErr       = errors.Errorf("Failed DBA BeignTx Error")
 )
+
+type DB interface {
+	DBA(table string) DBA
+}
 
 type DBATx interface {
 	Rollback() error
@@ -15,7 +20,7 @@ type DBATx interface {
 }
 
 type DBA interface {
-	Begin() DBATx
+	Begin() (DBATx, error)
 	Load(key Marshaler, value Unmarshaler) error // value = Load(key)
 	Store(key Marshaler, value Marshaler) error  // Duplicate Insert error
 }

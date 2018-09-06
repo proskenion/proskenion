@@ -1,5 +1,5 @@
-hash: 1f081b0b2332d44f1b2316ef54df4286b9dca6c4e5dc4a71cbca63db4cef94ba
-updated: 2018-09-06T18:30:15.822416+09:00
+hash: ed3c41135606c83ed5fc625e07850da02d52018025114f0868de115b1e2bc571
+updated: 2018-09-07T01:09:50.609244+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
@@ -28,12 +28,24 @@ imports:
   - validator
 - name: github.com/inconshreveable/log15
   version: 67afb5ed74ec82fd7ac8f49d27c509ac6f991970
+- name: github.com/jmoiron/sqlx
+  version: 0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849
+  subpackages:
+  - reflectx
 - name: github.com/kelseyhightower/envconfig
   version: dd1402a4d99de9ac2f396cd6fcb957bc2c695ec1
+- name: github.com/lann/builder
+  version: 47ae307949d02aa1f1069fdafc00ca08e1dbabac
+- name: github.com/lann/ps
+  version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
+- name: github.com/Masterminds/squirrel
+  version: ba9c5a05a8f46889ec7a9c2916f2dcf271074b58
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
   version: 3fb116b820352b7f0c281308a4d6250c22d94e27
+- name: github.com/mattn/go-sqlite3
+  version: 3aefd9f0a162514f66d0e4ceda3edc44e66b502e
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: github.com/pmezard/go-difflib
@@ -105,4 +117,6 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/yaml.v2
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports: []

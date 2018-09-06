@@ -27,3 +27,6 @@ import:
 - package: go.uber.org/multierr
 - package: github.com/inconshreveable/log15
 - package: github.com/go-stack/stack
+- package: gopkg.in/yaml.v2
+- package: github.com/Masterminds/squirrel
+- package: github.com/mattn/go-sqlite3
