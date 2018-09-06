@@ -2,7 +2,6 @@ syntax = "proto3";
 package proskenion;
 
 import "primitive.proto";
-import "transaction.proto";
 
 
 /**
@@ -24,6 +23,5 @@ message Block {
         int32 round = 6;
     }
     Payload payload = 1;
-    repeated Transaction transactions = 2;
     Signature signature = 3;
 }

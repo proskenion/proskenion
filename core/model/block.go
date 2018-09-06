@@ -21,14 +21,13 @@ type Block interface {
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	Verify() error
-	Sign(pubKey PublicKey, privKey PrivateKey) error
+	Sign(PublicKey, PrivateKey) error
 }
 
 type BlockPayload interface {
 	GetHeight() int64
 	GetPreBlockHash() Hash
 	GetCreatedTime() int64
-	GetCommitTime() int64
 	GetMerkleHash() Hash
 	GetTxsHash() Hash
 	GetRound() int32

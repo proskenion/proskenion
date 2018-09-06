@@ -10,7 +10,8 @@ import "commands.proto";
  **/
 message Transaction {
     message Payload {
-        repeated Command commands = 1;
+        int64 createdTime = 1;
+        repeated Command commands = 2;
     }
     Payload payload = 1;
     repeated Signature signatures = 2;

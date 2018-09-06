@@ -13,13 +13,14 @@ type Transaction interface {
 	GetSignatures() []Signature
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	Hash() ([]byte, error)
-	Sign(pubKey []byte, privKey []byte) error
+	Hash() (Hash, error)
+	Sign(PublicKey, PrivateKey) error
 	Verify() error
 }
 
 type TransactionPayload interface {
 	Marshal() ([]byte, error)
-	Hash() ([]byte, error)
+	Hash() (Hash, error)
+	GetCreatedTime() int64
 	GetCommands() []Command
 }

@@ -14,3 +14,20 @@ type Signature interface {
 	GetPublicKey() PublicKey
 	GetSignature() []byte
 }
+
+func PublicKeysFromBytesSlice(keys [][]byte) []PublicKey {
+	ret := make([]PublicKey, len(keys))
+	for i, key := range keys {
+		ret[i] = key
+	}
+	return ret
+}
+
+func BytesListFromPublicKeys(keys []PublicKey) [][]byte {
+	ret := make([][]byte, len(keys))
+	for i, key := range keys {
+		ret[i] = key
+	}
+	return ret
+
+}
