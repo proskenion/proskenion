@@ -8,6 +8,11 @@ var (
 	ErrDBABeginErr       = errors.Errorf("Failed DBA BeignTx Error")
 )
 
+type KeyValueStore interface {
+	Load(key Marshaler, value Unmarshaler) error // value = Load(key)
+	Store(key Marshaler, value Marshaler) error  // Duplicate Insert error
+}
+
 type DB interface {
 	DBA(table string) DBA
 }

@@ -9,6 +9,12 @@ import (
 	"testing"
 )
 
+type Randomer interface {
+	core.Hasher
+	core.Marshaler
+	core.Unmarshaler
+}
+
 func RandomKeyPairs() (model.PublicKey, model.PrivateKey) {
 	return crypto.NewEd25519Sha256Cryptor().NewKeyPairs()
 }

@@ -1,6 +1,13 @@
 package core
 
-import . "github.com/proskenion/proskenion/core/model"
+import (
+	"github.com/pkg/errors"
+	. "github.com/proskenion/proskenion/core/model"
+)
+
+var (
+	ErrMerkleParticleTreeNotFoundKey = errors.Errorf("Failed MerkleParticleTree Not Found key")
+)
 
 // Transaction 列の管理
 type MerkleTree interface {
@@ -10,7 +17,38 @@ type MerkleTree interface {
 
 // World State の管理
 type MerkleParticleTree interface {
-	// TODO あとで考える
+	Root() MerkleParticleIterator
+	Find(key Marshaler, value Unmarshaler) error
+	Upsert(key Marshaler, value Unmarshaler) error
+	Hash() (Hash, error)
+	Unmarshal() ([]byte, error)
+}
+
+type MerkleParticleIterator interface {
+	Data(unmarshaler Unmarshaler) error
+	Iterator() MerkleParticleNodeIterator
+	Find(key Marshaler, value Unmarshaler) error
+	Upsert(key Marshaler, value Unmarshaler) error
+	Next() MerkleParticleIterator
+	Prev() MerkleParticleIterator
+	First() bool
+	Last() bool
+	Hash() (Hash, error)
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
+}
+
+type MerkleParticleNodeIterator interface {
+	Data(unmarshaler Unmarshaler) error
+	Find(key Marshaler, value Unmarshaler) error
+	Upsert(key Marshaler, value Unmarshaler) error
+	Next() MerkleParticleNodeIterator
+	Prev() MerkleParticleNodeIterator
+	First() bool
+	Last() bool
+	Hash() (Hash, error)
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
 }
 
 // WFA
