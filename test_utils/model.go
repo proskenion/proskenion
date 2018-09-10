@@ -60,8 +60,6 @@ func RandomInvalidTx(t *testing.T) model.Transaction {
 	return tx
 }
 
-/*
-
 func RandomValidTxs(t *testing.T) []model.Transaction {
 	txs := make([]model.Transaction, 30)
 	for id, _ := range txs {
@@ -81,6 +79,10 @@ func RandomInvalidTxs(t *testing.T) []model.Transaction {
 func RandomTxs(t *testing.T) []model.Transaction {
 	return RandomValidTxs(t)
 }
+
+/*
+
+
 
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {

@@ -5,6 +5,8 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func RandomKeyPairs() (model.PublicKey, model.PrivateKey) {
@@ -29,6 +31,20 @@ func (m *RandomMockMarshaler) Unmarshal(pb []byte) error {
 	return nil
 }
 
+func (m *RandomMockMarshaler) Hash() (model.Hash, error) {
+	return m.Marshal()
+}
+
 func RandomMarshaler() *RandomMockMarshaler {
 	return &RandomMockMarshaler{hex.EncodeToString(RandomByte())}
+}
+
+func RandomMarshalerFromStr(s string) *RandomMockMarshaler {
+	return &RandomMockMarshaler{s}
+}
+
+func DecodeMustString(t *testing.T, s string) []byte {
+	h, err := hex.DecodeString(s)
+	require.NoError(t, err)
+	return h
 }

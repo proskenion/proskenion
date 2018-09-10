@@ -4,7 +4,8 @@ import . "github.com/proskenion/proskenion/core/model"
 
 // Transaction 列の管理
 type MerkleTree interface {
-	// TODO あとで考える(おおよそ Set と同じことができればおｋ)
+	Push(hash Hasher) error
+	Top() Hash
 }
 
 // World State の管理
@@ -14,7 +15,6 @@ type MerkleParticleTree interface {
 
 // WFA
 type WFA interface {
-
 }
 
 // 全Tx履歴
