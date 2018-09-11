@@ -1,66 +1,144 @@
 package repository
 
 import (
+	"bytes"
+	"encoding/gob"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 // World State の管理
 type MerkleParticleTree struct {
-	dba  core.KeyValueStore
-	root core.MerkleParticleTreeIterator
+	dba     core.KeyValueStore
+	cryptor core.Cryptor
+	root    core.MerkleParticleNodeIterator
 }
 
-func (t *MerkleParticleTree) Find(key core.Marshaler, value core.Unmarshaler) error {
+func NewMerkleParticleTree(kvStore core.KeyValueStore, cryptor core.Cryptor, hash model.Hash) core.MerkleParticleTree {
+	return &MerkleParticleTree{
+		dba:     kvStore,
+		cryptor: cryptor,
+	}
+}
+
+func (t *MerkleParticleTree) Iterator() core.MerkleParticleNodeIterator {
+	return t.root
+}
+
+// key で参照した先の iterator を取得
+func (t *MerkleParticleTree) Find(key []byte) (core.MerkleParticleNodeIterator, error) {
 	return t.Iterator().Find(key)
 }
-func (t *MerkleParticleTree) Upsert(key core.Marshaler, value core.Unmarshaler) error {
-	return t.Iterator().Upser(key, value)
-}
-func (t *MerkleParticleTree) Hash() (model.Hash, error) {
-	return nil, nil
-}
-func (t *MerkleParticleTree) Marshal() ([]byte, error) {
-	return nil, nil
-}
-func (t *MerkleParticleTree) Unmarshal(b []byte) error {
-	return nil
+
+// Upsert したあとの新しい Iterator を生成して取得
+func (t *MerkleParticleTree) Upsert(node []core.KVNode) (core.MerkleParticleNodeIterator, error) {
+	return t.Iterator().Upsert(node)
 }
 
-type MerkleParticleIterator interface {
-	Data(unmarshaler core.Unmarshaler) error
-	History() MerkleParticleNodeIterator
-	Next() MerkleParticleIterator
-	Prev() MerkleParticleIterator
-	First() bool
-	Last() bool
-	Hash() (model.Hash, error)
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
+// 現在参照しているノードに値を追加
+func (t *MerkleParticleTree) Append(value core.Marshaler) error {
+	return t.Iterator().Append(value)
+}
+func (t *MerkleParticleTree) Hash() (model.Hash, error) {
+	return t.Iterator().Hash()
+}
+func (t *MerkleParticleTree) Marshal() ([]byte, error) {
+	return t.Iterator().Marshal()
+}
+func (t *MerkleParticleTree) Unmarshal(b []byte) error {
+	return t.Iterator().Unmarshal(b)
+}
+
+type MerkleParticleNode struct {
+	depth    uint32 // depth of tree, root tree is 0
+	height   uint64 // height of merkle Node, Merkle Particle Node like blockChain
+	childs   []model.Hash
+	dataKey  core.Marshaler
+	prevHash model.Hash
+}
+
+type keyMarshaler struct {
+	b []byte
+}
+
+func createMarshaler(b []byte) core.Marshaler {
+	return &keyMarshaler{b}
 }
 
 type MerkleParticleNodeIterator struct {
-	dba core.KeyValueStore
+	dba     core.KeyValueStore
+	cryptor core.Cryptor
+	node    *MerkleParticleNode
+}
+
+func NewMerkleParticleNodeIterator(dba core.KeyValueStore, cryptor core.Cryptor) core.MerkleParticleNodeIterator {
+	return &MerkleParticleNodeIterator{
+		dba:     dba,
+		cryptor: cryptor,
+	}
+}
+
+func (k *keyMarshaler) Marshal() ([]byte, error) {
+	return k.b, nil
 }
 
 func (t *MerkleParticleNodeIterator) Data(unmarshaler core.Unmarshaler) error {
-	return nil
+	return t.dba.Load(t.node.dataKey, unmarshaler)
 }
-func (t *MerkleParticleNodeIterator) Next() MerkleParticleNodeIterator {
-	return nil
+
+// key で参照した先の iterator を取得
+func (t *MerkleParticleNodeIterator) Find(key []byte) (core.MerkleParticleNodeIterator, error) {
+	if len(key) == 0 {
+		return t, nil
+	}
+	nextKey := t.node.childs[key[0]] // Check : out of range
+	newIt := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
+	err := t.dba.Load(createMarshaler(nextKey), newIt)
+	if err != nil {
+		return nil, err
+	}
+	return newIt.Find(key[1:])
 }
-func (t *MerkleParticleNodeIterator) Prev() MerkleParticleNodeIterator {
-	return nil
-}
-func (t *MerkleParticleNodeIterator) First() bool {
-	return false
-}
-func (t *MerkleParticleNodeIterator) Last() bool {
-	return false
-}
-func (t *MerkleParticleNodeIterator) Marshal() ([]byte, error) {
+
+// Upsert したあとの Iterator を生成して取得
+func (t *MerkleParticleNodeIterator) Upsert(kvNodes []core.KVNode) (core.MerkleParticleNodeIterator, error) {
 	return nil, nil
 }
-func (t *MerkleParticleNodeIterator) Unmarshal([]byte) error {
+
+// 現在参照しているノードに値を追加
+func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) error {
+	return nil
+}
+
+func (t *MerkleParticleNodeIterator) Prev() core.MerkleParticleNodeIterator {
+	it := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
+	err := t.dba.Load(createMarshaler(t.node.prevHash), it)
+	if err != nil {
+		return nil
+	}
+	return it
+}
+
+func (t *MerkleParticleNodeIterator) Hash() (model.Hash, error) {
+	return t.cryptor.Hash(t)
+}
+
+func (t *MerkleParticleNodeIterator) Marshal() ([]byte, error) {
+	var network bytes.Buffer        // Stand-in for a network connection
+	enc := gob.NewEncoder(&network) // Will write to network.
+	err := enc.Encode(t.node)
+	if err != nil {
+		return nil, err
+	}
+	return network.Bytes(), nil
+}
+
+func (t *MerkleParticleNodeIterator) Unmarshal(b []byte) error {
+	network := bytes.NewBuffer(b)
+	dec := gob.NewDecoder(network) // Will read from network.
+	err := dec.Decode(t.node)
+	if err != nil {
+		return err
+	}
 	return nil
 }
