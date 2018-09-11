@@ -39,12 +39,15 @@ func (t *MerkleParticleTree) Upsert(node []core.KVNode) (core.MerkleParticleNode
 func (t *MerkleParticleTree) Append(value core.Marshaler) error {
 	return t.Iterator().Append(value)
 }
+
 func (t *MerkleParticleTree) Hash() (model.Hash, error) {
 	return t.Iterator().Hash()
 }
+
 func (t *MerkleParticleTree) Marshal() ([]byte, error) {
 	return t.Iterator().Marshal()
 }
+
 func (t *MerkleParticleTree) Unmarshal(b []byte) error {
 	return t.Iterator().Unmarshal(b)
 }
@@ -112,13 +115,29 @@ func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) error {
 	if err != nil {
 		return err
 	}
-	err = t.dba.Store(createMarshaler(hash), value)
+	keyMarshal := createMarshaler(hash)
+	err = t.dba.Store(keyMarshal, value)
 	if err != nil {
 		return err
 	}
-	node := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
-	t.node.dataKey(hash)
-	return nil
+	thisHash, err := t.Hash()
+	if err != nil {
+		return err
+	}
+	newIt := &MerkleParticleNodeIterator{
+		node: &MerkleParticleNode{
+			depth:    t.node.depth,
+			height:   t.node.height + 1,
+			childs:   make([]model.Hash, 256),
+			dataKey:  keyMarshal,
+			prevHash: thisHash,
+		},
+	}
+	newItHash, err := newIt.Hash()
+	if err != nil {
+		return err
+	}
+	return t.dba.Store(createMarshaler(newItHash), newIt)
 }
 
 func (t *MerkleParticleNodeIterator) Prev() core.MerkleParticleNodeIterator {
