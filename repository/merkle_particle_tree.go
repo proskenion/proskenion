@@ -102,11 +102,22 @@ func (t *MerkleParticleNodeIterator) Find(key []byte) (core.MerkleParticleNodeIt
 
 // Upsert したあとの Iterator を生成して取得
 func (t *MerkleParticleNodeIterator) Upsert(kvNodes []core.KVNode) (core.MerkleParticleNodeIterator, error) {
+	// TODO
 	return nil, nil
 }
 
 // 現在参照しているノードに値を追加
 func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) error {
+	hash, err := t.cryptor.Hash(value)
+	if err != nil {
+		return err
+	}
+	err = t.dba.Store(createMarshaler(hash), value)
+	if err != nil {
+		return err
+	}
+	node := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
+	t.node.dataKey(hash)
 	return nil
 }
 
