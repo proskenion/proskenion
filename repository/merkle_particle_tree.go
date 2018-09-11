@@ -8,14 +8,14 @@ import (
 // World State の管理
 type MerkleParticleTree struct {
 	dba  core.KeyValueStore
-	root core.MerkleParticleIterator
+	root core.MerkleParticleTreeIterator
 }
 
 func (t *MerkleParticleTree) Find(key core.Marshaler, value core.Unmarshaler) error {
-	return nil
+	return t.Iterator().Find(key)
 }
 func (t *MerkleParticleTree) Upsert(key core.Marshaler, value core.Unmarshaler) error {
-	return nil
+	return t.Iterator().Upser(key, value)
 }
 func (t *MerkleParticleTree) Hash() (model.Hash, error) {
 	return nil, nil
