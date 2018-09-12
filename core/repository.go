@@ -29,7 +29,7 @@ type MerkleParticleController interface {
 	// Upsert したあとの Iterator を生成して取得
 	Upsert([]KVNode) (MerkleParticleNodeIterator, error)
 	// 現在参照しているノードに値を追加
-	Append(value Marshaler) error
+	Append(value Marshaler) (MerkleParticleNodeIterator, error)
 	Hasher
 	Marshaler
 	Unmarshaler
