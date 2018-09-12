@@ -15,44 +15,50 @@ type MerkleTree interface {
 	Top() Hash
 }
 
-// World State の管理
+type KVNode interface {
+	// KVNode{key = Key()[1:], value=value}
+	Next() KVNode
+	Key() []byte
+	Value() Marshaler
+}
+
+// Merkle Particle Tree に対する操作
+type MerkleParticleController interface {
+	// key で参照した先の iterator を取得
+	Find(key []byte) (MerkleParticleNodeIterator, error)
+	// Upsert したあとの Iterator を生成して取得
+	Upsert([]KVNode) (MerkleParticleNodeIterator, error)
+	// 現在参照しているノードに値を追加
+	Append(value Marshaler) error
+	Hasher
+	Marshaler
+	Unmarshaler
+}
+
+// World State の管理 に使う(SubTree の管理にも使う)
 type MerkleParticleTree interface {
-	Root() MerkleParticleIterator
-	Find(key Marshaler, value Unmarshaler) error
-	Upsert(key Marshaler, value Unmarshaler) error
-	Hash() (Hash, error)
-	Unmarshal() ([]byte, error)
-}
-
-type MerkleParticleIterator interface {
-	Data(unmarshaler Unmarshaler) error
 	Iterator() MerkleParticleNodeIterator
-	Find(key Marshaler, value Unmarshaler) error
-	Upsert(key Marshaler, value Unmarshaler) error
-	Next() MerkleParticleIterator
-	Prev() MerkleParticleIterator
-	First() bool
-	Last() bool
-	Hash() (Hash, error)
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
+	MerkleParticleController
 }
 
+// Merkle Particle Node を管理する Iterator
 type MerkleParticleNodeIterator interface {
 	Data(unmarshaler Unmarshaler) error
-	Find(key Marshaler, value Unmarshaler) error
-	Upsert(key Marshaler, value Unmarshaler) error
-	Next() MerkleParticleNodeIterator
+	MerkleParticleController
 	Prev() MerkleParticleNodeIterator
-	First() bool
-	Last() bool
-	Hash() (Hash, error)
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
 }
 
 // WFA
 type WFA interface {
+	Hash() (Hash, error)
+	// Query gets value from targetId
+	Query(targetId string, value Unmarshaler) error
+	// Append [targetId] = value
+	Append(targetId string, value Marshaler) error
+	// Commit appenging nodes
+	Commit() error
+	// RollBack
+	Rollback() error
 }
 
 // 全Tx履歴
