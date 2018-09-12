@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrMerkleParticleTreeNotFoundKey = errors.Errorf("Failed MerkleParticleTree Not Found key")
+	ErrInvalidKVNodes                = errors.Errorf("Failed Key Value Nodes Invalid")
 )
 
 // Transaction 列の管理
@@ -27,7 +28,7 @@ type MerkleParticleController interface {
 	// key で参照した先の iterator を取得
 	Find(key []byte) (MerkleParticleNodeIterator, error)
 	// Upsert したあとの Iterator を生成して取得
-	Upsert([]KVNode) (MerkleParticleNodeIterator, error)
+	Upsert(KVNode) (MerkleParticleNodeIterator, error)
 	// 現在参照しているノードに値を追加
 	Append(value Marshaler) (MerkleParticleNodeIterator, error)
 	Hasher
