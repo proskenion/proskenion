@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	. "github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 )
 
 type DBSQLite struct {
@@ -71,7 +72,7 @@ func (d *DBASQLite) Begin() (DBATx, error) {
 	return &DBASQLiteTx{tx, d.table}, nil
 }
 
-func (d *DBASQLite) Load(key Marshaler, value Unmarshaler) error {
+func (d *DBASQLite) Load(key model.Hash, value Unmarshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
 		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
@@ -79,7 +80,7 @@ func (d *DBASQLite) Load(key Marshaler, value Unmarshaler) error {
 	return rollBackTx(tx, tx.Load(key, value))
 }
 
-func (d *DBASQLite) Store(key Marshaler, value Marshaler) error {
+func (d *DBASQLite) Store(key model.Hash, value Marshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
 		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
@@ -136,36 +137,30 @@ func (t *DBASQLiteTx) store(k []byte, v []byte) error {
 	return err
 }
 
-func (t *DBASQLiteTx) Load(key Marshaler, value Unmarshaler) error {
-	k, err := key.Marshal()
-	if err != nil {
-		return errors.Wrap(ErrMarshal, err.Error())
-	}
-	if err = t.loadAndCast(k, value); err != nil {
+func (t *DBASQLiteTx) Load(key model.Hash, value Unmarshaler) error {
+	if err := t.loadAndCast(key, value); err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return errors.Wrap(ErrDBANotFoundLoad, err.Error())
 		}
+		return err
 	}
-	return err
+	return nil
 }
 
-func (t *DBASQLiteTx) Store(key Marshaler, value Marshaler) error {
-	k, err := key.Marshal()
-	if err != nil {
-		return errors.Wrap(ErrMarshal, err.Error())
-	}
+func (t *DBASQLiteTx) Store(key model.Hash, value Marshaler) error {
 	v, err := value.Marshal()
 	if err != nil {
 		return errors.Wrap(ErrMarshal, err.Error())
 	}
-	if err = t.store(k, v); err != nil {
+	if err = t.store(key, v); err != nil {
 		if sqliteErr, ok := err.(sqlite.Error); ok {
 			if sqliteErr.Code == sqlite.ErrConstraint {
 				return errors.Wrap(ErrDBADuplicateStore, err.Error())
 			}
 		}
+		return err
 	}
-	return err
+	return nil
 }
 
 func (t *DBASQLiteTx) Commit() error {

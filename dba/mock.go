@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/pkg/errors"
 	. "github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	"sync"
 )
 
@@ -31,7 +32,7 @@ func newSyncMapApplyBytes() *syncMapApplyBytes {
 }
 
 func (s *syncMapApplyBytes) Store(key, value interface{}) {
-	if b, ok := key.([]byte); ok {
+	if b, ok := key.(model.Hash); ok {
 		s.Map.Store(hex.EncodeToString(b), value)
 		return
 	}
@@ -39,7 +40,7 @@ func (s *syncMapApplyBytes) Store(key, value interface{}) {
 }
 
 func (s *syncMapApplyBytes) Load(key interface{}) (interface{}, bool) {
-	if b, ok := key.([]byte); ok {
+	if b, ok := key.(model.Hash); ok {
 		return s.Map.Load(hex.EncodeToString(b))
 	}
 	return s.Map.Load(key)
@@ -53,12 +54,12 @@ func (d *DBAOnMemory) Begin() (DBATx, error) {
 	return &DBAOnMemoryTx{d.db, newSyncMapApplyBytes()}, nil
 }
 
-func (d *DBAOnMemory) Load(key Marshaler, value Unmarshaler) error {
+func (d *DBAOnMemory) Load(key model.Hash, value Unmarshaler) error {
 	tx, _ := d.Begin()
 	return tx.Load(key, value)
 }
 
-func (d *DBAOnMemory) Store(key Marshaler, value Marshaler) error {
+func (d *DBAOnMemory) Store(key model.Hash, value Marshaler) error {
 	tx, _ := d.Begin()
 	if err := tx.Store(key, value); err != nil {
 		return err
@@ -91,21 +92,17 @@ func (t *DBAOnMemoryTx) castAndUnmarshal(v interface{}, value Unmarshaler) error
 	return nil
 }
 
-func (t *DBAOnMemoryTx) Load(key Marshaler, value Unmarshaler) error {
-	k, err := key.Marshal()
-	if err != nil {
-		return errors.Wrap(ErrMarshal, err.Error())
-	}
-	if v, ok := t.origin.Load(k); ok {
+func (t *DBAOnMemoryTx) Load(key model.Hash, value Unmarshaler) error {
+	if v, ok := t.origin.Load(key); ok {
 		return t.castAndUnmarshal(v, value)
 	}
-	if v, ok := t.tmp.Load(k); ok {
+	if v, ok := t.tmp.Load(key); ok {
 		return t.castAndUnmarshal(v, value)
 	}
-	return errors.Wrapf(ErrDBANotFoundLoad, hex.EncodeToString(k))
+	return errors.Wrapf(ErrDBANotFoundLoad, hex.EncodeToString(key))
 }
 
-func (t *DBAOnMemoryTx) checkDuplicate(key []byte) error {
+func (t *DBAOnMemoryTx) checkDuplicate(key model.Hash) error {
 	if _, ok := t.origin.Load(key); ok {
 		return errors.Wrap(ErrDBADuplicateStore, hex.EncodeToString(key))
 	}
@@ -115,19 +112,15 @@ func (t *DBAOnMemoryTx) checkDuplicate(key []byte) error {
 	return nil
 }
 
-func (t *DBAOnMemoryTx) Store(key Marshaler, value Marshaler) error {
-	k, err := key.Marshal()
-	if err != nil {
-		return errors.Wrap(ErrMarshal, err.Error())
-	}
-	if err = t.checkDuplicate(k); err != nil {
+func (t *DBAOnMemoryTx) Store(key model.Hash, value Marshaler) error {
+	if err := t.checkDuplicate(key); err != nil {
 		return err
 	}
 	v, err := value.Marshal()
 	if err != nil {
 		return errors.Wrap(ErrMarshal, err.Error())
 	}
-	t.tmp.Store(k, v)
+	t.tmp.Store(key, v)
 	return nil
 }
 
