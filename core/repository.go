@@ -17,8 +17,8 @@ type MerkleTree interface {
 }
 
 type KVNode interface {
-	// KVNode{key = Key()[1:], value=value}
-	Next() KVNode
+	// KVNode{key = Key()[cnt:], value=value}
+	Next(cnt int) KVNode
 	Key() []byte
 	Value() Marshaler
 }
@@ -29,8 +29,6 @@ type MerkleParticleController interface {
 	Find(key []byte) (MerkleParticleNodeIterator, error)
 	// Upsert したあとの Iterator を生成して取得
 	Upsert(KVNode) (MerkleParticleNodeIterator, error)
-	// 現在参照しているノードに値を追加
-	Append(value Marshaler) (MerkleParticleNodeIterator, error)
 	Hasher
 	Marshaler
 	Unmarshaler
@@ -46,7 +44,10 @@ type MerkleParticleTree interface {
 type MerkleParticleNodeIterator interface {
 	Data(unmarshaler Unmarshaler) error
 	MerkleParticleController
-	Prev() MerkleParticleNodeIterator
+	Key() []byte
+	Childs() []Hash
+	DataHash() Hash
+	Leaf() bool
 }
 
 // WFA

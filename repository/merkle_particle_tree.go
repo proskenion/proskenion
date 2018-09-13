@@ -3,6 +3,7 @@ package repository
 import (
 	"bytes"
 	"encoding/gob"
+	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
@@ -54,18 +55,13 @@ func (t *MerkleParticleTree) Unmarshal(b []byte) error {
 
 type MerkleParticleNode struct {
 	key      []byte
-	height   uint64       // height of merkle Node, Merkle Particle Node like blockChain
 	childs   []model.Hash // child node of tree. (must be alphabet prefix)
-	dataKey  model.Hash   // data access key
-	prevHash model.Hash   // previous node (like blockChain)
+	dataHash model.Hash   // data access key
+	hash     model.Hash   // Hash of this node
 }
 
 type keyMarshaler struct {
 	b []byte
-}
-
-func createMarshaler(b []byte) core.Marshaler {
-	return &keyMarshaler{b}
 }
 
 type MerkleParticleNodeIterator struct {
@@ -89,17 +85,15 @@ func (t *MerkleParticleNodeIterator) createMerkleParticleNodeIterator(node *Merk
 	}
 }
 
-func (t *MerkleParticleNodeIterator) createMerkleParticleLeafNode(kvNode core.KVNode) (*MerkleParticleNode, error) {
-	keyHash, err := t.cryptor.Hash(kvNode.Value())
-	err = t.dba.Store(createMarshaler(keyHash), kvNode.Value())
+func (t *MerkleParticleNodeIterator) createMerkleParticleLeafNode(node core.KVNode) (*MerkleParticleNode, error) {
+	keyHash, err := t.cryptor.Hash(node.Value())
+	err = t.dba.Store(keyHash, node.Value())
 	if err != nil {
 		return nil, err
 	}
 	return &MerkleParticleNode{
-		height:   0,
 		childs:   nil,
-		dataKey:  keyHash,
-		prevHash: nil,
+		dataHash: keyHash,
 	}, nil
 }
 
@@ -108,7 +102,7 @@ func (k *keyMarshaler) Marshal() ([]byte, error) {
 }
 
 func (t *MerkleParticleNodeIterator) Data(unmarshaler core.Unmarshaler) error {
-	return t.dba.Load(createMarshaler(t.node.dataKey), unmarshaler)
+	return t.dba.Load(t.node.dataHash, unmarshaler)
 }
 
 // key で参照した先の iterator を取得
@@ -118,7 +112,7 @@ func (t *MerkleParticleNodeIterator) Find(key []byte) (core.MerkleParticleNodeIt
 	}
 	nextKey := t.node.childs[key[0]] // Check : out of range
 	newIt := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
-	err := t.dba.Load(createMarshaler(nextKey), newIt)
+	err := t.dba.Load(nextKey, newIt)
 	if err != nil {
 		return nil, err
 	}
@@ -139,74 +133,110 @@ func CountPrefixBytes(a []byte, b []byte) (int, bool) {
 	return cnt, false
 }
 
-func (t *MerkleParticleNodeIterator) getNode(hash model.Hash) (core.MerkleParticleNodeIterator, error) {
+func (t *MerkleParticleNodeIterator) getLeafNode() (core.MerkleParticleNodeIterator, error) {
 	nextIt := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
-	err := t.dba.Load(createMarshaler(hash), nextIt)
+	err := t.dba.Load(t.node.dataHash, nextIt)
 	if err != nil {
 		return nil, err
 	}
 	return nextIt, nil
 }
 
+func (t *MerkleParticleNodeIterator) getChildNode(node core.KVNode) (core.MerkleParticleNodeIterator, bool) {
+	nextId := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
+	if len(t.node.childs[0]) == 0 {
+		return nil, false
+	}
+	err := t.dba.Load(t.node.childs[0], nextId)
+	if err != nil {
+		return nil, false
+	}
+	return nextId, true
+}
+
+func (t *MerkleParticleNodeIterator) createNewLeafItereator(node core.KVNode) (core.MerkleParticleNodeIterator, error) {
+	newLeaf, err := t.createMerkleParticleLeafNode(node)
+	if err != nil {
+		return nil, err
+	}
+	newIt := t.createMerkleParticleNodeIterator(newLeaf)
+	return newIt, nil
+}
+
+func (t *MerkleParticleNodeIterator) newInnerNodeIterator(cnt int, childs ...core.MerkleParticleNodeIterator) (core.MerkleParticleNodeIterator, error) {
+	// 子ノードを更新
+	var newDataHash model.Hash = nil
+	newChilds := make([]model.Hash, 26)
+	newKey := t.node.key[:cnt]
+	if len(t.Key()) == cnt { // 自身が分裂していない場合は自分の情報を受け継ぐ
+		newDataHash = t.DataHash()
+		newChilds = t.Childs()
+	} else { // 分裂するときは分裂後の子を生成する
+		it := t.createMerkleParticleNodeIterator(
+			&MerkleParticleNode{
+				key:      t.Key()[cnt:],
+				childs:   t.Childs(),
+				dataHash: t.DataHash(),
+			},
+		)
+		childs = append(childs, it)
+	}
+
+	for _, child := range childs {
+		hash, err := child.Hash()
+		if err != nil {
+			return nil, err
+		}
+		newChilds[child.Key()[0]] = hash
+	}
+
+	return t.createMerkleParticleNodeIterator(
+		&MerkleParticleNode{
+			key:      newKey,
+			childs:   newChilds,
+			dataHash: newDataHash,
+		}), nil
+}
+
 // Upsert したあとの Iterator を生成して取得
-func (t *MerkleParticleNodeIterator) Upsert(kvNode core.KVNode) (core.MerkleParticleNodeIterator, error) {
-	cnt, ok := CountPrefixBytes(t.node.key, kvNode.Key())
+func (t *MerkleParticleNodeIterator) Upsert(node core.KVNode) (core.MerkleParticleNodeIterator, error) {
+	if t.Leaf() {
+		return t.Append(node.Value())
+	}
+	cnt, ok := CountPrefixBytes(t.node.key, node.Key())
+	node.Next(cnt)
+
+	// key と prefix が完全一致して且つ子ノードが存在する
+	if len(t.node.key) == cnt {
+		if it, ok := t.getChildNode(node); ok {
+			newIt, err := it.Upsert(node)
+			if err != nil {
+				return nil, err
+			}
+			return t.newInnerNodeIterator(cnt, newIt)
+		}
+	}
 	if ok { // Perfect Match
-		// key と完全一致したので dataKey の中身を更新
-		it, err := t.getNode(t.node.dataKey)
+		// key と完全一致したので dataHash の中身を更新
+		it, err := t.getLeafNode()
 		if err != nil {
 			return nil, err
 		}
-		it, err = it.Append(kvNode.Value())
+		newIt, err := it.Upsert(node)
 		if err != nil {
 			return nil, err
 		}
-		return it, nil
-	} else if cnt == len(t.node.key) {
-		// node の Key と一致。 kvNode から生える。
-	} else if cnt == len(kvNode.Key()) {
-		// new node の Key と一致。 new node から生える。
+		return t.newInnerNodeIterator(cnt, newIt)
+	} else if len(node.Key()) == 0 {
+		// Insert される Node が -> Leaf Node になる
+		// TODO
 	} else {
-		// 両方 prefix を分割
-		baseKey := t.node.key[:cnt]
-		newIt := t.createMerkleParticleNodeIterator(
-			&MerkleParticleNode{
-				key:      baseKey,
-				height:   0,
-				childs:   make([]model.Hash, 26),
-				dataKey:  nil,
-				prevHash: nil,
-			},
-		)
-		newItL := t.createMerkleParticleNodeIterator(
-			&MerkleParticleNode{
-				key:      t.node.key[cnt:],
-				height:   t.node.height,
-				childs:   t.node.childs,
-				dataKey:  t.node.dataKey,
-				prevHash: t.node.prevHash,
-			},
-		)
-		newLeaf, err := t.createMerkleParticleLeafNode(kvNode)
+		// Insert される側が Node が InnterNode -> Leaf Node になる
+		newIt, err := t.createNewLeafItereator(node)
 		if err != nil {
 			return nil, err
 		}
-		newItR := t.createMerkleParticleNodeIterator(newLeaf)
-		var itL core.MerkleParticleNodeIterator
-		if cnt < len(t.node.key) {
-			createMerkleParticleNodeIterator(t.dba, t.cryptor,
-				&MerkleParticleNode{
-					height:   0,
-					childs:   make([]model.Hash, 16),
-					dataKey:  keyMarshal,
-					prevHash: thisHash,
-				})
-		}
-		var itR core.MerkleParticleNodeIterator
-		if cnt < len(kvNode.Key()) {
-
-		}
-
+		return t.newInnerNodeIterator(cnt, newIt)
 	}
 	return nil, nil
 }
@@ -217,8 +247,7 @@ func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) (core.MerklePa
 	if err != nil {
 		return nil, err
 	}
-	keyMarshal := createMarshaler(hash)
-	err = t.dba.Store(keyMarshal, value)
+	err = t.dba.Store(hash, value)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +260,7 @@ func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) (core.MerklePa
 			depth:    t.node.depth,
 			height:   t.node.height + 1,
 			childs:   make([]model.Hash, 16),
-			dataKey:  keyMarshal,
+			dataHash: hash,
 			prevHash: thisHash,
 		},
 	)
@@ -239,12 +268,16 @@ func (t *MerkleParticleNodeIterator) Append(value core.Marshaler) (core.MerklePa
 	if err != nil {
 		return nil, err
 	}
-	return newIt, t.dba.Store(createMarshaler(newItHash), newIt)
+	return newIt, t.dba.Store(newItHash, newIt)
+}
+
+func (t *MerkleParticleNodeIterator) Leaf() bool {
+	return len(t.node.childs) == 0
 }
 
 func (t *MerkleParticleNodeIterator) Prev() core.MerkleParticleNodeIterator {
 	it := NewMerkleParticleNodeIterator(t.dba, t.cryptor)
-	err := t.dba.Load(createMarshaler(t.node.prevHash), it)
+	err := t.dba.Load(t.node.prevHash, it)
 	if err != nil {
 		return nil
 	}
@@ -252,7 +285,8 @@ func (t *MerkleParticleNodeIterator) Prev() core.MerkleParticleNodeIterator {
 }
 
 func (t *MerkleParticleNodeIterator) Hash() (model.Hash, error) {
-	return t.cryptor.Hash(t)
+	hash := t.cryptor.ConcatHash(t.node.childs...)
+	return t.cryptor.ConcatHash(hash, t.node.dataHash), nil
 }
 
 func (t *MerkleParticleNodeIterator) Marshal() ([]byte, error) {
@@ -273,4 +307,16 @@ func (t *MerkleParticleNodeIterator) Unmarshal(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (t *MerkleParticleNodeIterator) Key() []byte {
+	return t.node.key
+}
+
+func (t *MerkleParticleNodeIterator) Childs() []model.Hash {
+	return t.node.childs
+}
+
+func (t *MerkleParticleNodeIterator) DataHash() model.Hash {
+	return t.node.dataHash
 }

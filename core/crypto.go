@@ -28,7 +28,7 @@ type Hasher interface {
 
 type Cryptor interface {
 	Hash(marshaler Marshaler) (Hash, error)
-	ConcatHash(Hash, Hash) Hash
+	ConcatHash(hash ...Hash) Hash
 	Sign(hasher Hasher, privateKey PrivateKey) ([]byte, error)
 	Verify(publicKey PublicKey, hasher Hasher, signature []byte) error
 	NewKeyPairs() (PublicKey, PrivateKey)

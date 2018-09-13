@@ -25,9 +25,19 @@ func (c Ed25519Sha256Cryptor) Hash(marshaler Marshaler) (Hash, error) {
 	return sha.Sum(nil), nil
 }
 
-func (c Ed25519Sha256Cryptor) ConcatHash(hash1 Hash, hash2 Hash) Hash {
+func (c Ed25519Sha256Cryptor) ConcatHash(hashes ...Hash) Hash {
+	if len(hashes) == 0 {
+		return Hash(nil)
+	}
+	if len(hashes) == 1 {
+		return hashes[0]
+	}
+	thash := hashes[0]
+	for _, hash := range hashes[1:] {
+		thash = append(thash, hash...)
+	}
 	sha := sha256.New()
-	sha.Write(append(hash1, hash2...))
+	sha.Write(thash)
 	return sha.Sum(nil)
 }
 
