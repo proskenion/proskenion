@@ -34,6 +34,8 @@ type MerkleParticleController interface {
 	Unmarshaler
 }
 
+var MERKLE_PARTICLE_CHILD_EDGES = 26
+
 // World State の管理 に使う(SubTree の管理にも使う)
 type MerkleParticleTree interface {
 	Iterator() MerkleParticleNodeIterator
@@ -42,7 +44,6 @@ type MerkleParticleTree interface {
 
 // Merkle Particle Node を管理する Iterator
 type MerkleParticleNodeIterator interface {
-	Data(unmarshaler Unmarshaler) error
 	MerkleParticleController
 	Key() []byte
 	Childs() []Hash
