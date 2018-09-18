@@ -83,7 +83,13 @@ func (w *WFA) Append(targetId string, value model.Marshaler) error {
 
 // Commit appenging nodes
 func (w *WFA) Commit() error {
-	return w.tx.Commit()
+	if err := w.tx.Commit(); err != nil {
+		if err := w.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+	return nil
 }
 
 // RollBack
