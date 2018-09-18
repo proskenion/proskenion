@@ -60,7 +60,7 @@ func testUpsertFirst(t *testing.T, tree core.MerklePatriciaTree, node core.KVNod
 	err = it.Data(unmarshaler)
 	assert.NoError(t, err)
 	// use value is model.Account
-	assert.Equal(t, node.Value().(model.Account), unmarshaler.(model.Account))
+	assert.Equal(t, MustHash(node.Value().(model.Account)), MustHash(unmarshaler.(model.Account)))
 }
 
 func testUpsertSecond(t *testing.T, tree core.MerklePatriciaTree, node core.KVNode, unmarshaler model.Unmarshaler) {
@@ -74,7 +74,7 @@ func testUpsertSecond(t *testing.T, tree core.MerklePatriciaTree, node core.KVNo
 	err = it.Data(unmarshaler)
 	assert.NoError(t, err)
 	// use value is model.Account
-	assert.Equal(t, node.Value().(model.Account), unmarshaler.(model.Account))
+	assert.Equal(t, MustHash(node.Value().(model.Account)), MustHash(unmarshaler.(model.Account)))
 }
 
 func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 core.MerklePatriciaTree) {
