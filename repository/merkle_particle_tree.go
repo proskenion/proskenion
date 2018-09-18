@@ -24,7 +24,7 @@ func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, has
 	}
 	err := kvStore.Load(hash, newInternal)
 	if err != nil {
-		if err != core.ErrDBANotFoundLoad {
+		if errors.Cause(err) != core.ErrDBANotFoundLoad {
 			return nil, err
 		}
 
@@ -133,7 +133,7 @@ func (n *MerklePatriciaInternalNode) Height() int64 {
 }
 
 func (n *MerklePatriciaInternalNode) PrevHash() model.Hash {
-	return model.Hash{nil}
+	return model.Hash(nil)
 }
 
 func (n *MerklePatriciaInternalNode) DataObject() []byte {

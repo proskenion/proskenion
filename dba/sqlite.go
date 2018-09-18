@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	. "github.com/proskenion/proskenion/core"
-	. "github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/core/model"
+	. "github.com/proskenion/proskenion/core/model"
 )
 
 type DBSQLite struct {
@@ -20,14 +20,12 @@ type DBSQLite struct {
 func newSQLite(conf *config.Config) DB {
 	db, err := sqlx.Open(conf.DB.Kind, fmt.Sprintf("file:%s/%s.sqlite?cache=shared", conf.DB.Path, conf.DB.Name))
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 	return &DBSQLite{make(map[string]DBA), db}
 }
 
 func NewDBSQLite(conf *config.Config) DB {
-	fmt.Println(conf.DB.Kind)
 	switch conf.DB.Kind {
 	case "sqlite3":
 		return newSQLite(conf)
