@@ -7,7 +7,9 @@ import (
 
 var (
 	ErrMerklePatriciaTreeNotFoundKey = errors.Errorf("Failed MerklePatriciaTree Not Found key")
+	ErrWFANotFound                   = errors.Errorf("Failed WFA Query Not Found")
 	ErrInvalidKVNodes                = errors.Errorf("Failed Key Value Nodes Invalid")
+	ErrWFAQueryUnmarshal             = errors.Errorf("Failed WFA Query Unmarshal")
 )
 
 // Transaction 列の管理
