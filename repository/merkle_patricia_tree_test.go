@@ -133,7 +133,7 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		require.NoError(t, err)
 		err = it.Data(ac)
 		assert.NoError(t, err)
-		assert.Equal(t, acs[i], ac)
+		assert.Equal(t, MustHash(acs[i]), MustHash(ac))
 	}
 
 	// Second Upsert part 2 tree1
@@ -145,7 +145,7 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		require.NoError(t, err)
 		err = it.Data(ac)
 		assert.NoError(t, err)
-		assert.Equal(t, acs2[i], ac)
+		assert.Equal(t, MustHash(acs2[i]), MustHash(ac))
 	}
 }
 
