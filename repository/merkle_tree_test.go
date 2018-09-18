@@ -12,7 +12,7 @@ import (
 )
 
 func testMerkleTree_PushAndTop(t *testing.T, tree core.MerkleTree) {
-	hashers := []core.Hasher{
+	hashers := []model.Hasher{
 		RandomMarshalerFromStr("1a"),
 		RandomMarshalerFromStr("2a"),
 		RandomMarshalerFromStr("3a"),

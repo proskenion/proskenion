@@ -3,9 +3,7 @@ package model
 type Query interface {
 	GetPayload() QueryPayload
 	GetSignature() Signature
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
-	Hash() (Hash, error)
+	Modelor
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
 	Validate() error

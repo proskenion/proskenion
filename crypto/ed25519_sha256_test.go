@@ -31,7 +31,7 @@ func TestEd25519Sha256Cryptor_Hash(t *testing.T) {
 
 	for _, c := range []struct {
 		name      string
-		marshaler core.Marshaler
+		marshaler model.Marshaler
 		exp       string
 		expErr    error
 	}{
@@ -81,7 +81,7 @@ func TestEd25519Sha256Cryptor_SignAndVerify(t *testing.T) {
 
 	for _, c := range []struct {
 		name         string
-		hasher       core.Hasher
+		hasher       model.Hasher
 		publicKey    model.PublicKey
 		privateKey   model.PrivateKey
 		expSignErr   error

@@ -12,9 +12,11 @@ type Account interface {
 	GetAccountName() string
 	GetPublicKeys() []PublicKey
 	GetAmount() int64
+	Modelor
 }
 
 type Peer interface {
 	GetAddress() string
 	GetPublicKey() PublicKey
+	Modelor
 }

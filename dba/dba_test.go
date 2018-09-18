@@ -21,8 +21,8 @@ func testDBA_Store_Load(t *testing.T, dba core.DBA) {
 	for _, c := range []struct {
 		name     string
 		key      model.Hash
-		expValue core.Marshaler
-		actValue core.Unmarshaler
+		expValue model.Marshaler
+		actValue model.Unmarshaler
 		expErr   error
 	}{
 		{
@@ -79,8 +79,8 @@ func testDBATx_Store_Load(t *testing.T, dba core.DBA) {
 	for _, c := range []struct {
 		name     string
 		key      model.Hash
-		expValue core.Marshaler
-		actValue core.Unmarshaler
+		expValue model.Marshaler
+		actValue model.Unmarshaler
 		expErr   error
 	}{
 		{

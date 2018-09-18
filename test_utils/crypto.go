@@ -10,16 +10,16 @@ import (
 )
 
 type Randomer interface {
-	core.Hasher
-	core.Marshaler
-	core.Unmarshaler
+	model.Hasher
+	model.Marshaler
+	model.Unmarshaler
 }
 
 func RandomKeyPairs() (model.PublicKey, model.PrivateKey) {
 	return crypto.NewEd25519Sha256Cryptor().NewKeyPairs()
 }
 
-func MustHash(hasher core.Hasher) model.Hash {
+func MustHash(hasher model.Hasher) model.Hash {
 	hash, _ := hasher.Hash()
 	return hash
 }

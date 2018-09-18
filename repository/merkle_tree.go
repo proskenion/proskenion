@@ -28,7 +28,7 @@ func newDefaultMarshaler(a []byte, b []byte) *DefaultMarshaler {
 	return &DefaultMarshaler{append(a, b...)}
 }
 
-func (t *AccumulateHash) Push(hasher core.Hasher) error {
+func (t *AccumulateHash) Push(hasher model.Hasher) error {
 	hash, err := hasher.Hash()
 	if err != nil {
 		return errors.Wrap(core.ErrHash, err.Error())
