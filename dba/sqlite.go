@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	. "github.com/proskenion/proskenion/core"
+	. "github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/core/model"
 )
 

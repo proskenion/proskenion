@@ -2,17 +2,21 @@ package test_utils
 
 import (
 	"encoding/hex"
-	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"github.com/proskenion/proskenion/core"
 )
 
 type Randomer interface {
 	model.Hasher
 	model.Marshaler
 	model.Unmarshaler
+}
+
+func RandomCryptor() core.Cryptor {
+	return crypto.NewEd25519Sha256Cryptor()
 }
 
 func RandomKeyPairs() (model.PublicKey, model.PrivateKey) {

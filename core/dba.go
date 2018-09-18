@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/pkg/errors"
-	"github.com/proskenion/proskenion/core/model"
+	. "github.com/proskenion/proskenion/core/model"
 )
 
 var (
@@ -12,8 +12,8 @@ var (
 )
 
 type KeyValueStore interface {
-	Load(key model.Hash, value Unmarshaler) error // value = Load(key)
-	Store(key model.Hash, value Marshaler) error  // Duplicate Insert error
+	Load(key Hash, value Unmarshaler) error // value = Load(key)
+	Store(key Hash, value Marshaler) error  // Duplicate Insert error
 }
 
 type DB interface {
