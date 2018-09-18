@@ -1,12 +1,12 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"github.com/pkg/errors"
 	. "github.com/proskenion/proskenion/core"
 	. "github.com/proskenion/proskenion/core/model"
 	"golang.org/x/crypto/ed25519"
-	"crypto/rand"
 )
 
 type Ed25519Sha256Cryptor struct{}
@@ -23,6 +23,22 @@ func (c Ed25519Sha256Cryptor) Hash(marshaler Marshaler) (Hash, error) {
 	sha := sha256.New()
 	sha.Write(marshal)
 	return sha.Sum(nil), nil
+}
+
+func (c Ed25519Sha256Cryptor) ConcatHash(hashes ...Hash) Hash {
+	if len(hashes) == 0 {
+		return Hash(nil)
+	}
+	if len(hashes) == 1 {
+		return hashes[0]
+	}
+	thash := hashes[0]
+	for _, hash := range hashes[1:] {
+		thash = append(thash, hash...)
+	}
+	sha := sha256.New()
+	sha.Write(thash)
+	return sha.Sum(nil)
 }
 
 func (c Ed25519Sha256Cryptor) Sign(hasher Hasher, privateKey PrivateKey) ([]byte, error) {

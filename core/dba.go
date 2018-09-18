@@ -1,6 +1,9 @@
 package core
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	. "github.com/proskenion/proskenion/core/model"
+)
 
 var (
 	ErrDBADuplicateStore = errors.Errorf("Failed DBA Duplicate Store")
@@ -8,19 +11,22 @@ var (
 	ErrDBABeginErr       = errors.Errorf("Failed DBA BeignTx Error")
 )
 
+type KeyValueStore interface {
+	Load(key Hash, value Unmarshaler) error // value = Load(key)
+	Store(key Hash, value Marshaler) error  // Duplicate Insert error
+}
+
 type DB interface {
 	DBA(table string) DBA
 }
 
 type DBATx interface {
 	Rollback() error
-	Load(key Marshaler, value Unmarshaler) error // value = Load(key)
-	Store(key Marshaler, value Marshaler) error  // Duplicate Insert error
+	KeyValueStore
 	Commit() error
 }
 
 type DBA interface {
 	Begin() (DBATx, error)
-	Load(key Marshaler, value Unmarshaler) error // value = Load(key)
-	Store(key Marshaler, value Marshaler) error  // Duplicate Insert error
+	KeyValueStore
 }

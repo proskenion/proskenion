@@ -147,7 +147,7 @@ func (p *QueryResponsePayload) GetAccount() model.Account {
 	if p.QueryResponse_Payload == nil {
 		return &Account{}
 	}
-	return &Account{p.QueryResponse_Payload.GetAccount()}
+	return &Account{p.cryptor, p.QueryResponse_Payload.GetAccount()}
 }
 
 func (p *QueryResponsePayload) Marshal() ([]byte, error) {

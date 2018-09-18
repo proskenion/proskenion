@@ -3,6 +3,7 @@ package dba_test
 import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/dba"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -19,35 +20,35 @@ func (a *ErrUnmarshaler) Unmarshal(b []byte) error {
 func testDBA_Store_Load(t *testing.T, dba core.DBA) {
 	for _, c := range []struct {
 		name     string
-		key      core.Marshaler
-		expValue core.Marshaler
-		actValue core.Unmarshaler
+		key      model.Hash
+		expValue model.Marshaler
+		actValue model.Unmarshaler
 		expErr   error
 	}{
 		{
 			"case 1",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"case 2",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"case 3",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"failed unmarshal",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			&ErrUnmarshaler{},
 			core.ErrUnmarshal,
@@ -68,7 +69,7 @@ func testDBA_Store_Load(t *testing.T, dba core.DBA) {
 			err = dba.Store(c.key, c.expValue)
 			assert.EqualError(t, errors.Cause(err), core.ErrDBADuplicateStore.Error())
 
-			err = dba.Load(RandomMarshaler(), c.actValue)
+			err = dba.Load(RandomByte(), c.actValue)
 			assert.EqualError(t, errors.Cause(err), core.ErrDBANotFoundLoad.Error())
 		})
 	}
@@ -77,35 +78,35 @@ func testDBA_Store_Load(t *testing.T, dba core.DBA) {
 func testDBATx_Store_Load(t *testing.T, dba core.DBA) {
 	for _, c := range []struct {
 		name     string
-		key      core.Marshaler
-		expValue core.Marshaler
-		actValue core.Unmarshaler
+		key      model.Hash
+		expValue model.Marshaler
+		actValue model.Unmarshaler
 		expErr   error
 	}{
 		{
 			"case 1",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"case 2",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"case 3",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			RandomMarshaler(),
 			nil,
 		},
 		{
 			"failed unmarshal",
-			RandomMarshaler(),
+			RandomByte(),
 			RandomMarshaler(),
 			&ErrUnmarshaler{},
 			core.ErrUnmarshal,
@@ -139,7 +140,7 @@ func testDBATx_Store_Load(t *testing.T, dba core.DBA) {
 			err = btx.Store(c.key, c.expValue)
 			assert.EqualError(t, errors.Cause(err), core.ErrDBADuplicateStore.Error())
 
-			err = btx.Load(RandomMarshaler(), c.actValue)
+			err = btx.Load(RandomByte(), c.actValue)
 			assert.EqualError(t, errors.Cause(err), core.ErrDBANotFoundLoad.Error())
 
 			err = btx.Commit()

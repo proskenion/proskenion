@@ -80,6 +80,10 @@ func RandomTxs(t *testing.T) []model.Transaction {
 	return RandomValidTxs(t)
 }
 
+func RandomAccount() model.Account {
+	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int63())
+}
+
 /*
 
 

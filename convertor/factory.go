@@ -50,6 +50,7 @@ func (f *ModelFactory) NewSignature(pubkey model.PublicKey, signature []byte) mo
 
 func (f *ModelFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, amount int64) model.Account {
 	return &Account{
+		f.cryptor,
 		&proskenion.Account{
 			AccountId:   accountId,
 			AccountName: accountName,
@@ -61,6 +62,7 @@ func (f *ModelFactory) NewAccount(accountId string, accountName string, publicKe
 
 func (f *ModelFactory) NewPeer(address string, pubkey model.PublicKey) model.Peer {
 	return &Peer{
+		f.cryptor,
 		&proskenion.Peer{
 			Address:   address,
 			PublicKey: []byte(pubkey),
@@ -72,7 +74,7 @@ func (f *ModelFactory) NewTxBuilder() model.TxBuilder {
 	return &TxBuilder{
 		&proskenion.Transaction{
 			Payload:    &proskenion.Transaction_Payload{},
-			Signatures: make([]*proskenion.Signature,0),
+			Signatures: make([]*proskenion.Signature, 0),
 		},
 		f.cryptor,
 		f.executor,

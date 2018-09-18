@@ -14,20 +14,9 @@ var (
 	ErrCryptorVerify = errors.Errorf("Failed Cryptor Verify")
 )
 
-type Marshaler interface {
-	Marshal() ([]byte, error)
-}
-
-type Unmarshaler interface {
-	Unmarshal([]byte) error
-}
-
-type Hasher interface {
-	Hash() (Hash, error)
-}
-
 type Cryptor interface {
 	Hash(marshaler Marshaler) (Hash, error)
+	ConcatHash(hash ...Hash) Hash
 	Sign(hasher Hasher, privateKey PrivateKey) ([]byte, error)
 	Verify(publicKey PublicKey, hasher Hasher, signature []byte) error
 	NewKeyPairs() (PublicKey, PrivateKey)

@@ -1,11 +1,15 @@
 package convertor
 
 import (
+	"errors"
+	"github.com/gogo/protobuf/proto"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 )
 
 type Account struct {
+	cryptor core.Cryptor
 	*proskenion.Account
 }
 
@@ -16,7 +20,23 @@ func (a *Account) GetPublicKeys() []model.PublicKey {
 	return model.PublicKeysFromBytesSlice(a.Account.GetPublicKeys())
 }
 
+func (a *Account) Marshal() ([]byte, error) {
+	return proto.Marshal(a.Account)
+}
+
+func (a *Account) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, a.Account)
+}
+
+func (a *Account) Hash() (model.Hash, error) {
+	if a.Account == nil {
+		return nil, errors.New("Account is nil")
+	}
+	return a.cryptor.Hash(a)
+}
+
 type Peer struct {
+	cryptor core.Cryptor
 	*proskenion.Peer
 }
 
@@ -25,4 +45,19 @@ func (p *Peer) GetPublicKey() model.PublicKey {
 		return nil
 	}
 	return p.Peer.GetPublicKey()
+}
+
+func (a *Peer) Marshal() ([]byte, error) {
+	return proto.Marshal(a.Peer)
+}
+
+func (a *Peer) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, a.Peer)
+}
+
+func (a *Peer) Hash() (model.Hash, error) {
+	if a.Peer == nil {
+		return nil, errors.New("Peer is nil")
+	}
+	return a.cryptor.Hash(a)
 }
