@@ -59,10 +59,6 @@ func testUpsertFirst(t *testing.T, tree core.MerklePatriciaTree, node core.KVNod
 func testUpsertSecond(t *testing.T, tree core.MerklePatriciaTree, node core.KVNode, unmarshaler model.Unmarshaler) {
 	it, err := tree.Find(node.Key())
 	assert.NoError(t, err)
-	err = it.Data(unmarshaler)
-	assert.NoError(t, err)
-	// use value is model.Account
-	assert.Equal(t, node.Value().(model.Account), unmarshaler.(model.Account))
 
 	_, err = tree.Upsert(node)
 	require.NoError(t, err)
@@ -82,33 +78,38 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		RandomAccount(),
 		RandomAccount(),
 	}
-	nodes := []core.KVNode{
-		RandomKVStoreFromAccount(RandomStrKey(), acs[0]),
-		RandomKVStoreFromAccount(RandomStrKey(), acs[1]),
-		RandomKVStoreFromAccount(RandomStrKey(), acs[2]),
-		RandomKVStoreFromAccount(RandomStrKey(), acs[3]),
-		RandomKVStoreFromAccount(RandomStrKey(), acs[4]),
-	}
-	unmarshalers := []model.Account{
+	acs2 := []model.Account{
 		RandomAccount(),
 		RandomAccount(),
 		RandomAccount(),
 		RandomAccount(),
 		RandomAccount(),
 	}
+	keys := [][]byte{
+		RandomStrKey(),
+		RandomStrKey(),
+		RandomStrKey(),
+		RandomStrKey(),
+		RandomStrKey(),
+	}
+	unmarshaler := RandomAccount()
 
 	// First Upsert tree1 and tree2
-	for i, node := range nodes {
-		testUpsertFirst(t, tree1, node, unmarshalers[i])
-		testUpsertFirst(t, tree2, node, unmarshalers[i])
+	for i, key := range keys {
+		kvNode := RandomKVStoreFromAccount(key, acs[i])
+
+		testUpsertFirst(t, tree1, kvNode, unmarshaler)
+		testUpsertFirst(t, tree2, kvNode, unmarshaler)
 		assert.Equal(t, MustHash(tree1), MustHash(tree2))
 	}
+
 	firstHash := MustHash(tree1)
 
 	// Second Upsert tree1 and tree2
-	for i, node := range nodes {
-		testUpsertSecond(t, tree1, node, unmarshalers[i])
-		testUpsertSecond(t, tree2, node, unmarshalers[i])
+	for i, key := range keys {
+		kvNode := RandomKVStoreFromAccount(key, acs2[i])
+		testUpsertSecond(t, tree1, kvNode, unmarshaler)
+		testUpsertSecond(t, tree2, kvNode, unmarshaler)
 		assert.Equal(t, MustHash(tree1), MustHash(tree2))
 	}
 	lastHash := MustHash(tree1)
@@ -117,18 +118,26 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 	assert.NotEqual(t, firstHash, lastHash)
 
 	// First Upsert 終了時に巻き戻し
-	actFirstNode := tree1.Iterator()
-	actFirstHash, err := actFirstNode.Hash()
+	err := tree1.Set(firstHash)
 	require.NoError(t, err)
-	assert.Equal(t, firstHash, actFirstHash)
-	for _, node := range nodes {
-		v := RandomMarshaler()
-		err := actFirstNode.Find(node, v)
+	for i, key := range keys {
+		ac := RandomAccount()
+		it, err := tree1.Find(key)
 		require.NoError(t, err)
-		assert.Equal(t, node, v)
+		err = it.Data(ac)
+		assert.NoError(t, err)
+		assert.Equal(t, acs[i], ac)
 	}
+
 	// Second Upsert part 2 tree1
-	for i, node := range nodes {
-		testUpsertSecond(t, tree1, node, nodes3[i])
+	err = tree1.Set(lastHash)
+	require.NoError(t, err)
+	for i, key := range keys {
+		ac := RandomAccount()
+		it, err := tree1.Find(key)
+		require.NoError(t, err)
+		err = it.Data(ac)
+		assert.NoError(t, err)
+		assert.Equal(t, acs2[i], ac)
 	}
 }
