@@ -8,44 +8,8 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"math/rand"
 	"testing"
 )
-
-type MockKVNode struct {
-	key     []byte
-	account model.Account
-}
-
-func RandomKVStoreFromAccount(key []byte, ac model.Account) core.KVNode {
-	return &MockKVNode{key, ac}
-}
-
-func (kv *MockKVNode) Key() []byte {
-	return kv.key
-}
-
-func (kv *MockKVNode) Value() model.Marshaler {
-	return kv.account
-}
-
-func (kv *MockKVNode) Next(cnt int) core.KVNode {
-	return &MockKVNode{
-		kv.key[cnt:],
-		kv.account,
-	}
-}
-
-var MOCK_ROOT_KEY byte = 0
-
-func RandomStrKey() []byte {
-	ret := make([]byte, rand.Int()%10+2)
-	ret[0] = MOCK_ROOT_KEY
-	for i := 1; i < len(ret); i++ {
-		ret[i] = byte(rand.Intn(26))
-	}
-	return ret
-}
 
 func testUpsertFirst(t *testing.T, tree core.MerklePatriciaTree, node core.KVNode, unmarshaler model.Unmarshaler) {
 	_, err := tree.Find(node.Key())

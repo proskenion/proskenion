@@ -84,6 +84,11 @@ func RandomAccount() model.Account {
 	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int63())
 }
 
+func RandomPeer() model.Peer {
+	pub, _ := RandomKeyPairs()
+	return NewTestFactory().NewPeer(RandomStr(), pub)
+}
+
 /*
 
 
