@@ -8,6 +8,7 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"math/rand"
 	"testing"
 )
 
@@ -29,18 +30,19 @@ func (kv *MockKVNode) Value() model.Marshaler {
 }
 
 func (kv *MockKVNode) Next(cnt int) core.KVNode {
-	kv.key = kv.key[cnt:]
-	return kv
+	return &MockKVNode{
+		kv.key[cnt:],
+		kv.account,
+	}
 }
 
 var MOCK_ROOT_KEY byte = 0
 
 func RandomStrKey() []byte {
-	str := RandomStr()
-	ret := make([]byte, 1)
+	ret := make([]byte, rand.Int()%10+2)
 	ret[0] = MOCK_ROOT_KEY
-	for _, c := range str {
-		ret = append(ret, byte(c-'a'))
+	for i := 1; i < len(ret); i++ {
+		ret[i] = byte(rand.Intn(26))
 	}
 	return ret
 }
@@ -54,6 +56,7 @@ func testUpsertFirst(t *testing.T, tree core.MerklePatriciaTree, node core.KVNod
 
 	it, err := tree.Find(node.Key())
 	assert.NoError(t, err)
+	assert.True(t, it.Leaf())
 	err = it.Data(unmarshaler)
 	assert.NoError(t, err)
 	// use value is model.Account
@@ -67,6 +70,7 @@ func testUpsertSecond(t *testing.T, tree core.MerklePatriciaTree, node core.KVNo
 	_, err = tree.Upsert(node)
 	require.NoError(t, err)
 	it, err = tree.Find(node.Key())
+	assert.True(t, it.Leaf())
 	err = it.Data(unmarshaler)
 	assert.NoError(t, err)
 	// use value is model.Account

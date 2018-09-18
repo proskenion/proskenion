@@ -147,7 +147,7 @@ type MerklePatriciaLeafNode struct {
 }
 
 func (n *MerklePatriciaLeafNode) Leaf() bool {
-	return false
+	return true
 }
 
 func (n *MerklePatriciaLeafNode) Key() []byte {
@@ -285,12 +285,19 @@ func (t *MerklePatriciaNodeIterator) Find(key []byte) (core.MerklePatriciaNodeIt
 	if t.Leaf() {
 		return t, nil
 	}
-	if len(t.Key()) < len(key) {
+	if len(t.Key()) > len(key) {
 		return nil, core.ErrMerklePatriciaTreeNotFoundKey
 	}
-	nextChild, err := t.getChild(key[0])
+	if len(t.Key()) == len(key) {
+		leaf, err := t.getLeaf()
+		if err != nil {
+			return nil, err
+		}
+		return leaf, nil
+	}
+	nextChild, err := t.getChild(key[len(t.Key())])
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(core.ErrMerklePatriciaTreeNotFoundKey, err.Error())
 	}
 	return nextChild.Find(key[len(t.Key()):])
 }
@@ -311,6 +318,9 @@ func CountPrefixBytes(a []byte, b []byte) (int, bool) {
 
 // node の Key に沿って子を返す
 func (t *MerklePatriciaNodeIterator) getChildFromNode(node core.KVNode) (core.MerklePatriciaNodeIterator, bool) {
+	if len(node.Key()) == 0 {
+		return nil, false
+	}
 	it, err := t.getChild(node.Key()[0])
 	if err != nil {
 		return nil, false
@@ -321,6 +331,7 @@ func (t *MerklePatriciaNodeIterator) getChildFromNode(node core.KVNode) (core.Me
 // ノード t を cnt 番目で分割、新たに child を加えた時の 中間ノードの生成(場合により child にも変更を加える)
 func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.MerklePatriciaNodeIterator) (core.MerklePatriciaNodeIterator, error) {
 	// 子ノードを更新
+	var err error
 	var newDataHash model.Hash = nil
 	newChilds := make([]model.Hash, core.MERKLE_PARTICLE_CHILD_EDGES)
 	newKey := t.Key()[:cnt]
@@ -328,6 +339,12 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 	if len(t.Key()) == cnt { // 自身が分裂していない場合は自分の情報を受け継ぐ
 		newDataHash = t.DataHash()
 		newChilds = t.Childs()
+		if child.Leaf() {
+			newDataHash, err = child.Hash()
+			if err != nil {
+				return nil, err
+			}
+		}
 	} else { // 分裂するときは分裂後の子を生成する
 		// 分岐後の自分(child)
 		it, err := t.createMerklePatriciaNodeIterator(
@@ -355,6 +372,9 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 	}
 
 	for _, child := range childs {
+		if child.Leaf() {
+			continue
+		}
 		hash, err := child.Hash()
 		if err != nil {
 			return nil, err
@@ -376,18 +396,9 @@ func (t *MerklePatriciaNodeIterator) Upsert(node core.KVNode) (core.MerklePatric
 		return t.Append(node.Value())
 	}
 	cnt, ok := CountPrefixBytes(t.Key(), node.Key())
-	node.Next(cnt)
+	node = node.Next(cnt)
 
 	// key と prefix が完全一致して且つ子ノードが存在する
-	if len(t.Key()) == cnt {
-		if it, ok := t.getChildFromNode(node); ok {
-			newIt, err := it.Upsert(node)
-			if err != nil {
-				return nil, err
-			}
-			return t.createInternalIterator(cnt, newIt)
-		}
-	}
 	if ok { // Perfect Match
 		// key と完全一致したので dataHash の中身を更新
 		it, err := t.getLeaf()
@@ -399,20 +410,28 @@ func (t *MerklePatriciaNodeIterator) Upsert(node core.KVNode) (core.MerklePatric
 			return nil, err
 		}
 		return t.createInternalIterator(cnt, newIt)
-	} else {
-		// 現在のノードを分割して中身を更新
-		newIt, err := t.createLeafIterator(node)
-		if err != nil {
-			return nil, err
-		}
-		return t.createInternalIterator(cnt, newIt)
 	}
-	return nil, nil
+	if len(t.Key()) == cnt {
+		if it, ok := t.getChildFromNode(node); ok {
+			newIt, err := it.Upsert(node)
+			if err != nil {
+				return nil, err
+			}
+			return t.createInternalIterator(cnt, newIt)
+		}
+	}
+	// 現在のノードを分割して中身を更新
+	newIt, err := t.createLeafIterator(node)
+	if err != nil {
+		return nil, err
+	}
+	return t.createInternalIterator(cnt, newIt)
+
 }
 
 // 現在参照しているノードに値を追加
 func (t *MerklePatriciaNodeIterator) Append(value model.Marshaler) (core.MerklePatriciaNodeIterator, error) {
-	hash, err := t.cryptor.Hash(value)
+	object, err := value.Marshal()
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +442,7 @@ func (t *MerklePatriciaNodeIterator) Append(value model.Marshaler) (core.MerkleP
 	newIt, err := t.createMerklePatriciaNodeIterator(
 		&MerklePatriciaLeafNode{
 			Height_:     t.node.Height() + 1,
-			DataObject_: hash,
+			DataObject_: object,
 			PrevHash_:   thisHash,
 		},
 	)
