@@ -8,3 +8,8 @@ import (
 func RandomDBA() core.DBA {
 	return dba.NewDBAOnMemory()
 }
+
+func RandomDBATx() core.DBATx {
+	tx, _ := dba.NewDBAOnMemory().Begin()
+	return tx
+}

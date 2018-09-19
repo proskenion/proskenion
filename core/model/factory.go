@@ -15,6 +15,13 @@ type ModelFactory interface {
 	NewTxBuilder() TxBuilder
 	NewQueryBuilder() QueryBuilder
 	NewQueryResponseBuilder() QueryResponseBuilder
+
+	NewEmptyBlock() Block
+	NewEmptyAccount() Account
+	NewEmptyPeer() Peer
+	NewEmptyTx() Transaction
+	NewEmptyQuery() Query
+	NewEmptyQueryResponse() QueryResponse
 }
 
 type TxBuilder interface {

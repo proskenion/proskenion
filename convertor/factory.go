@@ -19,6 +19,42 @@ func NewModelFactory(cryptor core.Cryptor,
 	return &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
 }
 
+func (f *ModelFactory) NewEmptyBlock() model.Block {
+	return &Block{
+		&proskenion.Block{
+			Payload:   &proskenion.Block_Payload{},
+			Signature: &proskenion.Signature{},
+		},
+		f.cryptor,
+	}
+}
+
+func (f *ModelFactory) NewEmptyAccount() model.Account {
+	return &Account{
+		f.cryptor,
+		&proskenion.Account{},
+	}
+}
+
+func (f *ModelFactory) NewEmptyPeer() model.Peer {
+	return &Peer{
+		f.cryptor,
+		&proskenion.Peer{},
+	}
+}
+
+func (f *ModelFactory) NewEmptyTx() model.Transaction {
+	return f.NewTxBuilder().Build()
+}
+
+func (f *ModelFactory) NewEmptyQuery() model.Query {
+	return f.NewQueryBuilder().Build()
+}
+
+func (f *ModelFactory) NewEmptyQueryResponse() model.QueryResponse {
+	return f.NewQueryResponseBuilder().Build()
+}
+
 func (f *ModelFactory) NewBlock(height int64,
 	preBlockHash model.Hash, createdTime int64,
 	merkleHash model.Hash, txsHash model.Hash,

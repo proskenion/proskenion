@@ -34,7 +34,7 @@ func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, has
 			cryptor: cryptor,
 			node: &MerklePatriciaInternalNode{
 				Key_:      []byte{rootKey},
-				Childs_:   make([]model.Hash, core.MERKLE_PARTICLE_CHILD_EDGES),
+				Childs_:   make(map[byte]model.Hash),
 				DataHash_: model.Hash(nil),
 			},
 		}
@@ -97,7 +97,7 @@ type MerklePatriciaNode interface {
 
 	// Internal
 	Key() []byte
-	Childs() []model.Hash
+	Childs() map[byte]model.Hash
 	DataHash() model.Hash
 
 	// Leaf
@@ -108,8 +108,8 @@ type MerklePatriciaNode interface {
 
 type MerklePatriciaInternalNode struct {
 	Key_      []byte
-	Childs_   []model.Hash // child node of tree. (must be alphabet prefix)
-	DataHash_ model.Hash   // data access key (must be leaf node)
+	Childs_   map[byte]model.Hash // child node of tree.
+	DataHash_ model.Hash          // data access key (must be leaf node)
 }
 
 func (n *MerklePatriciaInternalNode) Leaf() bool {
@@ -120,7 +120,7 @@ func (n *MerklePatriciaInternalNode) Key() []byte {
 	return n.Key_
 }
 
-func (n *MerklePatriciaInternalNode) Childs() []model.Hash {
+func (n *MerklePatriciaInternalNode) Childs() map[byte]model.Hash {
 	return n.Childs_
 }
 
@@ -154,7 +154,7 @@ func (n *MerklePatriciaLeafNode) Key() []byte {
 	return nil
 }
 
-func (n *MerklePatriciaLeafNode) Childs() []model.Hash {
+func (n *MerklePatriciaLeafNode) Childs() map[byte]model.Hash {
 	return nil
 }
 
@@ -206,10 +206,11 @@ func (t *MerklePatriciaNodeIterator) newEmptyInternalIterator() core.MerklePatri
 
 func (t *MerklePatriciaNodeIterator) getChild(key byte) (core.MerklePatriciaNodeIterator, error) {
 	unmarshaler := t.newEmptyInternalIterator()
-	if key < 0 || len(t.Childs()) <= int(key) {
+	childHash, ok := t.Childs()[key]
+	if !ok {
 		return nil, errors.Errorf("Childs Out of Range")
 	}
-	err := t.dba.Load(t.Childs()[key], unmarshaler)
+	err := t.dba.Load(childHash, unmarshaler)
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +244,9 @@ func (t *MerklePatriciaNodeIterator) createMerklePatriciaNodeIterator(node Merkl
 	// saved
 	err = t.dba.Store(hash, it)
 	if err != nil {
+		if errors.Cause(err) == core.ErrDBADuplicateStore { // Duplicate, but return this node
+			return it, nil
+		}
 		return nil, err
 	}
 	return it, nil
@@ -272,7 +276,7 @@ func (t *MerklePatriciaNodeIterator) createLeafIterator(node core.KVNode) (core.
 			&MerklePatriciaInternalNode{
 				Key_:      node.Key(),
 				DataHash_: hash,
-				Childs_:   make([]model.Hash, core.MERKLE_PARTICLE_CHILD_EDGES),
+				Childs_:   make(map[byte]model.Hash),
 			},
 		)
 		return newInternalIt, nil
@@ -333,7 +337,7 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 	// 子ノードを更新
 	var err error
 	var newDataHash model.Hash = nil
-	newChilds := make([]model.Hash, core.MERKLE_PARTICLE_CHILD_EDGES)
+	newChilds := make(map[byte]model.Hash)
 	newKey := t.Key()[:cnt]
 	childs := []core.MerklePatriciaNodeIterator{child}
 	if len(t.Key()) == cnt { // 自身が分裂していない場合は自分の情報を受け継ぐ
@@ -471,7 +475,11 @@ func (t *MerklePatriciaNodeIterator) Hash() (model.Hash, error) {
 			t.node.DataObject(),
 			[]byte(strconv.FormatInt(t.node.Height(), 10))), nil
 	} else {
-		hash := t.cryptor.ConcatHash(t.node.Childs()...)
+		childs := make([]model.Hash, 256)
+		for k, v := range t.node.Childs() {
+			childs[k] = v
+		}
+		hash := t.cryptor.ConcatHash(childs...)
 		return t.cryptor.ConcatHash(hash, t.node.DataHash(), t.Key()), nil
 	}
 }
@@ -500,7 +508,7 @@ func (t *MerklePatriciaNodeIterator) Key() []byte {
 	return t.node.Key()
 }
 
-func (t *MerklePatriciaNodeIterator) Childs() []model.Hash {
+func (t *MerklePatriciaNodeIterator) Childs() map[byte]model.Hash {
 	return t.node.Childs()
 }
 
