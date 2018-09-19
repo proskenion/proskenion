@@ -48,7 +48,7 @@ func test_WFA(t *testing.T, wfa core.WFA) {
 }
 
 func TestWFA(t *testing.T) {
-	wfa, err := BeginWFA(RandomDBA(), RandomCryptor(), model.Hash(nil))
+	wfa, err := NewWFA(RandomDBATx(), RandomCryptor(), model.Hash(nil))
 	require.NoError(t, err)
 	test_WFA(t, wfa)
 }

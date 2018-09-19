@@ -79,6 +79,6 @@ type TxHistory interface {
 type Blockchain interface {
 	Top() (Block, bool)
 	// Commit is allowed only Commitable Block, ohterwise panic
-	Commit(block Block)
+	Commit(block Block) error
 	VerifyCommit(block Block) error
 }

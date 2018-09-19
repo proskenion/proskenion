@@ -14,11 +14,7 @@ type WFA struct {
 
 var WFA_ROOT_KEY byte = 0
 
-func BeginWFA(dba core.DBA, cryptor core.Cryptor, rootHash model.Hash) (core.WFA, error) {
-	tx, err := dba.Begin()
-	if err != nil {
-		return nil, err
-	}
+func NewWFA(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WFA, error) {
 	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WFA_ROOT_KEY)
 	if err != nil {
 		return nil, err
@@ -30,6 +26,8 @@ func (w *WFA) Hash() (model.Hash, error) {
 	return w.tree.Hash()
 }
 
+// targetId を MerklePatriciaTree の key バイト列に変換
+// WIP : @, ., # に対応
 func TargetIdToKey(id string) []byte {
 	ret := make([]byte, 1)
 	ret[0] = WFA_ROOT_KEY
