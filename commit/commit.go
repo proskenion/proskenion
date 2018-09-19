@@ -8,6 +8,6 @@ import (
 type Commit struct {
 }
 
-func (c *Commit) Commit(wsv core.WSV, blockchain core.Blockchain, block model.Block, tree core.MerkleTree) error {
-
+func (c *Commit) Commit(wsv core.WSV, blockchain core.Blockchain, block model.Block, tree core.TxList) error {
+	return nil
 }

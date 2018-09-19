@@ -11,10 +11,7 @@ type TxList struct {
 }
 
 func NewTxList(cryptor core.Cryptor) core.TxList {
-	return &TxList{
-		NewAccumulateHash(cryptor),
-		make([]model.Transaction, 0),
-	}
+	return &TxList{NewAccumulateHash(cryptor), make([]model.Transaction, 0)}
 }
 
 func (t *TxList) Push(tx model.Transaction) error {
