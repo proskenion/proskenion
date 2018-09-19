@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/pkg/errors"
 	. "github.com/proskenion/proskenion/core/model"
+	"github.com/satellitex/bbft/model"
 )
 
 var (
@@ -18,6 +19,13 @@ var (
 type MerkleTree interface {
 	Push(hash Hasher) error
 	Top() Hash
+}
+
+// TxList Wrap MerkleTree
+type TxList interface {
+	Push(tx model.Transaction) error
+	Top() Hash
+	List() []model.Transaction
 }
 
 type KVNode interface {
