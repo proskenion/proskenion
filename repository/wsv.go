@@ -7,22 +7,22 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 )
 
-type WFA struct {
+type WSV struct {
 	tx   core.DBATx
 	tree core.MerklePatriciaTree
 }
 
-var WFA_ROOT_KEY byte = 0
+var WSV_ROOT_KEY byte = 0
 
-func NewWFA(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WFA, error) {
-	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WFA_ROOT_KEY)
+func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV, error) {
+	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
 	if err != nil {
 		return nil, err
 	}
-	return &WFA{tx, tree}, nil
+	return &WSV{tx, tree}, nil
 }
 
-func (w *WFA) Hash() (model.Hash, error) {
+func (w *WSV) Hash() (model.Hash, error) {
 	return w.tree.Hash()
 }
 
@@ -30,7 +30,7 @@ func (w *WFA) Hash() (model.Hash, error) {
 // WIP : @, ., # に対応
 func TargetIdToKey(id string) []byte {
 	ret := make([]byte, 1)
-	ret[0] = WFA_ROOT_KEY
+	ret[0] = WSV_ROOT_KEY
 	for _, c := range id {
 		ret = append(ret, byte(c-'a'))
 	}
@@ -39,16 +39,16 @@ func TargetIdToKey(id string) []byte {
 }
 
 // Query gets value from targetId
-func (w *WFA) Query(targetId string, value model.Unmarshaler) error {
+func (w *WSV) Query(targetId string, value model.Unmarshaler) error {
 	it, err := w.tree.Find(TargetIdToKey(targetId))
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
-			return errors.Wrap(core.ErrWFANotFound, err.Error())
+			return errors.Wrap(core.ErrWSVNotFound, err.Error())
 		}
 		return err
 	}
 	if err = it.Data(value); err != nil {
-		return errors.Wrap(core.ErrWFAQueryUnmarshal, err.Error())
+		return errors.Wrap(core.ErrWSVQueryUnmarshal, err.Error())
 	}
 	return nil
 }
@@ -74,13 +74,13 @@ func (kv *KVNode) Next(cnt int) core.KVNode {
 }
 
 // Append [targetId] = value
-func (w *WFA) Append(targetId string, value model.Marshaler) error {
+func (w *WSV) Append(targetId string, value model.Marshaler) error {
 	_, err := w.tree.Upsert(&KVNode{TargetIdToKey(targetId), value})
 	return err
 }
 
 // Commit appenging nodes
-func (w *WFA) Commit() error {
+func (w *WSV) Commit() error {
 	if err := w.tx.Commit(); err != nil {
 		if err := w.Rollback(); err != nil {
 			return err
@@ -91,6 +91,6 @@ func (w *WFA) Commit() error {
 }
 
 // RollBack
-func (w *WFA) Rollback() error {
+func (w *WSV) Rollback() error {
 	return w.tx.Rollback()
 }

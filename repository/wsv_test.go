@@ -12,19 +12,19 @@ import (
 	"testing"
 )
 
-func test_WFA_Upserts(t *testing.T, wfa core.WFA, id string, ac model.Account) {
-	err := wfa.Query(id, ac)
-	require.EqualError(t, errors.Cause(err), core.ErrWFANotFound.Error())
-	err = wfa.Append(id, ac)
+func test_WSV_Upserts(t *testing.T, wsv core.WSV, id string, ac model.Account) {
+	err := wsv.Query(id, ac)
+	require.EqualError(t, errors.Cause(err), core.ErrWSVNotFound.Error())
+	err = wsv.Append(id, ac)
 	require.NoError(t, err)
 
 	unmarshaler := RandomAccount()
-	err = wfa.Query(id, unmarshaler)
+	err = wsv.Query(id, unmarshaler)
 	require.NoError(t, err)
 	assert.Equal(t, MustHash(ac), MustHash(unmarshaler.(model.Account)))
 }
 
-func test_WFA(t *testing.T, wfa core.WFA) {
+func test_WSV(t *testing.T, wsv core.WSV) {
 	acs := []model.Account{
 		RandomAccount(),
 		RandomAccount(),
@@ -42,13 +42,13 @@ func test_WFA(t *testing.T, wfa core.WFA) {
 
 	for i, ac := range acs {
 		fmt.Println("==upserts", i)
-		test_WFA_Upserts(t, wfa, ids[i], ac)
+		test_WSV_Upserts(t, wsv, ids[i], ac)
 	}
-	require.NoError(t, wfa.Commit())
+	require.NoError(t, wsv.Commit())
 }
 
-func TestWFA(t *testing.T) {
-	wfa, err := NewWFA(RandomDBATx(), RandomCryptor(), model.Hash(nil))
+func TestWSV(t *testing.T) {
+	wsv, err := NewWSV(RandomDBATx(), RandomCryptor(), model.Hash(nil))
 	require.NoError(t, err)
-	test_WFA(t, wfa)
+	test_WSV(t, wsv)
 }

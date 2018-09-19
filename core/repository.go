@@ -7,9 +7,11 @@ import (
 
 var (
 	ErrMerklePatriciaTreeNotFoundKey = errors.Errorf("Failed MerklePatriciaTree Not Found key")
-	ErrWFANotFound                   = errors.Errorf("Failed WFA Query Not Found")
 	ErrInvalidKVNodes                = errors.Errorf("Failed Key Value Nodes Invalid")
-	ErrWFAQueryUnmarshal             = errors.Errorf("Failed WFA Query Unmarshal")
+	ErrWSVNotFound                   = errors.Errorf("Failed WSV Query Not Found")
+	ErrWSVQueryUnmarshal             = errors.Errorf("Failed WSV Query Unmarshal")
+	ErrTxHistoryNotFound             = errors.Errorf("Failed WSV Query Not Found")
+	ErrTxHistoryQueryUnmarshal       = errors.Errorf("Failed WSV Query Unmarshal")
 )
 
 // Transaction 列の管理
@@ -38,8 +40,6 @@ type MerklePatriciaController interface {
 	Unmarshaler
 }
 
-var MERKLE_PARTICLE_CHILD_EDGES = 26
-
 // World State の管理 に使う(SubTree の管理にも使う)
 type MerklePatriciaTree interface {
 	Iterator() MerklePatriciaNodeIterator
@@ -50,15 +50,15 @@ type MerklePatriciaTree interface {
 type MerklePatriciaNodeIterator interface {
 	MerklePatriciaController
 	Key() []byte
-	Childs() []Hash
+	Childs() map[byte]Hash
 	DataHash() Hash
 	Leaf() bool
 	Data(unmarshaler Unmarshaler) error
 	Prev() (MerklePatriciaNodeIterator, error)
 }
 
-// WFA
-type WFA interface {
+// WSV (MerklePatriciaTree で管理)
+type WSV interface {
 	Hash() (Hash, error)
 	// Query gets value from targetId
 	Query(targetId string, value Unmarshaler) error
@@ -70,15 +70,23 @@ type WFA interface {
 	Rollback() error
 }
 
-// 全Tx履歴
+// 全Tx履歴 (MerklePatriciaTree で管理)
 type TxHistory interface {
-	FindTx(hash Hash) (Transaction, error)
+	Hash() (Hash, error)
+	// Query gets tx from txHash
+	Query(txHash Hash) (Transaction, error)
+	// Append [targetId] = value
+	Append(tx Transaction) error
+	// Commit appenging nodes
+	Commit() error
+	// RollBack
+	Rollback() error
 }
 
 // BlockChain
 type Blockchain interface {
 	Top() (Block, bool)
-	// Commit is allowed only Commitable Block, ohterwise panic
+	// Commit block
 	Commit(block Block) error
 	VerifyCommit(block Block) error
 }

@@ -12,8 +12,6 @@ type Blockchain struct {
 	factory    model.ModelFactory
 	top        model.Block
 	mostHeight int64
-	wfa        WFA
-	txHistory  core.TxHistory
 }
 
 func NewBlockchain(dba core.DBA, factory model.ModelFactory) core.Blockchain {
@@ -27,9 +25,34 @@ func (b *Blockchain) Top() (model.Block, bool) {
 	return b.top, true
 }
 
-// Commit is allowed only Commitable Block, ohterwise panic
-func (b *Blockchain) Commit(block model.Block) error {
+func rollBackTx(tx core.DBATx, mtErr error) error {
+	if err := tx.Rollback(); err != nil {
+		return errors.Wrap(err, mtErr.Error())
+	}
+	return mtErr
+}
+
+func commitTx(tx core.DBATx) error {
+	if err := tx.Commit(); err != nil {
+		return rollBackTx(tx, err)
+	}
 	return nil
+}
+
+// Commit is allowed only Commitable Block, ohterwise panic
+func (b *Blockchain) Commit(block model.Block) (err error) {
+	tx, err := b.dba.Begin()
+	if err != nil {
+		return err
+	}
+	hash, err := block.Hash()
+	if err != nil {
+		return rollBackTx(tx, err)
+	}
+	if err = tx.Store(hash, block); err != nil {
+		return rollBackTx(tx, err)
+	}
+	return commitTx(tx)
 }
 
 // Commit 可能かどうかの判定
@@ -37,6 +60,7 @@ func (b *Blockchain) VerifyCommit(block model.Block) error {
 	if err := block.Verify(); err != nil {
 		return err
 	}
+	// preBlockHash と同値の状態が存在するかの判定
 	preBlock := b.factory.NewEmptyBlock()
 	err := b.dba.Load(block.GetPayload().GetPreBlockHash(), preBlock)
 	preBlockHash, err := preBlock.Hash()
