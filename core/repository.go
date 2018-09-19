@@ -75,7 +75,7 @@ type TxHistory interface {
 	Hash() (Hash, error)
 	// Query gets tx from txHash
 	Query(txHash Hash) (Transaction, error)
-	// Append [targetId] = value
+	// Append tx
 	Append(tx Transaction) error
 	// Commit appenging nodes
 	Commit() error
