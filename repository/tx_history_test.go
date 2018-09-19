@@ -11,20 +11,34 @@ import (
 	"testing"
 )
 
-func test_TxHistory_Upserts(t *testing.T, TxHistory core.TxHistory, tx model.Transaction) {
+func test_TxHistory_Upserts(t *testing.T, txHistory core.TxHistory, tx model.Transaction) {
 	hash := MustHash(tx)
-	_, err := TxHistory.Query(hash)
+	_, err := txHistory.Query(hash)
 	require.EqualError(t, errors.Cause(err), core.ErrTxHistoryNotFound.Error())
-	err = TxHistory.Append(tx)
+	err = txHistory.Append(tx)
 	require.NoError(t, err)
 
-	retTx, err := TxHistory.Query(hash)
+	retTx, err := txHistory.Query(hash)
 	require.NoError(t, err)
 	assert.Equal(t, MustHash(tx), MustHash(retTx))
 }
 
-func test_TxHistory(t *testing.T, TxHistory core.TxHistory) {
+func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 	txs := []model.Transaction{
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+	}
+	txs2 := []model.Transaction{
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+		RandomTx(),
+	}
+	txs3 := []model.Transaction{
 		RandomTx(),
 		RandomTx(),
 		RandomTx(),
@@ -35,11 +49,53 @@ func test_TxHistory(t *testing.T, TxHistory core.TxHistory) {
 	for _, tx := range txs {
 		test_TxHistory_Upserts(t, TxHistory, tx)
 	}
+	firstHash, err := TxHistory.Hash()
+	require.NoError(t, err)
 	require.NoError(t, TxHistory.Commit())
+
+	for _, tx := range txs2 {
+		test_TxHistory_Upserts(t, TxHistory, tx)
+	}
+	secondHash, err := TxHistory.Hash()
+	require.NoError(t, err)
+	require.NoError(t, TxHistory.Commit())
+
+	tx, err := dba.Begin()
+	require.NoError(t, err)
+	txFirstHistory, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), firstHash)
+
+	for _, tx := range txs2 {
+		test_TxHistory_Upserts(t, txFirstHistory, tx)
+	}
+	require.NoError(t, err)
+	require.NoError(t, txFirstHistory.Commit())
+	secondHash2, err := txFirstHistory.Hash()
+	assert.Equal(t, secondHash, secondHash2)
+
+	txFirstHistory2, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), firstHash)
+	for _, tx := range txs3 {
+		test_TxHistory_Upserts(t, txFirstHistory2, tx)
+	}
+	require.NoError(t, err)
+	require.NoError(t, txFirstHistory2.Commit())
+	secondHash3, err := txFirstHistory2.Hash()
+	assert.NotEqual(t, secondHash, secondHash3)
+
+	for _, tx := range txs2 {
+		// History2 では tx2 が保存されていないことになっている
+		_, err := txFirstHistory2.Query(MustHash(tx))
+		assert.EqualError(t, errors.Cause(err), core.ErrTxHistoryNotFound.Error())
+
+		retTx, err := txFirstHistory.Query(MustHash(tx))
+		assert.Equal(t, MustHash(tx), MustHash(retTx))
+	}
 }
 
 func TestTxHistory(t *testing.T) {
-	TxHistory, err := repository.NewTxHistory(RandomDBATx(), NewTestFactory(), RandomCryptor(), model.Hash(nil))
+	dba := RandomDBA()
+	tx, err := dba.Begin()
 	require.NoError(t, err)
-	test_TxHistory(t, TxHistory)
+	TxHistory, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), model.Hash(nil))
+	require.NoError(t, err)
+	test_TxHistory(t, dba, TxHistory)
 }

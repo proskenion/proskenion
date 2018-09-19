@@ -244,6 +244,9 @@ func (t *MerklePatriciaNodeIterator) createMerklePatriciaNodeIterator(node Merkl
 	// saved
 	err = t.dba.Store(hash, it)
 	if err != nil {
+		if errors.Cause(err) == core.ErrDBADuplicateStore { // Duplicate, but return this node
+			return it, nil
+		}
 		return nil, err
 	}
 	return it, nil
