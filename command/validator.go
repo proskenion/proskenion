@@ -5,7 +5,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 )
 
-type CommandValidator struct{}
+type CommandValidator struct {}
 
 func NewCommandValidator() core.CommandValidator {
 	return &CommandValidator{}
