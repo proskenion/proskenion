@@ -5,13 +5,12 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 )
 
-type CommandValidator struct {}
+type CommandValidator struct{}
 
 func NewCommandValidator() core.CommandValidator {
 	return &CommandValidator{}
 }
 
-// WIP
-func (c *CommandValidator) Transfer(transfer model.Transfer) error {
+func (c *CommandValidator) Transfer(wsv model.ObjectFinder, transfer model.Transfer) error {
 	return nil
 }

@@ -3,17 +3,17 @@ package core
 import . "github.com/proskenion/proskenion/core/model"
 
 type Executor interface {
-	Execute() error
+	Execute(ObjectFinder) error
 }
 
 type Validator interface {
-	Validate() error
+	Validate(ObjectFinder) error
 }
 
 type CommandExecutor interface {
-	Transfer(transfer Transfer) error
+	Transfer(ObjectFinder, transfer Transfer) error
 }
 
 type CommandValidator interface {
-	Transfer(transfer Transfer) error
+	Transfer(ObjectFinder, transfer Transfer) error
 }
