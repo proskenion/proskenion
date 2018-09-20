@@ -11,9 +11,10 @@ type Validator interface {
 }
 
 type CommandExecutor interface {
-	Transfer(ObjectFinder, transfer Transfer) error
+	SetFactory(factory ModelFactory)
+	Transfer(ObjectFinder, Transfer) error
 }
 
 type CommandValidator interface {
-	Transfer(ObjectFinder, transfer Transfer) error
+	Transfer(ObjectFinder, Transfer) error
 }

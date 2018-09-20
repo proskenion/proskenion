@@ -23,7 +23,7 @@ var (
 	ErrCommitLoadTxHistory = errors.Errorf("Failed Commit Load TxHistory")
 )
 
-func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor) core.Commit {
+func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor) core.CommitSystem {
 	return &CommitSystem{dba, factory, cryptor, 0, nil}
 }
 
@@ -81,7 +81,7 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 
 	for _, tx := range txList.List() {
 		for _, cmd := range tx.GetPayload().GetCommands() {
-			if err := cmd.GetTransfer().Execute(); err != nil {
+			if err := cmd.Execute(wsv); err != nil {
 				return rollBackTx(dtx, err)
 			}
 		}
