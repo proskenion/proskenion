@@ -18,6 +18,15 @@ func NewBlockchain(dba core.DBA, factory model.ModelFactory) core.Blockchain {
 	return &Blockchain{dba, factory, nil, 0}
 }
 
+func (b *Blockchain) Get(blockHash model.Hash) (model.Block, bool) {
+	retBlock := b.factory.NewEmptyBlock()
+	err := b.dba.Load(blockHash, retBlock)
+	if err != nil {
+		return nil, false
+	}
+	return retBlock, true
+}
+
 func (b *Blockchain) Top() (model.Block, bool) {
 	if b.top == nil {
 		return nil, false

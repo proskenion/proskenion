@@ -72,11 +72,18 @@ func (p *BlockPayload) GetPreBlockHash() model.Hash {
 	return p.Block_Payload.GetPreBlockHash()
 }
 
-func (p *BlockPayload) GetMerkleHash() model.Hash {
+func (p *BlockPayload) GetWSVHash() model.Hash {
 	if p.Block_Payload == nil {
 		return nil
 	}
-	return p.Block_Payload.GetMerkleHash()
+	return p.Block_Payload.GetWsvHash()
+}
+
+func (p *BlockPayload) GetTxHistoryHash() model.Hash {
+	if p.Block_Payload == nil {
+		return nil
+	}
+	return p.Block_Payload.GetTxHistoryHash()
 }
 
 func (p *BlockPayload) GetTxsHash() model.Hash {

@@ -18,9 +18,10 @@ message Block {
         int64 Height = 1;
         bytes preBlockHash = 2;
         int64 createdTime = 3;
-        bytes merkleHash = 4;
-        bytes txsHash = 5;
-        int32 round = 6;
+        bytes wsvHash = 4;
+        bytes txHistoryHash = 5;
+        bytes txsHash = 6;
+        int32 round = 7;
     }
     Payload payload = 1;
     Signature signature = 3;
