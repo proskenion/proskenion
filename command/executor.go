@@ -19,10 +19,11 @@ func (c *CommandExecutor) SetFactory(factory model.ModelFactory) {
 	c.factory = factory
 }
 
-func (c *CommandExecutor) Transfer(wsv model.ObjectFinder, transfer model.Transfer) error {
+func (c *CommandExecutor) Transfer(wsv model.ObjectFinder, cmd model.Command) error {
+	transfer := cmd.GetTransfer()
 	srcAccount := c.factory.NewEmptyAccount()
 	destAccount := c.factory.NewEmptyAccount()
-	if err := wsv.Query(transfer.GetSrcAccountId(), srcAccount); err != nil {
+	if err := wsv.Query(cmd.GetTargetId(), srcAccount); err != nil {
 		return errors.Wrap(core.ErrCommandExecutorTransferNotFoundSrcAccountId, err.Error())
 	}
 	if err := wsv.Query(transfer.GetDestAccountId(), destAccount); err != nil {
@@ -44,16 +45,17 @@ func (c *CommandExecutor) Transfer(wsv model.ObjectFinder, transfer model.Transf
 		destAccount.GetPublicKeys(),
 		destAccount.GetAmount()+transfer.GetAmount(),
 	)
-	if err := wsv.Append(transfer.GetSrcAccountId(), newSrcAccount); err != nil {
+	if err := wsv.Append(newSrcAccount.GetAccountId(), newSrcAccount); err != nil {
 		return err
 	}
-	if err := wsv.Append(transfer.GetDestAccountId(), newDestAccount); err != nil {
+	if err := wsv.Append(newDestAccount.GetAccountId(), newDestAccount); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, ca model.CreateAccount) error {
+func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
+	ca := cmd.GetCreateAccount()
 	newAccount := c.factory.NewAccount(ca.GetAccountId(), ca.GetAccountId(), make([]model.PublicKey, 0), 0)
 	ac := c.factory.NewEmptyAccount()
 	if err := wsv.Query(ca.GetAccountId(), ac); err == nil {
@@ -68,12 +70,13 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, ca model.CreateA
 	return nil
 }
 
-func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, aa model.AddAsset) error {
+func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, cmd model.Command) error {
+	aa := cmd.GetAddAsset()
 	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(aa.GetAccountId(), ac); err != nil {
+	if err := wsv.Query(cmd.GetTargetId(), ac); err != nil {
 		return errors.Wrapf(core.ErrCommandExecutorAddAssetNotExistAccount, err.Error())
 	}
-	if ac.GetAccountId() != aa.GetAccountId() {
+	if ac.GetAccountId() != cmd.GetTargetId() {
 		return core.ErrCommandExecutorAddAssetNotExistAccount
 	}
 	newAc := c.factory.NewAccount(

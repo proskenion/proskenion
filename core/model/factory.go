@@ -38,6 +38,8 @@ type BlockBuilder interface {
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
 	Transfer(srcAccountId string, destAccountId string, amount int64) TxBuilder
+	CreateAccount(authorizerId string, accountId string) TxBuilder
+	AddAsset(accountId string, amount int64) TxBuilder
 	Build() Transaction
 }
 

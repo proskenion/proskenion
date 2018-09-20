@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -34,7 +33,6 @@ func TargetIdToKey(id string) []byte {
 	for _, c := range id {
 		ret = append(ret, byte(c-'a'))
 	}
-	fmt.Println(ret)
 	return ret
 }
 

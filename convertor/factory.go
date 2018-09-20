@@ -188,11 +188,40 @@ func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, amount i
 		&proskenion.Command{
 			Command: &proskenion.Command_Transfer{
 				Transfer: &proskenion.Transfer{
-					SrcAccountId:  srcAccountId,
 					DestAccountId: destAccountId,
 					Amount:        amount,
 				},
 			},
+			TargetId:     srcAccountId,
+			AuthorizerId: srcAccountId,
+		})
+	return t
+}
+
+func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_CreateAccount{
+				CreateAccount: &proskenion.CreateAccount{
+					AccountId: accountId,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) AddAsset(accountId string, amount int64) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddAsset{
+				AddAsset: &proskenion.AddAsset{
+					Amount: amount,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: accountId,
 		})
 	return t
 }

@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -41,7 +40,6 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 	}
 
 	for i, ac := range acs {
-		fmt.Println("==upserts", i)
 		test_WSV_Upserts(t, wsv, ids[i], ac)
 	}
 	require.NoError(t, wsv.Commit())

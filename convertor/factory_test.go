@@ -137,11 +137,24 @@ func TestTxModelBuilder(t *testing.T) {
 		txBuilder := NewTestFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
 			Transfer("a", "b", 10).
+			CreateAccount("x", "y").
+			AddAsset("w", 10).
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
-		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTransfer().GetSrcAccountId())
+
+		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
+		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransfer().GetDestAccountId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetAmount())
+
+		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
+		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
+		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetCreateAccount().GetAccountId())
+
+		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
+		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetAmount())
+
 	})
 }
 

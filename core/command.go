@@ -32,13 +32,13 @@ var (
 
 type CommandExecutor interface {
 	SetFactory(factory ModelFactory)
-	Transfer(ObjectFinder, Transfer) error
-	CreateAccount(ObjectFinder, CreateAccount) error
-	AddAsset(ObjectFinder, AddAsset) error
+	Transfer(ObjectFinder, Command) error
+	CreateAccount(ObjectFinder, Command) error
+	AddAsset(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
-	Transfer(ObjectFinder, Transfer) error
-	CreateAccount(ObjectFinder, CreateAccount) error
-	AddAsset(ObjectFinder, AddAsset) error
+	Transfer(ObjectFinder, Command) error
+	CreateAccount(ObjectFinder, Command) error
+	AddAsset(ObjectFinder, Command) error
 }
