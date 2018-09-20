@@ -94,8 +94,6 @@ type TxHistory interface {
 type Blockchain interface {
 	// blockHash を指定して Block を取得
 	Get(blockHash Hash) (Block, bool)
-	Top() (Block, bool)
 	// Commit block
-	Commit(block Block) error
-	VerifyCommit(block Block) error
+	Append(block Block) error
 }

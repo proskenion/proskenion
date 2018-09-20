@@ -10,9 +10,11 @@ import (
 
 type CommitSystem struct {
 	dba     core.DBA
-	bc      core.Blockchain
 	factory model.ModelFactory
 	cryptor core.Cryptor
+
+	height int64
+	top    model.Block
 }
 
 var (
@@ -21,8 +23,22 @@ var (
 	ErrCommitLoadTxHistory = errors.Errorf("Failed Commit Load TxHistory")
 )
 
-func NewCommitSystem(bc core.Blockchain) core.Commit {
-	return &CommitSystem{bc}
+func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor) core.Commit {
+	return &CommitSystem{dba, factory, cryptor, 0, nil}
+}
+
+func rollBackTx(tx core.DBATx, mtErr error) error {
+	if err := tx.Rollback(); err != nil {
+		return errors.Wrap(err, mtErr.Error())
+	}
+	return mtErr
+}
+
+func commitTx(tx core.DBATx) error {
+	if err := tx.Commit(); err != nil {
+		return rollBackTx(tx, err)
+	}
+	return nil
 }
 
 // Stateless Validate
@@ -42,16 +58,18 @@ func (c *CommitSystem) VerifyCommit(block model.Block, txList core.TxList) error
 }
 
 func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
-	preBlock, ok := c.bc.Get(block.GetPayload().GetPreBlockHash())
+	dtx, err := c.dba.Begin()
+	if err != nil {
+		return err
+	}
+
+	bc := repository.NewBlockchain(dtx, c.factory)
+	preBlock, ok := bc.Get(block.GetPayload().GetPreBlockHash())
 	if !ok {
 		return errors.Wrap(ErrCommitLoadPreBlock,
 			errors.Errorf("not found hash: %x", block.GetPayload().GetPreBlockHash()).Error())
 	}
 
-	dtx, err := c.dba.Begin()
-	if err != nil {
-		return err
-	}
 	wsv, err := repository.NewWSV(dtx, c.cryptor, preBlock.GetPayload().GetWSVHash())
 	if err != nil {
 		return errors.Wrap(ErrCommitLoadWSV, err.Error())
@@ -60,10 +78,16 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 	if err != nil {
 		return errors.Wrap(ErrCommitLoadTxHistory, err.Error())
 	}
+
 	for _, tx := range txList.List() {
 		for _, cmd := range tx.GetPayload().GetCommands() {
-			cmd.GetTransfer().Execute()
+			if err := cmd.GetTransfer().Execute(); err != nil {
+				return rollBackTx(dtx, err)
+			}
+		}
+		if err := txHistory.Append(tx); err != nil {
+			return rollBackTx(dtx, err)
 		}
 	}
-	return nil
+	return commitTx(dtx)
 }
