@@ -18,3 +18,18 @@ message Transfer {
     string destAccountId = 2;
     int64 amount = 3;
 }
+
+/**
+ * CerateAccount は アカウントの生成を行う。
+ **/
+message CreateAccount {
+    string accountId = 1;
+}
+
+/**
+ * AddPublicKey はアカウントに鍵を追加する。
+ **/
+message AddPublicKey {
+    string accountId = 1;
+    bytes publicKey = 2;
+}
