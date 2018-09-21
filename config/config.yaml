@@ -3,3 +3,4 @@ db:
  path: database
  kind: sqlite3
  name: db
+proposal_txs_limits: 1000

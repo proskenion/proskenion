@@ -97,3 +97,9 @@ type Blockchain interface {
 	// Commit block
 	Append(block Block) error
 }
+
+// 提案された Transaction を保持する Queue
+type ProposalTxQueue interface {
+	Push(tx Transaction) error
+	Pop() (Transaction, bool)
+}

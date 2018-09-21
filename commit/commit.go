@@ -120,6 +120,7 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 }
 
 // CreateBlock
+/*
 func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	var err error
 	wsvHash := model.Hash(nil)
@@ -147,3 +148,4 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	// ProposalTxQueue から valid な Tx をとってきて hoge る
 
 }
+*/
