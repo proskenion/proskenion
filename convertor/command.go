@@ -17,6 +17,10 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 	switch x := c.GetCommand().(type) {
 	case *proskenion.Command_Transfer:
 		return c.executor.Transfer(wsv, c)
+	case *proskenion.Command_AddAsset:
+		return c.executor.AddAsset(wsv, c)
+	case *proskenion.Command_CreateAccount:
+		return c.executor.CreateAccount(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -26,6 +30,10 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 	switch x := c.GetCommand().(type) {
 	case *proskenion.Command_Transfer:
 		return c.validator.Transfer(wsv, c)
+	case *proskenion.Command_AddAsset:
+		return c.validator.AddAsset(wsv, c)
+	case *proskenion.Command_CreateAccount:
+		return c.validator.CreateAccount(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}

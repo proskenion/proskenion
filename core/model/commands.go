@@ -17,9 +17,7 @@ type Transfer interface {
 	GetAmount() int64
 }
 
-type CreateAccount interface {
-	GetAccountId() string
-}
+type CreateAccount interface {}
 
 type AddAsset interface {
 	GetAmount() int64

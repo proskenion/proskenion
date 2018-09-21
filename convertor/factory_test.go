@@ -149,7 +149,6 @@ func TestTxModelBuilder(t *testing.T) {
 
 		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
 		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
-		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetCreateAccount().GetAccountId())
 
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())

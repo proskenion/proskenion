@@ -24,11 +24,9 @@ message Transfer {
 }
 
 /**
- * CerateAccount は アカウントの生成を行う。
+ * CerateAccount は TargetId の アカウントの生成を行う。
  **/
-message CreateAccount {
-    string accountId = 1;
-}
+message CreateAccount {}
 
 /**
  * AddAsset は targetId の amount を増やす。
@@ -38,7 +36,7 @@ message AddAsset {
 }
 
 /**
- * AddPublicKey はアカウントに鍵を追加する。
+ * AddPublicKey は TragetId アカウントに鍵を追加する。
  *
 message AddPublicKey {
     string accountId = 1;

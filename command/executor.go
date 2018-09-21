@@ -55,16 +55,15 @@ func (c *CommandExecutor) Transfer(wsv model.ObjectFinder, cmd model.Command) er
 }
 
 func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
-	ca := cmd.GetCreateAccount()
-	newAccount := c.factory.NewAccount(ca.GetAccountId(), ca.GetAccountId(), make([]model.PublicKey, 0), 0)
+	newAccount := c.factory.NewAccount(cmd.GetTargetId(), cmd.GetTargetId(), make([]model.PublicKey, 0), 0)
 	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(ca.GetAccountId(), ac); err == nil {
-		if ac.GetAccountId() == ca.GetAccountId() {
+	if err := wsv.Query(cmd.GetTargetId(), ac); err == nil {
+		if ac.GetAccountId() == cmd.GetTargetId() {
 			return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
-				fmt.Errorf("already exist accountId : %s", ca.GetAccountId()).Error())
+				fmt.Errorf("already exist accountId : %s", cmd.GetTargetId()).Error())
 		}
 	}
-	if err := wsv.Append(ca.GetAccountId(), newAccount); err != nil {
+	if err := wsv.Append(cmd.GetTargetId(), newAccount); err != nil {
 		return err
 	}
 	return nil
@@ -85,7 +84,7 @@ func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, cmd model.Command) er
 		ac.GetPublicKeys(),
 		ac.GetAmount()+aa.GetAmount(),
 	)
-	if err := wsv.Query(newAc.GetAccountId(), newAc); err != nil {
+	if err := wsv.Append(newAc.GetAccountId(), newAc); err != nil {
 		return err
 	}
 	return nil

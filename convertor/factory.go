@@ -202,9 +202,7 @@ func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.T
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_CreateAccount{
-				CreateAccount: &proskenion.CreateAccount{
-					AccountId: accountId,
-				},
+				CreateAccount: &proskenion.CreateAccount{},
 			},
 			TargetId:     accountId,
 			AuthorizerId: authorizerId,
