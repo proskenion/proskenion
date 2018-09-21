@@ -81,6 +81,9 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 
 	for _, tx := range txList.List() {
 		for _, cmd := range tx.GetPayload().GetCommands() {
+			if err := cmd.Validate(wsv); err != nil {
+				return rollBackTx(dtx, err)
+			}
 			if err := cmd.Execute(wsv); err != nil {
 				return rollBackTx(dtx, err)
 			}
