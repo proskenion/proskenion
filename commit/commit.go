@@ -63,6 +63,7 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 		return err
 	}
 
+	// load state
 	bc := repository.NewBlockchain(dtx, c.factory)
 	preBlock, ok := bc.Get(block.GetPayload().GetPreBlockHash())
 	if !ok {
@@ -79,6 +80,7 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 		return errors.Wrap(ErrCommitLoadTxHistory, err.Error())
 	}
 
+	// transactions execute
 	for _, tx := range txList.List() {
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
@@ -92,5 +94,56 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 			return rollBackTx(dtx, err)
 		}
 	}
+
+	// hash check
+	wsvHash, err := wsv.Hash()
+	if err != nil {
+		return rollBackTx(dtx, err)
+	}
+	if !bytes.Equal(block.GetPayload().GetWSVHash(), wsvHash) {
+		return rollBackTx(dtx, errors.Errorf("not equaled wsv Hash : %x", wsvHash))
+	}
+	txHistoryHash, err := txHistory.Hash()
+	if err != nil {
+		return rollBackTx(dtx, err)
+	}
+	if !bytes.Equal(block.GetPayload().GetTxHistoryHash(), txHistoryHash) {
+		return rollBackTx(dtx, errors.Errorf("not equaled txHistory Hash : %x", txHistoryHash))
+	}
+
+	// top ブロックを更新
+	if c.height < block.GetPayload().GetHeight() {
+		c.height = block.GetPayload().GetHeight()
+		c.top = block
+	}
 	return commitTx(dtx)
+}
+
+// CreateBlock
+func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
+	var err error
+	wsvHash := model.Hash(nil)
+	txHistoryHash := model.Hash(nil)
+	if c.top != nil {
+		wsvHash = c.top.GetPayload().GetWSVHash()
+		txHistoryHash = c.top.GetPayload().GetTxHistoryHash()
+	}
+
+	dtx, err := c.dba.Begin()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// load state
+	wsv, err := repository.NewWSV(dtx, c.cryptor, wsvHash)
+	if err != nil {
+		return nil, nil, errors.Wrap(ErrCommitLoadWSV, err.Error())
+	}
+	txHistory, err := repository.NewTxHistory(dtx, c.factory, c.cryptor, txHistoryHash)
+	if err != nil {
+		return nil, nil, errors.Wrap(ErrCommitLoadTxHistory, err.Error())
+	}
+
+	// ProposalTxQueue から valid な Tx をとってきて hoge る
+
 }
