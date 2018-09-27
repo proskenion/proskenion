@@ -26,3 +26,7 @@ func (t *TxList) Top() model.Hash {
 func (t *TxList) List() []model.Transaction {
 	return t.txs
 }
+
+func (t *TxList) Size() int {
+	return len(t.txs)
+}

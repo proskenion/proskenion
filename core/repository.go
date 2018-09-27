@@ -25,6 +25,7 @@ type TxList interface {
 	Push(tx Transaction) error
 	Top() Hash
 	List() []Transaction
+	Size() int
 }
 
 type KVNode interface {
