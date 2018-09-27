@@ -101,5 +101,6 @@ type Blockchain interface {
 // 提案された Transaction を保持する Queue
 type ProposalTxQueue interface {
 	Push(tx Transaction) error
+	Erase(hash Hash) error
 	Pop() (Transaction, bool)
 }

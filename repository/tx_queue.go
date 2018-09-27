@@ -17,16 +17,22 @@ var (
 type ProposalTxQueueOnMemory struct {
 	mutex  *sync.Mutex
 	limit  int
-	queue  []model.Transaction
-	findTx map[string]model.Transaction
+	queue  map[uint64]model.Transaction
+	findTx map[string]uint64
+	head   uint64
+	tail   uint64
+	middle uint64
 }
 
 func NewProposalTxQueueOnMemory(conf *config.Config) core.ProposalTxQueue {
 	return &ProposalTxQueueOnMemory{
 		new(sync.Mutex),
 		conf.ProposalTxsLimits,
-		make([]model.Transaction, 0, conf.ProposalTxsLimits),
-		make(map[string]model.Transaction),
+		make(map[uint64]model.Transaction),
+		make(map[string]uint64),
+		0,
+		0,
+		0,
 	}
 }
 
@@ -45,9 +51,10 @@ func (q *ProposalTxQueueOnMemory) Push(tx model.Transaction) error {
 	if _, ok := q.findTx[string(hash)]; ok {
 		return errors.Wrapf(ErrProposalTxQueueAlreadyExistTx, "already tx : %x, push to proposal tx queue", hash)
 	}
-	if len(q.queue) < q.limit {
-		q.findTx[string(hash)] = tx
-		q.queue = append(q.queue, tx)
+	if q.tail-q.head-q.middle < uint64(q.limit) {
+		q.findTx[string(hash)] = q.tail
+		q.queue[q.tail] = tx
+		q.tail++
 	} else {
 		//log.Print(ErrProposalTxQueueLimits, "queue's max length: %d", q.limit)
 		return errors.Wrapf(ErrProposalTxQueueLimits, "queue's max length: %d", q.limit)
@@ -59,15 +66,34 @@ func (q *ProposalTxQueueOnMemory) Pop() (model.Transaction, bool) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	if len(q.queue) == 0 {
-		return nil, false
+	for len(q.findTx) != 0 {
+		tx, ok := q.queue[q.head]
+		if ok {
+			txHash, err := tx.Hash()
+			if err != nil {
+				return nil, false
+			}
+			delete(q.findTx, string(txHash))
+			delete(q.queue, q.head)
+			q.head++
+			return tx, true
+		}
+		q.middle--
+		q.head++
 	}
-	front := q.queue[0]
-	frontHash, err := front.Hash()
-	if err != nil {
-		return nil, false
+	return nil, false
+}
+
+func (q *ProposalTxQueueOnMemory) Erase(hash model.Hash) error {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	if id, ok := q.findTx[string(hash)]; ok {
+		delete(q.queue, id)
+		delete(q.findTx, string(hash))
+		q.middle++
+	} else {
+		return errors.Errorf("unexist tx's hash %x", hash)
 	}
-	delete(q.findTx, string(frontHash))
-	q.queue = q.queue[1:]
-	return front, true
+	return nil
 }

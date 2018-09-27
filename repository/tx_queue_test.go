@@ -75,6 +75,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 		err = queue.Push(tx)
 		assert.EqualError(t, errors.Cause(err), ErrProposalTxQueueAlreadyExistTx.Error())
 	})
+
 }
 
 func TestProposalTxQueueOnMemory(t *testing.T) {
