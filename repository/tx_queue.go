@@ -12,6 +12,7 @@ var (
 	ErrProposalTxQueueLimits         = errors.Errorf("PropposalTxQueue run limit reached")
 	ErrProposalTxQueueAlreadyExistTx = errors.Errorf("Failed Push Already Exist Tx")
 	ErrProposalTxQueuePush           = errors.Errorf("Failed ProposalTxQueue Push")
+	ErrProposalTxQueueEraseUnexistTx = errors.Errorf("Faield Erase Unexist Transaction")
 )
 
 type ProposalTxQueueOnMemory struct {
@@ -93,7 +94,7 @@ func (q *ProposalTxQueueOnMemory) Erase(hash model.Hash) error {
 		delete(q.findTx, string(hash))
 		q.middle++
 	} else {
-		return errors.Errorf("unexist tx's hash %x", hash)
+		return errors.Wrapf(ErrProposalTxQueueEraseUnexistTx, "unexist tx's hash %x", hash)
 	}
 	return nil
 }
