@@ -3,6 +3,7 @@ package test_utils
 import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/repository"
 	"math/rand"
 )
 
@@ -39,4 +40,17 @@ func RandomStrKey() []byte {
 		ret[i] = byte(rand.Intn(26))
 	}
 	return ret
+}
+
+func RandomQueue() core.ProposalTxQueue {
+	config := NewTestConfig()
+	queue := repository.NewProposalTxQueueOnMemory(config)
+	for i := 0; i < 100; i++ {
+		tx := RandomValidTx()
+		err := queue.Push(tx)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return queue
 }

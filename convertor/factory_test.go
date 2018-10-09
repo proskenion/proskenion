@@ -10,20 +10,22 @@ import (
 
 func TestBlockFactory(t *testing.T) {
 	for _, c := range []struct {
-		name                 string
-		expectedHeight       int64
-		expectedPreBlockHash model.Hash
-		expectedCreatedTime  int64
-		expectedMerkleHash   model.Hash
-		expectedTxsHash      model.Hash
-		expectedRound        int32
+		name                  string
+		expectedHeight        int64
+		expectedPreBlockHash  model.Hash
+		expectedCreatedTime   int64
+		expectedWSVHash       model.Hash
+		expectedTxHistoryHash model.Hash
+		expectedTxsHash       model.Hash
+		expectedRound         int32
 	}{
 		{
 			"case 1",
 			10,
 			model.Hash("preBlockHash"),
 			5,
-			model.Hash("merkleHash"),
+			model.Hash("WSVHash"),
+			model.Hash("TxHistoryHash"),
 			model.Hash("txHash"),
 			1,
 		},
@@ -32,7 +34,8 @@ func TestBlockFactory(t *testing.T) {
 			999999999999,
 			model.Hash("preBlockHash"),
 			0,
-			model.Hash("merkleHash"),
+			model.Hash("WSVHash"),
+			model.Hash("TxHistoryHash"),
 			model.Hash("txHash"),
 			1,
 		},
@@ -41,6 +44,7 @@ func TestBlockFactory(t *testing.T) {
 			0,
 			nil,
 			999999999999,
+			nil,
 			nil,
 			nil,
 			0,
@@ -52,18 +56,26 @@ func TestBlockFactory(t *testing.T) {
 			-1,
 			nil,
 			nil,
+			nil,
 			-1111111,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			block := NewTestFactory().
-				NewBlock(c.expectedHeight, c.expectedPreBlockHash,
-					c.expectedCreatedTime, c.expectedMerkleHash,
-					c.expectedTxsHash, c.expectedRound)
+				NewBlockBuilder().
+				Height(c.expectedHeight).
+				PreBlockHash(c.expectedPreBlockHash).
+				CreatedTime(c.expectedCreatedTime).
+				WSVHash(c.expectedWSVHash).
+				TxHistoryHash(c.expectedTxHistoryHash).
+				TxsHash(c.expectedTxsHash).
+				Round(c.expectedRound).
+				Build()
 			assert.Equal(t, c.expectedHeight, block.GetPayload().GetHeight())
 			assert.Equal(t, c.expectedPreBlockHash, block.GetPayload().GetPreBlockHash())
 			assert.Equal(t, c.expectedCreatedTime, block.GetPayload().GetCreatedTime())
-			assert.Equal(t, c.expectedMerkleHash, block.GetPayload().GetMerkleHash())
+			assert.Equal(t, c.expectedWSVHash, block.GetPayload().GetWSVHash())
+			assert.Equal(t, c.expectedTxHistoryHash, block.GetPayload().GetTxHistoryHash())
 			assert.Equal(t, c.expectedTxsHash, block.GetPayload().GetTxsHash())
 			assert.Equal(t, c.expectedRound, block.GetPayload().GetRound())
 		})
@@ -125,11 +137,23 @@ func TestTxModelBuilder(t *testing.T) {
 		txBuilder := NewTestFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
 			Transfer("a", "b", 10).
+			CreateAccount("x", "y").
+			AddAsset("w", 10).
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
-		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTransfer().GetSrcAccountId())
+
+		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
+		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransfer().GetDestAccountId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetAmount())
+
+		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
+		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
+
+		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
+		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetAmount())
+
 	})
 }
 

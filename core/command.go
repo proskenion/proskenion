@@ -1,19 +1,44 @@
 package core
 
-import . "github.com/proskenion/proskenion/core/model"
+import (
+	"fmt"
+	. "github.com/proskenion/proskenion/core/model"
+)
 
 type Executor interface {
-	Execute() error
+	Execute(ObjectFinder) error
 }
 
 type Validator interface {
-	Validate() error
+	Validate(ObjectFinder) error
 }
 
+// Transfer Err
+var (
+	ErrCommandExecutorTransferNotFoundSrcAccountId      = fmt.Errorf("Failed Command Executor Transfer Can Not Load SrcAccounId")
+	ErrCommandExecutorTransferNotFoundDestAccountId     = fmt.Errorf("Failed Command Executor Transfer Can Not Load DestAccounId")
+	ErrCommandExecutorTransferNotEnoughSrcAccountAmount = fmt.Errorf("Failed Command Executor Transfer Not Enough SrcAccount Amount")
+)
+
+// CreateAccount Err
+var (
+	ErrCommandExecutorCreateAccountAlreadyExistAccount = fmt.Errorf("Failed Command Executor CreateAccount AlreadyExist AccountId")
+)
+
+// AddAsset Err
+var (
+	ErrCommandExecutorAddAssetNotExistAccount = fmt.Errorf("Failed Command Executor AddAsset Not Exist Account")
+)
+
 type CommandExecutor interface {
-	Transfer(transfer Transfer) error
+	SetFactory(factory ModelFactory)
+	Transfer(ObjectFinder, Command) error
+	CreateAccount(ObjectFinder, Command) error
+	AddAsset(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
-	Transfer(transfer Transfer) error
+	Transfer(ObjectFinder, Command) error
+	CreateAccount(ObjectFinder, Command) error
+	AddAsset(ObjectFinder, Command) error
 }

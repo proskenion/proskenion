@@ -20,6 +20,14 @@ type MerkleTree interface {
 	Top() Hash
 }
 
+// TxList Wrap MerkleTree
+type TxList interface {
+	Push(tx Transaction) error
+	Top() Hash
+	List() []Transaction
+	Size() int
+}
+
 type KVNode interface {
 	// KVNode{key = Key()[cnt:], value=value}
 	Next(cnt int) KVNode
@@ -85,8 +93,15 @@ type TxHistory interface {
 
 // BlockChain
 type Blockchain interface {
-	Top() (Block, bool)
+	// blockHash を指定して Block を取得
+	Get(blockHash Hash) (Block, bool)
 	// Commit block
-	Commit(block Block) error
-	VerifyCommit(block Block) error
+	Append(block Block) error
+}
+
+// 提案された Transaction を保持する Queue
+type ProposalTxQueue interface {
+	Push(tx Transaction) error
+	Erase(hash Hash) error
+	Pop() (Transaction, bool)
 }

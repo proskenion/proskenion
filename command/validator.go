@@ -11,7 +11,13 @@ func NewCommandValidator() core.CommandValidator {
 	return &CommandValidator{}
 }
 
-// WIP
-func (c *CommandValidator) Transfer(transfer model.Transfer) error {
+func (c *CommandValidator) Transfer(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+func (c *CommandValidator) AddAsset(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }

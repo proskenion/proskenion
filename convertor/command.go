@@ -1,6 +1,7 @@
 package convertor
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
@@ -12,23 +13,40 @@ type Command struct {
 	validator core.CommandValidator
 }
 
-func (c *Command) GetTransfer() model.Transfer {
-	if c.Command != nil {
-		return &Transfer{c.Command.GetTransfer(), c.executor, c.validator}
+func (c *Command) Execute(wsv model.ObjectFinder) error {
+	switch x := c.GetCommand().(type) {
+	case *proskenion.Command_Transfer:
+		return c.executor.Transfer(wsv, c)
+	case *proskenion.Command_AddAsset:
+		return c.executor.AddAsset(wsv, c)
+	case *proskenion.Command_CreateAccount:
+		return c.executor.CreateAccount(wsv, c)
+	default:
+		return fmt.Errorf("Command has unexpected type %T", x)
 	}
-	return &Transfer{nil, c.executor, c.validator}
 }
 
-type Transfer struct {
-	*proskenion.Transfer
-	executor  core.CommandExecutor
-	validator core.CommandValidator
+func (c *Command) Validate(wsv model.ObjectFinder) error {
+	switch x := c.GetCommand().(type) {
+	case *proskenion.Command_Transfer:
+		return c.validator.Transfer(wsv, c)
+	case *proskenion.Command_AddAsset:
+		return c.validator.AddAsset(wsv, c)
+	case *proskenion.Command_CreateAccount:
+		return c.validator.CreateAccount(wsv, c)
+	default:
+		return fmt.Errorf("Command has unexpected type %T", x)
+	}
 }
 
-func (c *Transfer) Execute() error {
-	return c.executor.Transfer(c)
+func (c *Command) GetTransfer() model.Transfer {
+	return c.Command.GetTransfer()
 }
 
-func (c *Transfer) Validate() error {
-	return c.validator.Transfer(c)
+func (c *Command) GetCreateAccount() model.CreateAccount {
+	return c.Command.GetCreateAccount()
+}
+
+func (c *Command) GetAddAsset() model.AddAsset {
+	return c.Command.GetAddAsset()
 }

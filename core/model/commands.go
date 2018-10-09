@@ -1,13 +1,24 @@
 package model
 
 type Command interface {
+	GetAuthorizerId() string
+	GetTargetId() string
+
 	GetTransfer() Transfer
+	GetCreateAccount() CreateAccount
+	GetAddAsset() AddAsset
+
+	Execute(ObjectFinder) error
+	Validate(ObjectFinder) error
 }
 
 type Transfer interface {
-	GetSrcAccountId() string
 	GetDestAccountId() string
 	GetAmount() int64
-	Execute() error
-	Validate() error
+}
+
+type CreateAccount interface {}
+
+type AddAsset interface {
+	GetAmount() int64
 }

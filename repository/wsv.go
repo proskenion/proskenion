@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -32,9 +31,8 @@ func TargetIdToKey(id string) []byte {
 	ret := make([]byte, 1)
 	ret[0] = WSV_ROOT_KEY
 	for _, c := range id {
-		ret = append(ret, byte(c-'a'))
+		ret = append(ret, byte(c))
 	}
-	fmt.Println(ret)
 	return ret
 }
 

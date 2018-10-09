@@ -8,15 +8,15 @@ import (
 	"sync"
 )
 
-type DBAnMemory struct {
+type DBOnMemory struct {
 	dba map[string]DBA
 }
 
-func NewDBAnMemory() DB {
-	return &DBAnMemory{make(map[string]DBA)}
+func NewDBOnMemory() DB {
+	return &DBOnMemory{make(map[string]DBA)}
 }
 
-func (db *DBAnMemory) DBA(table string) DBA {
+func (db *DBOnMemory) DBA(table string) DBA {
 	if _, ok := db.dba[table]; !ok {
 		db.dba[table] = NewDBAOnMemory()
 	}

@@ -8,10 +8,10 @@ var (
 )
 
 type ModelFactory interface {
-	NewBlock(height int64, preBlockHash Hash, createdTime int64, merkleHash Hash, txsHash Hash, round int32) Block
 	NewSignature(pubkey PublicKey, signature []byte) Signature
 	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
 	NewPeer(address string, pubkey PublicKey) Peer
+	NewBlockBuilder() BlockBuilder
 	NewTxBuilder() TxBuilder
 	NewQueryBuilder() QueryBuilder
 	NewQueryResponseBuilder() QueryResponseBuilder
@@ -24,9 +24,22 @@ type ModelFactory interface {
 	NewEmptyQueryResponse() QueryResponse
 }
 
+type BlockBuilder interface {
+	Height(int64) BlockBuilder
+	PreBlockHash(Hash) BlockBuilder
+	CreatedTime(int64) BlockBuilder
+	WSVHash(Hash) BlockBuilder
+	TxHistoryHash(Hash) BlockBuilder
+	TxsHash(Hash) BlockBuilder
+	Round(int32) BlockBuilder
+	Build() Block
+}
+
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
 	Transfer(srcAccountId string, destAccountId string, amount int64) TxBuilder
+	CreateAccount(authorizerId string, accountId string) TxBuilder
+	AddAsset(accountId string, amount int64) TxBuilder
 	Build() Transaction
 }
 

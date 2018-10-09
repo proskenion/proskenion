@@ -15,8 +15,11 @@ type ModelFactory struct {
 
 func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
-	cmdValidator core.CommandValidator, queryValidator core.QueryValidator) model.ModelFactory {
-	return &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
+	cmdValidator core.CommandValidator,
+	queryValidator core.QueryValidator) model.ModelFactory {
+	factory := &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
+	executor.SetFactory(factory)
+	return factory
 }
 
 func (f *ModelFactory) NewEmptyBlock() model.Block {
@@ -55,26 +58,6 @@ func (f *ModelFactory) NewEmptyQueryResponse() model.QueryResponse {
 	return f.NewQueryResponseBuilder().Build()
 }
 
-func (f *ModelFactory) NewBlock(height int64,
-	preBlockHash model.Hash, createdTime int64,
-	merkleHash model.Hash, txsHash model.Hash,
-	round int32) model.Block {
-	return &Block{
-		&proskenion.Block{
-			Payload: &proskenion.Block_Payload{
-				Height:       height,
-				PreBlockHash: preBlockHash,
-				CreatedTime:  createdTime,
-				MerkleHash:   merkleHash,
-				TxsHash:      txsHash,
-				Round:        round,
-			},
-			Signature: &proskenion.Signature{},
-		},
-		f.cryptor,
-	}
-}
-
 func (f *ModelFactory) NewSignature(pubkey model.PublicKey, signature []byte) model.Signature {
 	return &Signature{
 		&proskenion.Signature{
@@ -103,6 +86,16 @@ func (f *ModelFactory) NewPeer(address string, pubkey model.PublicKey) model.Pee
 			Address:   address,
 			PublicKey: []byte(pubkey),
 		},
+	}
+}
+
+func (f *ModelFactory) NewBlockBuilder() model.BlockBuilder {
+	return &BlockBuilder{
+		&proskenion.Block{
+			Payload:   &proskenion.Block_Payload{},
+			Signature: &proskenion.Signature{},
+		},
+		f.cryptor,
 	}
 }
 
@@ -139,6 +132,45 @@ func (f *ModelFactory) NewQueryResponseBuilder() model.QueryResponseBuilder {
 	}
 }
 
+type BlockBuilder struct {
+	*proskenion.Block
+	cryptor core.Cryptor
+}
+
+func (b *BlockBuilder) Height(height int64) model.BlockBuilder {
+	b.Block.Payload.Height = height
+	return b
+}
+func (b *BlockBuilder) PreBlockHash(hash model.Hash) model.BlockBuilder {
+	b.Block.Payload.PreBlockHash = hash
+	return b
+}
+func (b *BlockBuilder) CreatedTime(time int64) model.BlockBuilder {
+	b.Block.Payload.CreatedTime = time
+	return b
+}
+func (b *BlockBuilder) WSVHash(hash model.Hash) model.BlockBuilder {
+	b.Block.Payload.WsvHash = hash
+	return b
+}
+func (b *BlockBuilder) TxHistoryHash(hash model.Hash) model.BlockBuilder {
+	b.Block.Payload.TxHistoryHash = hash
+	return b
+}
+func (b *BlockBuilder) TxsHash(hash model.Hash) model.BlockBuilder {
+	b.Block.Payload.TxsHash = hash
+	return b
+}
+
+func (b *BlockBuilder) Round(round int32) model.BlockBuilder {
+	b.Block.Payload.Round = round
+	return b
+}
+
+func (b *BlockBuilder) Build() model.Block {
+	return &Block{b.Block, b.cryptor}
+}
+
 type TxBuilder struct {
 	*proskenion.Transaction
 	cryptor   core.Cryptor
@@ -156,11 +188,38 @@ func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, amount i
 		&proskenion.Command{
 			Command: &proskenion.Command_Transfer{
 				Transfer: &proskenion.Transfer{
-					SrcAccountId:  srcAccountId,
 					DestAccountId: destAccountId,
 					Amount:        amount,
 				},
 			},
+			TargetId:     srcAccountId,
+			AuthorizerId: srcAccountId,
+		})
+	return t
+}
+
+func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_CreateAccount{
+				CreateAccount: &proskenion.CreateAccount{},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) AddAsset(accountId string, amount int64) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddAsset{
+				AddAsset: &proskenion.AddAsset{
+					Amount: amount,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: accountId,
 		})
 	return t
 }

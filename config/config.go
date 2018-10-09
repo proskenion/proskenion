@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	DB DBConfig `yaml:"db"`
+	DB    DBConfig    `yaml:"db"`
+	ProposalTxsLimits int `yaml:"proposal_txs_limits"`
 }
 
 type DBConfig struct {

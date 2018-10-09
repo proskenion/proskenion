@@ -14,7 +14,7 @@ import (
 func TestTransaction_GetHash(t *testing.T) {
 	txs := make([]model.Transaction, 50)
 	for id, _ := range txs {
-		txs[id] = RandomValidTx(t)
+		txs[id] = RandomValidTx()
 	}
 	for id, a := range txs {
 		for jd, b := range txs {
@@ -29,7 +29,7 @@ func TestTransaction_GetHash(t *testing.T) {
 
 func TestTransaction_Verfy(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		tx := RandomValidTx(t)
+		tx := RandomValidTx()
 		assert.NoError(t, tx.Verify())
 	})
 	t.Run("success w valid sign ", func(t *testing.T) {

@@ -5,16 +5,41 @@ package proskenion;
  * Command
  **/
 message Command {
+    string  authorizerId = 1;
+    string targetId = 2;
     oneof command {
-        Transfer transfer = 1;
+        Transfer transfer = 3;
+        CreateAccount createAccount = 4;
+        AddAsset addAsset = 5;
     }
 }
 
 /**
  * Transfer Command は送金を行う。
+ * targetId -> destAccountId
  **/
 message Transfer {
-    string srcAccountId = 1;
     string destAccountId = 2;
     int64 amount = 3;
 }
+
+/**
+ * CerateAccount は TargetId の アカウントの生成を行う。
+ **/
+message CreateAccount {}
+
+/**
+ * AddAsset は targetId の amount を増やす。
+ **/
+message AddAsset {
+    int64 amount = 1;
+}
+
+/**
+ * AddPublicKey は TragetId アカウントに鍵を追加する。
+ *
+message AddPublicKey {
+    string accountId = 1;
+    bytes publicKey = 2;
+}
+ **/
