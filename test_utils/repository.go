@@ -46,7 +46,7 @@ func RandomQueue() core.ProposalTxQueue {
 	config := NewTestConfig()
 	queue := repository.NewProposalTxQueueOnMemory(config)
 	for i := 0; i < 100; i++ {
-		tx := RandomTx()
+		tx := RandomValidTx()
 		err := queue.Push(tx)
 		if err != nil {
 			panic(err)

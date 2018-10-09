@@ -38,16 +38,15 @@ func RandomInvalidSig() model.Signature {
 func RandomTx() model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
 		CreatedTime(rand.Int63()).
-		Transfer(RandomStr(), RandomStr(), rand.Int63()).
+		CreateAccount(RandomStr(), RandomStr()).
 		Build()
 	return tx
 }
 
-func RandomValidTx(t *testing.T) model.Transaction {
+func RandomValidTx() model.Transaction {
 	validPub, validPriv := RandomKeyPairs()
 	tx := RandomTx()
-	err := tx.Sign(validPub, validPriv)
-	require.NoError(t, err)
+	tx.Sign(validPub, validPriv)
 	return tx
 }
 
@@ -60,10 +59,10 @@ func RandomInvalidTx(t *testing.T) model.Transaction {
 	return tx
 }
 
-func RandomValidTxs(t *testing.T) []model.Transaction {
+func RandomValidTxs() []model.Transaction {
 	txs := make([]model.Transaction, 30)
 	for id, _ := range txs {
-		txs[id] = RandomValidTx(t)
+		txs[id] = RandomValidTx()
 	}
 	return txs
 }
@@ -76,8 +75,8 @@ func RandomInvalidTxs(t *testing.T) []model.Transaction {
 	return txs
 }
 
-func RandomTxs(t *testing.T) []model.Transaction {
-	return RandomValidTxs(t)
+func RandomTxs() []model.Transaction {
+	return RandomValidTxs()
 }
 
 func RandomAccount() model.Account {
@@ -88,7 +87,6 @@ func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
 	return NewTestFactory().NewPeer(RandomStr(), pub)
 }
-
 
 /*
 

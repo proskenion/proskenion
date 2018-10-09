@@ -16,11 +16,31 @@ type MerklePatriciaTree struct {
 	root    core.MerklePatriciaNodeIterator
 }
 
+func makeInitializeMerklePatriciaNodeItreator(kvStore core.KeyValueStore, cryptor core.Cryptor, rootKey byte) *MerklePatriciaNodeIterator {
+	return &MerklePatriciaNodeIterator{
+		dba:     kvStore,
+		cryptor: cryptor,
+		node: &MerklePatriciaInternalNode{
+			Key_:      []byte{rootKey},
+			Childs_:   make(map[byte]model.Hash),
+			DataHash_: model.Hash(nil),
+		},
+	}
+}
+
 func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, hash model.Hash, rootKey byte) (core.MerklePatriciaTree, error) {
 	newInternal := &MerklePatriciaNodeIterator{
 		dba:     kvStore,
 		cryptor: cryptor,
 		node:    &MerklePatriciaInternalNode{},
+	}
+	if hash == nil {
+		newInternal = makeInitializeMerklePatriciaNodeItreator(kvStore, cryptor, rootKey)
+		var err error
+		hash, err = newInternal.Hash()
+		if err != nil {
+			return nil, err
+		}
 	}
 	err := kvStore.Load(hash, newInternal)
 	if err != nil {
@@ -29,15 +49,7 @@ func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, has
 		}
 
 		// ROOT Internal Noed
-		newInternal = &MerklePatriciaNodeIterator{
-			dba:     kvStore,
-			cryptor: cryptor,
-			node: &MerklePatriciaInternalNode{
-				Key_:      []byte{rootKey},
-				Childs_:   make(map[byte]model.Hash),
-				DataHash_: model.Hash(nil),
-			},
-		}
+		newInternal = makeInitializeMerklePatriciaNodeItreator(kvStore, cryptor, rootKey)
 		hash, err := newInternal.Hash()
 		if err != nil {
 			return nil, err

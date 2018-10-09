@@ -1,6 +1,7 @@
 package commit_test
 
 import (
+	"fmt"
 	. "github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -19,6 +20,8 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	cs := NewCommitSystem(dba, fc, cryptor, queue, cconf)
 	block, txList, err := cs.CreateBlock()
 	require.NoError(t, err)
+	assert.NoError(t, cs.VerifyCommit(block, txList))
+	assert.NoError(t, cs.Commit(block, txList))
 
 	dba2 := RandomDBA()
 	queue2 := RandomQueue()
@@ -37,6 +40,7 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 
 	blockHash, err := block.Hash()
 	require.NoError(t, err)
+	fmt.Println("blockHash: ", blockHash)
 	b1, ok := bc.Get(blockHash)
 	require.True(t, ok)
 	b2, ok := bc2.Get(blockHash)

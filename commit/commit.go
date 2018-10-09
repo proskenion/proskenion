@@ -76,10 +76,13 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 
 	// load state
 	bc := repository.NewBlockchain(dtx, c.factory)
-	preBlock, ok := bc.Get(block.GetPayload().GetPreBlockHash())
-	if !ok {
-		return errors.Wrap(ErrCommitLoadPreBlock,
-			errors.Errorf("not found hash: %x", block.GetPayload().GetPreBlockHash()).Error())
+	preBlock := c.factory.NewEmptyBlock()
+	if !bytes.Equal(block.GetPayload().GetPreBlockHash(), model.Hash(nil)) {
+		var ok bool
+		if preBlock, ok = bc.Get(block.GetPayload().GetPreBlockHash()); !ok {
+			return errors.Wrap(ErrCommitLoadPreBlock,
+				errors.Errorf("not found hash: %x", block.GetPayload().GetPreBlockHash()).Error())
+		}
 	}
 
 	wsv, err := repository.NewWSV(dtx, c.cryptor, preBlock.GetPayload().GetWSVHash())
@@ -122,6 +125,7 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 		return rollBackTx(dtx, errors.Errorf("not equaled txHistory Hash : %x", txHistoryHash))
 	}
 
+	bc.Append(block)
 	// top ブロックを更新
 	if c.height < block.GetPayload().GetHeight() {
 		c.height = block.GetPayload().GetHeight()
@@ -135,13 +139,14 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	var err error
 	wsvHash := model.Hash(nil)
 	txHistoryHash := model.Hash(nil)
+	topHash := model.Hash(nil)
 	if c.top != nil {
 		wsvHash = c.top.GetPayload().GetWSVHash()
 		txHistoryHash = c.top.GetPayload().GetTxHistoryHash()
-	}
-	topHash, err := c.top.Hash()
-	if err != nil {
-		return nil, nil, err
+		topHash, err = c.top.Hash()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	dtx, err := c.dba.Begin()
@@ -200,6 +205,10 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 		Height(c.height + 1).
 		PreBlockHash(topHash).
 		Build()
+	err = newBlock.Sign(c.property.PublicKey, c.property.PrivateKey)
+	if err != nil {
+		return nil, nil, rollBackTx(dtx, err)
+	}
 
 	bc := repository.NewBlockchain(dtx, c.factory)
 	bc.Append(newBlock)
