@@ -7,4 +7,5 @@ import (
 type CommitSystem interface {
 	VerifyCommit(block Block, txList TxList) error
 	Commit(block Block, txList TxList) error
+	CreateBlock() (Block, TxList, error)
 }

@@ -14,7 +14,7 @@ type CommitSystem struct {
 	factory  model.ModelFactory
 	cryptor  core.Cryptor
 	queue    core.ProposalTxQueue
-	property CommitProperty
+	property *CommitProperty
 
 	height int64
 	top    model.Block
@@ -26,7 +26,7 @@ var (
 	ErrCommitLoadTxHistory = errors.Errorf("Failed Commit Load TxHistory")
 )
 
-func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor, property CommitProperty, queue core.ProposalTxQueue) core.CommitSystem {
+func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor, queue core.ProposalTxQueue, property *CommitProperty) core.CommitSystem {
 	return &CommitSystem{dba, factory, cryptor, queue, property, 0, nil}
 }
 
@@ -131,7 +131,6 @@ func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {
 }
 
 // CreateBlock
-
 func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	var err error
 	wsvHash := model.Hash(nil)
