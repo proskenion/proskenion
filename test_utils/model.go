@@ -88,10 +88,19 @@ func RandomPeer() model.Peer {
 	return NewTestFactory().NewPeer(RandomStr(), pub)
 }
 
+func RandomBlock() model.Block {
+	return NewTestFactory().NewBlockBuilder().
+		Height(rand.Int63()).
+		Round(0).
+		WSVHash(RandomByte()).
+		TxHistoryHash(RandomByte()).
+		PreBlockHash(RandomByte()).
+		CreatedTime(rand.Int63()).
+		TxsHash(RandomByte()).
+		Build()
+}
+
 /*
-
-
-
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {
 	hash, err := hasher.GetHash()
@@ -111,9 +120,6 @@ func RandomInvalidBlock(t *testing.T) model.Block {
 	return block
 }
 
-func RandomBlock(t *testing.T) model.Block {
-	return RandomValidBlock(t)
-}
 
 func ValidSignedBlock(t *testing.T) model.Block {
 	validPub, validPri := convertor.NewKeyPair()

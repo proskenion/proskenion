@@ -69,6 +69,10 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 			return errors.Wrap(core.ErrRepositoryCommitLoadPreBlock,
 				errors.Errorf("not found hash: %x", block.GetPayload().GetPreBlockHash()).Error())
 		}
+	} else {
+		if bc, err = dtx.Blockchain(nil); err != nil {
+			return err
+		}
 	}
 
 	wsv, err := dtx.WSV(preBlock.GetPayload().GetWSVHash())
@@ -111,7 +115,10 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 		return rollBackTx(dtx, errors.Errorf("not equaled txHistory Hash : %x", txHistoryHash))
 	}
 
-	bc.Append(block)
+	// block を追加・
+	if err := bc.Append(block); err != nil {
+		return err
+	}
 	// top ブロックを更新
 	if r.height < block.GetPayload().GetHeight() {
 		r.height = block.GetPayload().GetHeight()
@@ -134,8 +141,8 @@ func (r *RepositoryTx) TxHistory(hash model.Hash) (core.TxHistory, error) {
 	return NewTxHistory(r.tx, r.fc, r.cryptor, hash)
 }
 
-func (r *RepositoryTx) Blockchain(hash model.Hash) (core.Blockchain, error) {
-	return NewBlockchain(r.tx, r.fc, r.cryptor, hash)
+func (r *RepositoryTx) Blockchain(topBlockHash model.Hash) (core.Blockchain, error) {
+	return NewBlockchainFromTopBlock(r.tx, r.fc, r.cryptor, topBlockHash)
 }
 
 func (r *RepositoryTx) Top() (model.Block, error) {
