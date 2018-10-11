@@ -10,8 +10,16 @@ var (
 	ErrInvalidKVNodes                = errors.Errorf("Failed Key Value Nodes Invalid")
 	ErrWSVNotFound                   = errors.Errorf("Failed WSV Query Not Found")
 	ErrWSVQueryUnmarshal             = errors.Errorf("Failed WSV Query Unmarshal")
-	ErrTxHistoryNotFound             = errors.Errorf("Failed WSV Query Not Found")
-	ErrTxHistoryQueryUnmarshal       = errors.Errorf("Failed WSV Query Unmarshal")
+	ErrTxHistoryNotFound             = errors.Errorf("Failed TxHistory Query Not Found")
+	ErrTxHistoryQueryUnmarshal       = errors.Errorf("Failed TxHistory Query Unmarshal")
+	ErrBlockchainNotFound            = errors.Errorf("Failed Blockchain Get Not Found")
+	ErrBlockchainQueryUnmarshal      = errors.Errorf("Failed Blocchain Get Unmarshal")
+)
+
+var (
+	ErrRepositoryCommitLoadPreBlock  = errors.Errorf("Failed Repository Commit Load PreBlockchain")
+	ErrRepositoryCommitLoadWSV       = errors.Errorf("Failed Repository Commit Load WSV")
+	ErrRepositoryCommitLoadTxHistory = errors.Errorf("Failed Repository Commit Load TxHistory")
 )
 
 // Transaction 列の管理
@@ -94,7 +102,7 @@ type TxHistory interface {
 // BlockChain
 type Blockchain interface {
 	// blockHash を指定して Block を取得
-	Get(blockHash Hash) (Block, bool)
+	Get(blockHash Hash) (Block, error)
 	// Commit block
 	Append(block Block) error
 }
@@ -104,4 +112,18 @@ type ProposalTxQueue interface {
 	Push(tx Transaction) error
 	Erase(hash Hash) error
 	Pop() (Transaction, bool)
+}
+
+type Repository interface {
+	Begin() (RepositoryTx, error)
+	Top() (Block, bool)
+	Commit(Block, TxList) error
+}
+
+type RepositoryTx interface {
+	WSV(Hash) (WSV, error)
+	TxHistory(Hash) (TxHistory, error)
+	Blockchain(Hash) (Blockchain, error)
+	Commit() error
+	Rollback() error
 }

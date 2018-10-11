@@ -16,35 +16,38 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	cryptor := RandomCryptor()
 	queue := RandomQueue()
 	cconf := RandomCommitProperty()
+	rp := repository.NewRepository(dba, cryptor, fc)
 
-	cs := NewCommitSystem(dba, fc, cryptor, queue, cconf)
+	cs := NewCommitSystem(dba, fc, cryptor, queue, cconf, rp)
 	block, txList, err := cs.CreateBlock()
 	require.NoError(t, err)
 	assert.NoError(t, cs.VerifyCommit(block, txList))
-	assert.NoError(t, cs.Commit(block, txList))
+	err = cs.Commit(block, txList)
+	assert.Error(t, err)
 
 	dba2 := RandomDBA()
 	queue2 := RandomQueue()
-	cs2 := NewCommitSystem(dba2, fc, cryptor, queue2, cconf)
+	rp2 := repository.NewRepository(dba2, cryptor, fc)
+	cs2 := NewCommitSystem(dba2, fc, cryptor, queue2, cconf, rp2)
 
 	assert.NoError(t, cs2.VerifyCommit(block, txList))
 	assert.NoError(t, cs2.Commit(block, txList))
 
-	tx, err := dba.Begin()
+	fmt.Println("blockHash: ", MustHash(block))
+	rtx, err := rp.Begin()
 	require.NoError(t, err)
-	bc := repository.NewBlockchain(tx, fc)
 
-	tx2, err := dba2.Begin()
+	bc, err := rtx.Blockchain(MustHash(block))
 	require.NoError(t, err)
-	bc2 := repository.NewBlockchain(tx2, fc)
 
-	blockHash, err := block.Hash()
+	rtx2, err := rp2.Begin()
 	require.NoError(t, err)
-	fmt.Println("blockHash: ", blockHash)
-	b1, ok := bc.Get(blockHash)
-	require.True(t, ok)
-	b2, ok := bc2.Get(blockHash)
-	require.True(t, ok)
+	bc2, err := rtx2.Blockchain(MustHash(block))
+
+	b1, err := bc.Get(MustHash(block))
+	require.NoError(t, err)
+	b2, err := bc2.Get(MustHash(block))
+	require.NoError(t, err)
 
 	assert.Equal(t, MustHash(b1), MustHash(b2))
 }
