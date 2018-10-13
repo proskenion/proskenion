@@ -58,6 +58,14 @@ func RandomQueue() core.ProposalTxQueue {
 	return queue
 }
 
+func RandomTxList() core.TxList {
+	txList := repository.NewTxList(RandomCryptor())
+	for _, tx := range RandomTxs() {
+		txList.Push(tx)
+	}
+	return txList
+}
+
 func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (model.Block, core.TxList) {
 	wsvHash := model.Hash(nil)
 	txHistoryHash := model.Hash(nil)

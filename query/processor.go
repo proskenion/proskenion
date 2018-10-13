@@ -11,6 +11,10 @@ type QueryProcessor struct {
 	fc model.ModelFactory
 }
 
+func NewQueryProcessor(rp core.Repository, fc model.ModelFactory) core.QueryProcessor {
+	return &QueryProcessor{rp, fc}
+}
+
 func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	top, ok := q.rp.Top()
 	if !ok {
@@ -35,7 +39,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	default:
 		err = core.ErrQueryProcessorQueryObjectCodeNotImplemented
 	}
-	if err == core.ErrWSVNotFound {
+	if errors.Cause(err) == core.ErrWSVNotFound {
 		return nil, errors.Wrap(core.ErrQueryProcessorNotFound, err.Error())
 	}
 	return res, err

@@ -118,7 +118,7 @@ type Repository interface {
 	Begin() (RepositoryTx, error)
 	Top() (Block, bool)
 	Commit(Block, TxList) error
-	GeneisCommit(TxList) error
+	GenesisCommit(TxList) error
 }
 
 type RepositoryTx interface {

@@ -32,12 +32,20 @@ func TestNewQueryValidator(t *testing.T) {
 			model.AccountObjectCode,
 			query.ErrQueryValidateAuthorizerIdNotAccountId,
 		},
+		{
+			"case 3 peer",
+			"peer1:50051",
+			"authorizer@com",
+			model.PeerObjectCode,
+			nil,
+		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			query := NewTestFactory().NewQueryBuilder().
 				TargetId(c.targetId).
 				AuthorizerId(c.authorizerId).
 				CreatedTime(RandomNow()).
+				RequestCode(c.objectCode).
 				Build()
 			err := query.Validate()
 			if c.err != nil {

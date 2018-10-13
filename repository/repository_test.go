@@ -15,6 +15,9 @@ func TestRepository_Commit(t *testing.T) {
 
 	rp := NewRepository(dba, cryptor, fc)
 
+	txList := RandomTxList()
+	require.NoError(t, rp.GenesisCommit(txList))
+
 	block, txList := RandomCommitableBlock(t, nil, rp)
 	assert.NoError(t, rp.Commit(block, txList))
 
