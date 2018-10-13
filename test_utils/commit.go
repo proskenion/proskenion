@@ -10,3 +10,7 @@ func RandomCommitProperty() *commit.CommitProperty {
 		PrivateKey:   validPri,
 	}
 }
+
+func RandomNow() int64 {
+	return commit.Now()
+}

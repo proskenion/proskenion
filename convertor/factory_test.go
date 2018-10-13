@@ -262,4 +262,15 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 		assert.Equal(t, expAc.GetPublicKeys(), actAc.GetPublicKeys())
 		assert.Equal(t, expAc.GetAmount(), actAc.GetAmount())
 	})
+
+	t.Run("case 2 peer query", func(t *testing.T) {
+		pub, _ := RandomCryptor().NewKeyPairs()
+		expPeer := NewTestFactory().NewPeer("address:50051", pub)
+		res := NewTestFactory().NewQueryResponseBuilder().
+			Peer(expPeer).
+			Build()
+		actPeer := res.GetPayload().GetPeer()
+		assert.Equal(t, expPeer.GetPublicKey(), actPeer.GetPublicKey())
+		assert.Equal(t, expPeer.GetAddress(), actPeer.GetAddress())
+	})
 }

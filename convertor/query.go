@@ -144,10 +144,19 @@ func (p *QueryResponsePayload) ResponseCode() model.ObjectCode {
 }
 
 func (p *QueryResponsePayload) GetAccount() model.Account {
-	if p.QueryResponse_Payload == nil {
+	if p.QueryResponse_Payload == nil ||
+		p.QueryResponse_Payload.GetAccount() == nil {
 		return &Account{}
 	}
 	return &Account{p.cryptor, p.QueryResponse_Payload.GetAccount()}
+}
+
+func (p *QueryResponsePayload) GetPeer() model.Peer {
+	if p.QueryResponse_Payload == nil ||
+		p.QueryResponse_Payload.GetPeer() == nil {
+		return &Peer{}
+	}
+	return &Peer{p.cryptor, p.QueryResponse_Payload.GetPeer()}
 }
 
 func (p *QueryResponsePayload) Marshal() ([]byte, error) {
