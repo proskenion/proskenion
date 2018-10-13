@@ -277,6 +277,17 @@ func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuil
 	return q
 }
 
+func (q *QueryResponseBuilder) Peer(p model.Peer) model.QueryResponseBuilder {
+	q.QueryResponse.Payload.Object = &proskenion.QueryResponse_Payload_Peer{
+		Peer: &proskenion.Peer{
+			Address:   p.GetAddress(),
+			PublicKey: p.GetPublicKey(),
+		},
+	}
+	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_PeerObjectCode
+	return q
+}
+
 func (q *QueryResponseBuilder) Build() model.QueryResponse {
 	return &QueryResponse{q.QueryResponse, q.cryptor}
 }

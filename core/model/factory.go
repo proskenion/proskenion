@@ -53,5 +53,6 @@ type QueryBuilder interface {
 
 type QueryResponseBuilder interface {
 	Account(Account) QueryResponseBuilder
+	Peer(Peer) QueryResponseBuilder
 	Build() QueryResponse
 }
