@@ -127,6 +127,67 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 	return commitTx(dtx)
 }
 
+func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
+	dtx, err := r.Begin()
+	if err != nil {
+		return err
+	}
+
+	// load state
+	var bc core.Blockchain
+	if bc, err = dtx.Blockchain(nil); err != nil {
+		return err
+	}
+	wsv, err := dtx.WSV(nil)
+	if err != nil {
+		return errors.Wrap(core.ErrRepositoryCommitLoadWSV, err.Error())
+	}
+	txHistory, err := dtx.TxHistory(nil)
+	if err != nil {
+		return errors.Wrap(core.ErrRepositoryCommitLoadTxHistory, err.Error())
+	}
+
+	// transactions execute (no validate)
+	for _, tx := range txList.List() {
+		for _, cmd := range tx.GetPayload().GetCommands() {
+			if err := cmd.Execute(wsv); err != nil {
+				return rollBackTx(dtx, err)
+			}
+		}
+		if err := txHistory.Append(tx); err != nil {
+			return rollBackTx(dtx, err)
+		}
+	}
+
+	// hash check and block 生成
+	wsvHash, err := wsv.Hash()
+	if err != nil {
+		return rollBackTx(dtx, err)
+	}
+	txHistoryHash, err := txHistory.Hash()
+	if err != nil {
+		return rollBackTx(dtx, err)
+	}
+	genesisBlock := r.fc.NewBlockBuilder().
+		CreatedTime(0).
+		TxsHash(txList.Top()).
+		PreBlockHash(nil).
+		TxHistoryHash(txHistoryHash).
+		WSVHash(wsvHash).
+		Round(0).
+		Height(0).
+		Build()
+
+	// block を追加・
+	if err := bc.Append(genesisBlock); err != nil {
+		return err
+	}
+	// top ブロックを更新
+	r.height = genesisBlock.GetPayload().GetHeight()
+	r.top = genesisBlock
+	return commitTx(dtx)
+}
+
 type RepositoryTx struct {
 	tx      core.DBATx
 	cryptor core.Cryptor

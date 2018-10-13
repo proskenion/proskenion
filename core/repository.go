@@ -17,9 +17,9 @@ var (
 )
 
 var (
-	ErrRepositoryCommitLoadPreBlock  = errors.Errorf("Failed Repository Commit Load PreBlockchain")
-	ErrRepositoryCommitLoadWSV       = errors.Errorf("Failed Repository Commit Load WSV")
-	ErrRepositoryCommitLoadTxHistory = errors.Errorf("Failed Repository Commit Load TxHistory")
+	ErrRepositoryCommitLoadPreBlock   = errors.Errorf("Failed Repository Commit Load PreBlockchain")
+	ErrRepositoryCommitLoadWSV        = errors.Errorf("Failed Repository Commit Load WSV")
+	ErrRepositoryCommitLoadTxHistory  = errors.Errorf("Failed Repository Commit Load TxHistory")
 )
 
 // Transaction 列の管理
@@ -118,6 +118,7 @@ type Repository interface {
 	Begin() (RepositoryTx, error)
 	Top() (Block, bool)
 	Commit(Block, TxList) error
+	GeneisCommit(TxList) error
 }
 
 type RepositoryTx interface {
