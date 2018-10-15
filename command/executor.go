@@ -89,3 +89,24 @@ func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, cmd model.Command) er
 	}
 	return nil
 }
+
+func (c *CommandExecutor) AddPublicKey(wsv model.ObjectFinder, cmd model.Command) error {
+	ap := cmd.GetAddPublicKey()
+	ac := c.factory.NewEmptyAccount()
+	if err := wsv.Query(cmd.GetTargetId(), ac); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorAddPublicKeyNotExistAccount, err.Error())
+	}
+	if ac.GetAccountId() != cmd.GetTargetId() {
+		return core.ErrCommandExecutorAddPublicKeyNotExistAccount
+	}
+	newAc := c.factory.NewAccount(
+		ac.GetAccountId(),
+		ac.GetAccountName(),
+		append(ac.GetPublicKeys(), ap.GetPublicKey()),
+		ac.GetAmount(),
+	)
+	if err := wsv.Append(newAc.GetAccountId(), newAc); err != nil {
+		return err
+	}
+	return nil
+}

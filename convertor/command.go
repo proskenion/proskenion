@@ -21,6 +21,8 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.AddAsset(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.executor.CreateAccount(wsv, c)
+	case *proskenion.Command_AddPublicKey:
+		return c.validator.AddPublicKey(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -34,6 +36,8 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.AddAsset(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.validator.CreateAccount(wsv, c)
+	case *proskenion.Command_AddPublicKey:
+		return c.validator.AddPublicKey(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -49,4 +53,8 @@ func (c *Command) GetCreateAccount() model.CreateAccount {
 
 func (c *Command) GetAddAsset() model.AddAsset {
 	return c.Command.GetAddAsset()
+}
+
+func (c *Command) GetAddPublicKey() model.AddPublicKey {
+	return c.Command.GetAddPublicKey()
 }

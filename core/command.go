@@ -30,15 +30,22 @@ var (
 	ErrCommandExecutorAddAssetNotExistAccount = fmt.Errorf("Failed Command Executor AddAsset Not Exist Account")
 )
 
+// AddPublicKeys Err
+var (
+	ErrCommandExecutorAddPublicKeyNotExistAccount = fmt.Errorf("Failed Command Executor AddPublicKey Not Exist Account")
+)
+
 type CommandExecutor interface {
 	SetFactory(factory ModelFactory)
 	Transfer(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
 	AddAsset(ObjectFinder, Command) error
+	AddPublicKey(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
 	Transfer(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
 	AddAsset(ObjectFinder, Command) error
+	AddPublicKey(ObjectFinder, Command) error
 }

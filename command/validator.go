@@ -21,3 +21,6 @@ func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Comma
 func (c *CommandValidator) AddAsset(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }
+func (c *CommandValidator) AddPublicKey(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
