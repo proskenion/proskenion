@@ -33,6 +33,7 @@ var (
 // AddPublicKeys Err
 var (
 	ErrCommandExecutorAddPublicKeyNotExistAccount = fmt.Errorf("Failed Command Executor AddPublicKey Not Exist Account")
+	ErrCommandExecutorAddPublicKeyDuplicatePubkey = fmt.Errorf("Failed Command Executor AddPublicKey Duplicate Add PublicKey")
 )
 
 type CommandExecutor interface {

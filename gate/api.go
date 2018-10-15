@@ -17,10 +17,13 @@ var (
 )
 
 type APIGate struct {
-	db     core.DB
 	queue  core.ProposalTxQueue
 	logger log15.Logger
 	qp     core.QueryProcessor
+}
+
+func NewAPIGate(queue core.ProposalTxQueue, logger log15.Logger, qp core.QueryProcessor) core.APIGate {
+	return &APIGate{queue, logger, qp}
 }
 
 func (a *APIGate) Write(tx model.Transaction) error {

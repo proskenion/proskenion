@@ -285,7 +285,6 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 func TestCommandExecutor_AddPublicKey(t *testing.T) {
 	fc, ex, dtx, wsv := prePareCommandExecutor(t)
 	prePareCreateAccounts(t, fc, wsv)
-	prePareAddAsset(t, fc, wsv)
 
 	keys := []model.PublicKey{
 		RandomPublicKey(),
@@ -332,59 +331,46 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 			keys[0],
 			[]model.PublicKey{keys[2], keys[0]},
 			nil,
-		}, {
-			"case 3 : no dest account",
-			"authorizer",
-			"authorizer",
-			"unk",
-			100,
-			100,
-			100,
-			core.ErrCommandExecutorTransferNotFoundDestAccountId,
 		},
 		{
-			"case 4 : not enough src account ammount",
+			"case 4 : no target account",
 			"authorizer",
-			"account4",
-			"account3",
-			100,
-			100,
-			100,
-			core.ErrCommandExecutorTransferNotEnoughSrcAccountAmount,
+			"unk",
+			keys[2],
+			nil,
+			core.ErrCommandExecutorAddPublicKeyNotExistAccount,
+		},
+		{
+			"case 5 : duplicate pubkey",
+			"authorizer",
+			"authorizer",
+			keys[1],
+			nil,
+			core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			cmd := &convertor.Command{
 				Command: &proskenion.Command{
-					Command: &proskenion.Command_Transfer{
-						Transfer: &proskenion.Transfer{
-							DestAccountId: c.exDestAccountId,
-							Amount:        c.transAmount,
+					Command: &proskenion.Command_AddPublicKey{
+						AddPublicKey: &proskenion.AddPublicKey{
+							PublicKey: c.key,
 						},
 					},
-					TargetId:     c.exTargetId,
-					AuthorizerId: c.exAuthoirzerId,
+					TargetId:     c.targetId,
+					AuthorizerId: c.authorizerId,
 				}}
-			err := ex.Transfer(wsv, cmd)
-			if c.exErr != nil {
-				assert.EqualError(t, errors.Cause(err), c.exErr.Error())
+			err := ex.AddPublicKey(wsv, cmd)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
 			} else {
 				assert.NoError(t, err)
 
-				srcAc := fc.NewEmptyAccount()
-				err = wsv.Query(c.exTargetId, srcAc)
+				ac := fc.NewEmptyAccount()
+				err = wsv.Query(c.targetId, ac)
 				require.NoError(t, err)
-				assert.Equal(t, c.exTargetId, srcAc.GetAccountId())
-				assert.Equal(t, c.exSrcAmount, srcAc.GetAmount())
-				assert.Equal(t, make([]model.PublicKey, 0), srcAc.GetPublicKeys())
-
-				destAc := fc.NewEmptyAccount()
-				err = wsv.Query(c.exDestAccountId, destAc)
-				require.NoError(t, err)
-				assert.Equal(t, c.exDestAccountId, destAc.GetAccountId())
-				assert.Equal(t, c.exDestAmount, destAc.GetAmount())
-				assert.Equal(t, make([]model.PublicKey, 0), destAc.GetPublicKeys())
-
+				assert.Equal(t, c.targetId, ac.GetAccountId())
+				assert.ElementsMatch(t, c.exKeys, ac.GetPublicKeys())
 			}
 		})
 	}

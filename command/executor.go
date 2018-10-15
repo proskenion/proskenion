@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
@@ -90,6 +91,15 @@ func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, cmd model.Command) er
 	return nil
 }
 
+func containsPublicKey(keys []model.PublicKey, key model.PublicKey) bool {
+	for _, k := range keys {
+		if bytes.Equal(k, key) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *CommandExecutor) AddPublicKey(wsv model.ObjectFinder, cmd model.Command) error {
 	ap := cmd.GetAddPublicKey()
 	ac := c.factory.NewEmptyAccount()
@@ -98,6 +108,10 @@ func (c *CommandExecutor) AddPublicKey(wsv model.ObjectFinder, cmd model.Command
 	}
 	if ac.GetAccountId() != cmd.GetTargetId() {
 		return core.ErrCommandExecutorAddPublicKeyNotExistAccount
+	}
+	if containsPublicKey(ac.GetPublicKeys(), ap.GetPublicKey()) {
+		return errors.Wrapf(core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
+			"duplicate key : %x", ap.GetPublicKey())
 	}
 	newAc := c.factory.NewAccount(
 		ac.GetAccountId(),
