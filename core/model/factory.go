@@ -40,6 +40,7 @@ type TxBuilder interface {
 	Transfer(srcAccountId string, destAccountId string, amount int64) TxBuilder
 	CreateAccount(authorizerId string, accountId string) TxBuilder
 	AddAsset(accountId string, amount int64) TxBuilder
+	AddPublicKey(authorizerId string, accountId string, pubkey PublicKey) TxBuilder
 	Build() Transaction
 }
 

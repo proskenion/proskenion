@@ -224,6 +224,20 @@ func (t *TxBuilder) AddAsset(accountId string, amount int64) model.TxBuilder {
 	return t
 }
 
+func (t *TxBuilder) AddPublicKey(authorizerId string, accountId string, pubkey model.PublicKey) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddPublicKey{
+				AddPublicKey: &proskenion.AddPublicKey{
+					PublicKey: pubkey,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) Build() model.Transaction {
 	return &Transaction{t.Transaction,
 		t.cryptor, t.executor, t.validator}
