@@ -50,7 +50,7 @@ func (t *Transaction) Hash() (model.Hash, error) {
 
 func (t *Transaction) GetSignatures() []model.Signature {
 	if t.Transaction == nil {
-		return make([]model.Signature,0)
+		return make([]model.Signature, 0)
 	}
 	ret := make([]model.Signature, len(t.Signatures))
 	for i, sig := range t.Transaction.GetSignatures() {
@@ -85,6 +85,10 @@ func (t *Transaction) Verify() error {
 		}
 	}
 	return nil
+}
+
+func (t *Transaction) Validate(wsv model.ObjectFinder, history model.TxFinder) error {
+	return t.validator.Tx(wsv, history, t)
 }
 
 func (t *TransactionPayload) Marshal() ([]byte, error) {

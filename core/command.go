@@ -36,6 +36,13 @@ var (
 	ErrCommandExecutorAddPublicKeyDuplicatePubkey = fmt.Errorf("Failed Command Executor AddPublicKey Duplicate Add PublicKey")
 )
 
+// Transaction Err
+var (
+	ErrTxValidateNotFoundAuthorizer  = fmt.Errorf("Failed Transaction Validator Authorizer Not Found")
+	ErrTxValidateNotSignedAuthorizer = fmt.Errorf("Failed Transaction Validator Authorizer's not signed")
+	ErrTxValidateAlreadyExist        = fmt.Errorf("Failed Transaction Validator Already Exists")
+)
+
 type CommandExecutor interface {
 	SetFactory(factory ModelFactory)
 	Transfer(ObjectFinder, Command) error
@@ -49,4 +56,5 @@ type CommandValidator interface {
 	CreateAccount(ObjectFinder, Command) error
 	AddAsset(ObjectFinder, Command) error
 	AddPublicKey(ObjectFinder, Command) error
+	Tx(ObjectFinder, TxFinder, Command) error
 }
