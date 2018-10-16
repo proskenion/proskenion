@@ -7,6 +7,7 @@ import (
 	. "github.com/proskenion/proskenion/core"
 	. "github.com/proskenion/proskenion/core/model"
 	"golang.org/x/crypto/ed25519"
+	"strconv"
 )
 
 type Ed25519Sha256Cryptor struct{}
@@ -53,6 +54,9 @@ func (c Ed25519Sha256Cryptor) Verify(publicKey PublicKey, hasher Hasher, signatu
 	hash, err := hasher.Hash()
 	if err != nil {
 		return err
+	}
+	if l := len(publicKey); l != ed25519.PublicKeySize {
+		return errors.Errorf("ed25519: bad public key length: " + strconv.Itoa(l))
 	}
 	if ok := ed25519.Verify(ed25519.PublicKey(publicKey), hash, signature); !ok {
 		return errors.Errorf("ed25519.Verify is invalid\n"+

@@ -305,6 +305,9 @@ func (t *MerklePatriciaNodeIterator) Find(key []byte) (core.MerklePatriciaNodeIt
 		return nil, core.ErrMerklePatriciaTreeNotFoundKey
 	}
 	if len(t.Key()) == len(key) {
+		if !bytes.Equal(t.Key(), key) {
+			return nil, core.ErrMerklePatriciaTreeNotFoundKey
+		}
 		leaf, err := t.getLeaf()
 		if err != nil {
 			return nil, err

@@ -19,6 +19,7 @@ func NewModelFactory(cryptor core.Cryptor,
 	queryValidator core.QueryValidator) model.ModelFactory {
 	factory := &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
 	executor.SetFactory(factory)
+	cmdValidator.SetFactory(factory)
 	return factory
 }
 
@@ -224,6 +225,20 @@ func (t *TxBuilder) AddAsset(accountId string, amount int64) model.TxBuilder {
 	return t
 }
 
+func (t *TxBuilder) AddPublicKey(authorizerId string, accountId string, pubkey model.PublicKey) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddPublicKey{
+				AddPublicKey: &proskenion.AddPublicKey{
+					PublicKey: pubkey,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) Build() model.Transaction {
 	return &Transaction{t.Transaction,
 		t.cryptor, t.executor, t.validator}
@@ -274,6 +289,17 @@ func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuil
 		},
 	}
 	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_AccountObjectCode
+	return q
+}
+
+func (q *QueryResponseBuilder) Peer(p model.Peer) model.QueryResponseBuilder {
+	q.QueryResponse.Payload.Object = &proskenion.QueryResponse_Payload_Peer{
+		Peer: &proskenion.Peer{
+			Address:   p.GetAddress(),
+			PublicKey: p.GetPublicKey(),
+		},
+	}
+	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_PeerObjectCode
 	return q
 }
 

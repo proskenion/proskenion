@@ -139,6 +139,7 @@ func TestTxModelBuilder(t *testing.T) {
 			Transfer("a", "b", 10).
 			CreateAccount("x", "y").
 			AddAsset("w", 10).
+			AddPublicKey("auth", "ac", []byte{1, 2, 3}).
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
@@ -154,6 +155,9 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetAmount())
 
+		assert.Equal(t, "auth", tx.GetPayload().GetCommands()[3].GetAuthorizerId())
+		assert.Equal(t, "ac", tx.GetPayload().GetCommands()[3].GetTargetId())
+		assert.Equal(t, []byte{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKey().GetPublicKey())
 	})
 }
 
@@ -261,5 +265,16 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 		assert.Equal(t, expAc.GetAccountName(), actAc.GetAccountName())
 		assert.Equal(t, expAc.GetPublicKeys(), actAc.GetPublicKeys())
 		assert.Equal(t, expAc.GetAmount(), actAc.GetAmount())
+	})
+
+	t.Run("case 2 peer query", func(t *testing.T) {
+		pub, _ := RandomCryptor().NewKeyPairs()
+		expPeer := NewTestFactory().NewPeer("address:50051", pub)
+		res := NewTestFactory().NewQueryResponseBuilder().
+			Peer(expPeer).
+			Build()
+		actPeer := res.GetPayload().GetPeer()
+		assert.Equal(t, expPeer.GetPublicKey(), actPeer.GetPublicKey())
+		assert.Equal(t, expPeer.GetAddress(), actPeer.GetAddress())
 	})
 }

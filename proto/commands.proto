@@ -11,6 +11,7 @@ message Command {
         Transfer transfer = 3;
         CreateAccount createAccount = 4;
         AddAsset addAsset = 5;
+        AddPublicKey addPublicKey = 6;
     }
 }
 
@@ -38,8 +39,7 @@ message AddAsset {
 /**
  * AddPublicKey は TragetId アカウントに鍵を追加する。
  *
-message AddPublicKey {
-    string accountId = 1;
-    bytes publicKey = 2;
-}
  **/
+message AddPublicKey {
+    bytes publicKey = 1;
+}

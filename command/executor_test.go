@@ -281,3 +281,98 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 	}
 	require.NoError(t, dtx.Commit())
 }
+
+func TestCommandExecutor_AddPublicKey(t *testing.T) {
+	fc, ex, dtx, wsv := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, wsv)
+
+	keys := []model.PublicKey{
+		RandomPublicKey(),
+		RandomPublicKey(),
+		RandomPublicKey(),
+	}
+
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		targetId     string
+		key          model.PublicKey
+		exKeys       []model.PublicKey
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			"authorizer",
+			"authorizer",
+			keys[0],
+			[]model.PublicKey{keys[0]},
+			nil,
+		},
+		{
+			"case 2 : no error",
+			"authorizer",
+			"authorizer",
+			keys[1],
+			[]model.PublicKey{keys[0], keys[1]},
+			nil,
+		},
+		{
+			"case 3 : no error",
+			"authorizer",
+			"account1",
+			keys[2],
+			[]model.PublicKey{keys[2]},
+			nil,
+		},
+		{
+			"case 3 : no error",
+			"authorizer",
+			"account1",
+			keys[0],
+			[]model.PublicKey{keys[2], keys[0]},
+			nil,
+		},
+		{
+			"case 4 : no target account",
+			"authorizer",
+			"unk",
+			keys[2],
+			nil,
+			core.ErrCommandExecutorAddPublicKeyNotExistAccount,
+		},
+		{
+			"case 5 : duplicate pubkey",
+			"authorizer",
+			"authorizer",
+			keys[1],
+			nil,
+			core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := &convertor.Command{
+				Command: &proskenion.Command{
+					Command: &proskenion.Command_AddPublicKey{
+						AddPublicKey: &proskenion.AddPublicKey{
+							PublicKey: c.key,
+						},
+					},
+					TargetId:     c.targetId,
+					AuthorizerId: c.authorizerId,
+				}}
+			err := ex.AddPublicKey(wsv, cmd)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				ac := fc.NewEmptyAccount()
+				err = wsv.Query(c.targetId, ac)
+				require.NoError(t, err)
+				assert.Equal(t, c.targetId, ac.GetAccountId())
+				assert.ElementsMatch(t, c.exKeys, ac.GetPublicKeys())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}

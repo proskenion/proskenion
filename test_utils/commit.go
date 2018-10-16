@@ -1,6 +1,8 @@
 package test_utils
 
-import "github.com/proskenion/proskenion/commit"
+import (
+	"github.com/proskenion/proskenion/commit"
+)
 
 func RandomCommitProperty() *commit.CommitProperty {
 	validPub, validPri := RandomCryptor().NewKeyPairs()
@@ -9,4 +11,8 @@ func RandomCommitProperty() *commit.CommitProperty {
 		PublicKey:    validPub,
 		PrivateKey:   validPri,
 	}
+}
+
+func RandomNow() int64 {
+	return commit.Now()
 }

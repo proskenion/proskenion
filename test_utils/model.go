@@ -100,6 +100,24 @@ func RandomBlock() model.Block {
 		Build()
 }
 
+func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []model.PrivateKey) model.Transaction {
+	require.Equal(t, len(pub), len(pri))
+	for i, _ := range pub {
+		require.NoError(t, tx.Sign(pub[i], pri[i]))
+	}
+	return tx
+}
+
+func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
+	q := NewTestFactory().NewQueryBuilder().
+		AuthorizerId(authorizer.AccountId).
+		TargetId(target).
+		RequestCode(model.AccountObjectCode).
+		Build()
+	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return q
+}
+
 /*
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {

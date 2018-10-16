@@ -58,6 +58,14 @@ func RandomQueue() core.ProposalTxQueue {
 	return queue
 }
 
+func RandomTxList() core.TxList {
+	txList := repository.NewTxList(RandomCryptor())
+	for _, tx := range RandomTxs() {
+		txList.Push(tx)
+	}
+	return txList
+}
+
 func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (model.Block, core.TxList) {
 	wsvHash := model.Hash(nil)
 	txHistoryHash := model.Hash(nil)
@@ -86,7 +94,9 @@ func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (m
 	txList := repository.NewTxList(RandomCryptor())
 
 	for txList.Size() < 100 {
-		tx := RandomTx()
+		tx := NewTestFactory().NewTxBuilder().
+			CreateAccount("authorizer@com", RandomStr()+"@com").
+			CreatedTime(RandomNow()).Build()
 		// tx を構築
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			err = cmd.Validate(wsv)

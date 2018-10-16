@@ -11,24 +11,22 @@ import (
 )
 
 func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
-	dba := RandomDBA()
 	fc := NewTestFactory()
 	cryptor := RandomCryptor()
 	queue := RandomQueue()
 	cconf := RandomCommitProperty()
-	rp := repository.NewRepository(dba, cryptor, fc)
+	rp := repository.NewRepository(RandomDBA(), cryptor, fc)
 
-	cs := NewCommitSystem(dba, fc, cryptor, queue, cconf, rp)
+	cs := NewCommitSystem(fc, cryptor, queue, cconf, rp)
 	block, txList, err := cs.CreateBlock()
 	require.NoError(t, err)
 	assert.NoError(t, cs.VerifyCommit(block, txList))
 	err = cs.Commit(block, txList)
 	assert.Error(t, err)
 
-	dba2 := RandomDBA()
 	queue2 := RandomQueue()
-	rp2 := repository.NewRepository(dba2, cryptor, fc)
-	cs2 := NewCommitSystem(dba2, fc, cryptor, queue2, cconf, rp2)
+	rp2 := repository.NewRepository(RandomDBA(), cryptor, fc)
+	cs2 := NewCommitSystem(fc, cryptor, queue2, cconf, rp2)
 
 	assert.NoError(t, cs2.VerifyCommit(block, txList))
 	assert.NoError(t, cs2.Commit(block, txList))

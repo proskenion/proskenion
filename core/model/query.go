@@ -31,6 +31,7 @@ type QueryResponse interface {
 type QueryResponsePayload interface {
 	ResponseCode() ObjectCode
 	GetAccount() Account
+	GetPeer() Peer
 	Marshal() ([]byte, error)
 	Hash() (Hash, error)
 }

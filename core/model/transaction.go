@@ -14,6 +14,7 @@ type Transaction interface {
 	Modelor
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
+	Validate(ObjectFinder, TxFinder) error
 }
 
 type TransactionPayload interface {

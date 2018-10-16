@@ -10,7 +10,6 @@ import (
 )
 
 type CommitSystem struct {
-	dba      core.DBA
 	factory  model.ModelFactory
 	cryptor  core.Cryptor
 	queue    core.ProposalTxQueue
@@ -24,8 +23,8 @@ var (
 	ErrCommitLoadTxHistory = errors.Errorf("Failed Commit Load TxHistory")
 )
 
-func NewCommitSystem(dba core.DBA, factory model.ModelFactory, cryptor core.Cryptor, queue core.ProposalTxQueue, property *CommitProperty, rp core.Repository) core.CommitSystem {
-	return &CommitSystem{dba, factory, cryptor, queue, property, rp}
+func NewCommitSystem(factory model.ModelFactory, cryptor core.Cryptor, queue core.ProposalTxQueue, property *CommitProperty, rp core.Repository) core.CommitSystem {
+	return &CommitSystem{factory, cryptor, queue, property, rp}
 }
 
 func UnixTime(t time.Time) int64 {
@@ -93,10 +92,6 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	}
 
 	// load state
-	bc, err := dtx.Blockchain(topHash)
-	if err != nil {
-		return nil, nil, errors.Wrap(ErrCommitLoadPreBlock, err.Error())
-	}
 	wsv, err := dtx.WSV(wsvHash)
 	if err != nil {
 		return nil, nil, errors.Wrap(ErrCommitLoadWSV, err.Error())
@@ -115,18 +110,24 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 		}
 
 		// tx を構築
+		if err := tx.Validate(wsv, txHistory); err != nil {
+			goto txskip
+		}
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
-				continue
+				goto txskip
 			}
 			if err := cmd.Execute(wsv); err != nil {
-				return nil, nil, rollBackTx(dtx, err)
+				goto txskip // WIP : 要考
+				//return nil, nil, rollBackTx(dtx, err)
 			}
 		}
 		if err := txHistory.Append(tx); err != nil {
 			return nil, nil, rollBackTx(dtx, err)
 		}
 		txList.Push(tx)
+
+	txskip:
 	}
 
 	newTxHistoryHash, err := txHistory.Hash()
@@ -151,8 +152,13 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	if err != nil {
 		return nil, nil, rollBackTx(dtx, err)
 	}
-	if err := bc.Append(newBlock); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+	// 一度状態を戻す
+	if err := rollBackTx(dtx, nil); err != nil {
+		return nil, nil, err
 	}
-	return newBlock, txList, commitTx(dtx)
+	// 実際にCommit
+	if err := c.rp.Commit(newBlock, txList); err != nil {
+		return nil, nil, err
+	}
+	return newBlock, txList, nil
 }
