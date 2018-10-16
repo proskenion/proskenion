@@ -16,20 +16,22 @@ import (
 	"testing"
 )
 
-func createAccount(t *testing.T, authorizer string, target string, pub model.PublicKey, pri model.PrivateKey) model.Transaction {
+func createAccount(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
-		CreateAccount(authorizer, target).
+		CreateAccount(authorizer.AccountId, target).
 		Build()
-	require.NoError(t, tx.Sign(pub, pri))
+	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))
 	return tx
 }
 
-func getAccountQuery(authorizer string, target string) model.Query {
-	return NewTestFactory().NewQueryBuilder().
-		AuthorizerId(authorizer).
+func getAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
+	q := NewTestFactory().NewQueryBuilder().
+		AuthorizerId(authorizer.AccountId).
 		TargetId(target).
 		RequestCode(model.AccountObjectCode).
 		Build()
+	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return q
 }
 
 func TestAPIGate_WriteAndRead(t *testing.T) {
@@ -51,10 +53,10 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	GenesisCommitFromAccounts(t, rp, acs)
 
 	txs := []model.Transaction{
-		createAccount(t, acs[0].AccountId, "target3@com", acs[0].Pubkey, acs[0].prikey),
-		createAccount(t, acs[0].AccountId, "target4@com", acs[0].Pubkey, acs[0].prikey),
-		createAccount(t, acs[0].AccountId, "target5@com", acs[0].Pubkey, acs[0].prikey),
-		createAccount(t, acs[0].AccountId, "target6@com", acs[1].Pubkey, acs[1].prikey),
+		createAccount(t, acs[0], "target3@com"),
+		createAccount(t, acs[0], "target4@com"),
+		createAccount(t, acs[0], "target5@com"),
+		createAccount(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target6@com"),
 	}
 	for _, tx := range txs {
 		require.NoError(t, api.Write(tx))
@@ -73,28 +75,27 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		err     error
 	}{
 		{
-			getAccountQuery("authorizer@com", "target1@com"),
+			getAccountQuery(t, acs[0], "target1@com"),
 			[]model.PublicKey{acs[1].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery("authorizer@com", "target2@com"),
+			getAccountQuery(t, acs[0], "target2@com"),
 			[]model.PublicKey{acs[2].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery("authorizer@com", "target3@com"),
+			getAccountQuery(t, acs[0], "target3@com"),
 			[]model.PublicKey{acs[3].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery("authorizer@com", "target5@com"),
+			getAccountQuery(t, acs[0], "target4@com"),
 			[]model.PublicKey{},
 			nil,
 		},
-
 		{
-			getAccountQuery("authorizer@com", "target10@com"),
+			getAccountQuery(t, acs[0], "target5@com"),
 			[]model.PublicKey{},
 			core.ErrQueryProcessorNotFound,
 		},
@@ -106,7 +107,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, q.quqery.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
 			assert.Equal(t, q.pubkeys, res.GetPayload().GetAccount().GetPublicKeys())
-			assert.Equal(t, 0, res.GetPayload().GetAccount().GetAmount())
+			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetAmount())
 		}
 	}
 }

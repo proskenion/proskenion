@@ -22,7 +22,7 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 	case *proskenion.Command_CreateAccount:
 		return c.executor.CreateAccount(wsv, c)
 	case *proskenion.Command_AddPublicKey:
-		return c.validator.AddPublicKey(wsv, c)
+		return c.executor.AddPublicKey(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}

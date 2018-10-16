@@ -2,6 +2,7 @@ package command_test
 
 import (
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -43,6 +44,14 @@ func TestCommandValidator_Tx(t *testing.T) {
 				[]model.PublicKey{acs[0].Pubkey},
 				[]model.PrivateKey{acs[0].Prikey}),
 			nil,
+		},
+		{
+			"case 2 different key",
+			TxSign(t,
+				fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b").Build(),
+				[]model.PublicKey{acs[1].Pubkey},
+				[]model.PrivateKey{acs[1].Prikey}),
+			core.ErrTxValidateNotSignedAuthorizer,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
