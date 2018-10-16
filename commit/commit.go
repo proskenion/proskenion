@@ -92,10 +92,6 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	}
 
 	// load state
-	bc, err := dtx.Blockchain(topHash)
-	if err != nil {
-		return nil, nil, errors.Wrap(ErrCommitLoadPreBlock, err.Error())
-	}
 	wsv, err := dtx.WSV(wsvHash)
 	if err != nil {
 		return nil, nil, errors.Wrap(ErrCommitLoadWSV, err.Error())
@@ -156,8 +152,13 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	if err != nil {
 		return nil, nil, rollBackTx(dtx, err)
 	}
-	if err := bc.Append(newBlock); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+	// 一度状態を戻す
+	if err := rollBackTx(dtx, nil); err != nil {
+		return nil, nil, err
 	}
-	return newBlock, txList, commitTx(dtx)
+	// 実際にCommit
+	if err := c.rp.Commit(newBlock, txList); err != nil {
+		return nil, nil, err
+	}
+	return newBlock, txList, nil
 }

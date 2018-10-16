@@ -70,7 +70,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	assert.Equal(t, MustHash(txs[2]), MustHash(txList.List()[1]))
 
 	for _, q := range []struct {
-		quqery  model.Query
+		query   model.Query
 		pubkeys []model.PublicKey
 		err     error
 	}{
@@ -97,15 +97,20 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		{
 			getAccountQuery(t, acs[0], "target5@com"),
 			[]model.PublicKey{},
+			nil,
+		},
+		{
+			getAccountQuery(t, acs[0], "target6@com"),
+			[]model.PublicKey{},
 			core.ErrQueryProcessorNotFound,
 		},
 	} {
-		res, err := api.Read(q.quqery)
+		res, err := api.Read(q.query)
 		if q.err != nil {
 			assert.EqualError(t, errors.Cause(err), q.err.Error())
 		} else {
 			require.NoError(t, err)
-			assert.Equal(t, q.quqery.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
+			assert.Equal(t, q.query.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
 			assert.Equal(t, q.pubkeys, res.GetPayload().GetAccount().GetPublicKeys())
 			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetAmount())
 		}
