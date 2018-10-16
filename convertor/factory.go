@@ -19,6 +19,7 @@ func NewModelFactory(cryptor core.Cryptor,
 	queryValidator core.QueryValidator) model.ModelFactory {
 	factory := &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
 	executor.SetFactory(factory)
+	cmdValidator.SetFactory(factory)
 	return factory
 }
 

@@ -94,7 +94,9 @@ func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (m
 	txList := repository.NewTxList(RandomCryptor())
 
 	for txList.Size() < 100 {
-		tx := RandomTx()
+		tx := NewTestFactory().NewTxBuilder().
+			CreateAccount("authorizer@com", RandomStr()+"@com").
+			CreatedTime(RandomNow()).Build()
 		// tx を構築
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			err = cmd.Validate(wsv)

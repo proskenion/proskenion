@@ -52,9 +52,10 @@ type CommandExecutor interface {
 }
 
 type CommandValidator interface {
+	SetFactory(factory ModelFactory)
 	Transfer(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
 	AddAsset(ObjectFinder, Command) error
 	AddPublicKey(ObjectFinder, Command) error
-	Tx(ObjectFinder, TxFinder, Command) error
+	Tx(ObjectFinder, TxFinder, Transaction) error
 }

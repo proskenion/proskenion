@@ -16,9 +16,16 @@ func TestRepository_Commit(t *testing.T) {
 	rp := NewRepository(dba, cryptor, fc)
 
 	txList := RandomTxList()
+	txList.Push(
+		fc.NewTxBuilder().
+			CreateAccount("root", "authorizer@com").
+			Build())
 	require.NoError(t, rp.GenesisCommit(txList))
 
-	block, txList := RandomCommitableBlock(t, nil, rp)
+	top, ok := rp.Top()
+	require.True(t, ok)
+
+	block, txList := RandomCommitableBlock(t, top, rp)
 	assert.NoError(t, rp.Commit(block, txList))
 
 	topBlock, ok := rp.Top()

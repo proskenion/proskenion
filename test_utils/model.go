@@ -100,6 +100,14 @@ func RandomBlock() model.Block {
 		Build()
 }
 
+func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []model.PrivateKey) model.Transaction {
+	require.Equal(t, len(pub), len(pri))
+	for i, _ := range pub {
+		require.NoError(t, tx.Sign(pub[i], pri[i]))
+	}
+	return tx
+}
+
 /*
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {

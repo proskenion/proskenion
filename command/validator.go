@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -13,6 +14,10 @@ type CommandValidator struct {
 
 func NewCommandValidator() core.CommandValidator {
 	return &CommandValidator{}
+}
+
+func (c *CommandValidator) SetFactory(factory model.ModelFactory) {
+	c.fc = factory
 }
 
 func (c *CommandValidator) Transfer(wsv model.ObjectFinder, cmd model.Command) error {
@@ -44,13 +49,17 @@ func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) 
 // 1. 既に同一の Transaction Hash を持つ Transaction が存在するか
 // 2. Authorizer アカウントが存在するか
 // 3. Authorozer の権限を行使するための署名が揃っているか
-func (c *CommandValidator) Tx(wsv core.WSV, txh model.TxFinder, tx model.Transaction) error {
+func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx model.Transaction) error {
 	hash, err := tx.Hash()
 	if err != nil {
 		return err
 	}
-	_, err = txh.Query(hash)
+	txr, err := txh.Query(hash)
 	if errors.Cause(err) != core.ErrTxHistoryNotFound {
+		txrhash, _ := txr.Hash()
+		fmt.Println("Err :", err)
+		fmt.Println("Hash:", hash)
+		fmt.Println("Act :", txrhash)
 		return core.ErrTxValidateAlreadyExist
 	}
 	for _, cmd := range tx.GetPayload().GetCommands() {
@@ -60,6 +69,7 @@ func (c *CommandValidator) Tx(wsv core.WSV, txh model.TxFinder, tx model.Transac
 			return errors.Wrapf(core.ErrTxValidateNotFoundAuthorizer,
 				"authorizer : %s", cmd.GetAuthorizerId())
 		}
+		// TODO : sort すれば全体一致判定をO(nlogn)
 		for _, key := range ac.GetPublicKeys() {
 			if !containsPublicKeyInSignatures(tx.GetSignatures(), key) {
 				return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
