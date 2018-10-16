@@ -8,7 +8,7 @@ import (
 	. "github.com/proskenion/proskenion/regexp"
 )
 
-type QueryValidator struct{}
+type QueryValidator struct {}
 
 func NewQueryValidator() core.QueryValidator {
 	return &QueryValidator{}
@@ -37,6 +37,7 @@ func (q *QueryValidator) Validate(query model.Query) error {
 	return nil
 }
 
+// TODO これ Verify
 func (q *QueryValidator) accountObjectValidate(qp model.QueryPayload) error {
 	if ok := GetRegexp().VerifyAccountId.MatchString(qp.GetTargetId()); !ok {
 		return errors.Wrapf(ErrQueryValidateAccountTargetIdNotAccountId,

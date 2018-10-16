@@ -24,16 +24,6 @@ func createAccount(t *testing.T, authorizer *AccountWithPri, target string) mode
 	return tx
 }
 
-func getAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
-	q := NewTestFactory().NewQueryBuilder().
-		AuthorizerId(authorizer.AccountId).
-		TargetId(target).
-		RequestCode(model.AccountObjectCode).
-		Build()
-	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
-	return q
-}
-
 func TestAPIGate_WriteAndRead(t *testing.T) {
 	fc := NewTestFactory()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
@@ -75,34 +65,44 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		err     error
 	}{
 		{
-			getAccountQuery(t, acs[0], "target1@com"),
+			GetAccountQuery(t, acs[0], "target1@com"),
 			[]model.PublicKey{acs[1].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery(t, acs[0], "target2@com"),
+			GetAccountQuery(t, acs[0], "target2@com"),
 			[]model.PublicKey{acs[2].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery(t, acs[0], "target3@com"),
+			GetAccountQuery(t, acs[0], "target3@com"),
 			[]model.PublicKey{acs[3].Pubkey},
 			nil,
 		},
 		{
-			getAccountQuery(t, acs[0], "target4@com"),
+			GetAccountQuery(t, acs[0], "target4@com"),
 			[]model.PublicKey{},
 			nil,
 		},
 		{
-			getAccountQuery(t, acs[0], "target5@com"),
+			GetAccountQuery(t, acs[0], "target5@com"),
 			[]model.PublicKey{},
 			nil,
 		},
 		{
-			getAccountQuery(t, acs[0], "target6@com"),
+			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
 			core.ErrQueryProcessorNotFound,
+		},
+		{
+			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
+			[]model.PublicKey{},
+			core.ErrQueryProcessorNotSignedAuthorizer,
+		},
+		{
+			GetAccountQuery(t, &AccountWithPri{"auth@com", acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
+			[]model.PublicKey{},
+			core.ErrQueryProcessorNotExistAuthoirizer,
 		},
 	} {
 		res, err := api.Read(q.query)

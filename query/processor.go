@@ -1,6 +1,7 @@
 package query
 
 import (
+	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -15,6 +16,15 @@ func NewQueryProcessor(rp core.Repository, fc model.ModelFactory) core.QueryProc
 	return &QueryProcessor{rp, fc}
 }
 
+func containsPublicKey(keys []model.PublicKey, pub model.PublicKey) bool {
+	for _, key := range keys {
+		if bytes.Equal(key, pub) {
+			return true
+		}
+	}
+	return false
+}
+
 func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	top, ok := q.rp.Top()
 	if !ok {
@@ -27,6 +37,19 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
 	if err != nil {
 		return nil, err
+	}
+
+	// 署名チェック
+	ac := q.fc.NewEmptyAccount()
+	err = wsv.Query(query.GetPayload().GetAuthorizerId(), ac)
+	if err != nil {
+		return nil, errors.Wrapf(core.ErrQueryProcessorNotExistAuthoirizer,
+			"authorizer : %s", query.GetPayload().GetAuthorizerId())
+	}
+	if !containsPublicKey(ac.GetPublicKeys(), query.GetSignature().GetPublicKey()) {
+		return nil, errors.Wrapf(core.ErrQueryProcessorNotSignedAuthorizer,
+			"authorizer : %s, expect key : %x",
+			query.GetPayload().GetAuthorizerId(), query.GetSignature().GetPublicKey())
 	}
 
 	var res model.QueryResponse

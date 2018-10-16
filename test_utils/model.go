@@ -108,6 +108,16 @@ func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []mod
 	return tx
 }
 
+func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
+	q := NewTestFactory().NewQueryBuilder().
+		AuthorizerId(authorizer.AccountId).
+		TargetId(target).
+		RequestCode(model.AccountObjectCode).
+		Build()
+	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return q
+}
+
 /*
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {

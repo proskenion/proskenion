@@ -2,7 +2,6 @@ package command
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -54,12 +53,8 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 	if err != nil {
 		return err
 	}
-	txr, err := txh.Query(hash)
+	_, err = txh.Query(hash)
 	if errors.Cause(err) != core.ErrTxHistoryNotFound {
-		txrhash, _ := txr.Hash()
-		fmt.Println("Err :", err)
-		fmt.Println("Hash:", hash)
-		fmt.Println("Act :", txrhash)
 		return core.ErrTxValidateAlreadyExist
 	}
 	for _, cmd := range tx.GetPayload().GetCommands() {
