@@ -1,6 +1,8 @@
 package model
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 var (
 	ErrNewBlock    = errors.Errorf("Failed Factory NewBlock")

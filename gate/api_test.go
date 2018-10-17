@@ -16,14 +16,6 @@ import (
 	"testing"
 )
 
-func createAccount(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
-	tx := NewTestFactory().NewTxBuilder().
-		CreateAccount(authorizer.AccountId, target).
-		Build()
-	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))
-	return tx
-}
-
 func TestAPIGate_WriteAndRead(t *testing.T) {
 	fc := NewTestFactory()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
@@ -43,10 +35,10 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	GenesisCommitFromAccounts(t, rp, acs)
 
 	txs := []model.Transaction{
-		createAccount(t, acs[0], "target3@com"),
-		createAccount(t, acs[0], "target4@com"),
-		createAccount(t, acs[0], "target5@com"),
-		createAccount(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target6@com"),
+		CreateAccountTx(t, acs[0], "target3@com"),
+		CreateAccountTx(t, acs[0], "target4@com"),
+		CreateAccountTx(t, acs[0], "target5@com"),
+		CreateAccountTx(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target6@com"),
 	}
 	for _, tx := range txs {
 		require.NoError(t, api.Write(tx))
@@ -92,7 +84,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		{
 			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
-			core.ErrQueryProcessorNotFound,
+			core.ErrAPIGateQueryNotFound,
 		},
 		{
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
