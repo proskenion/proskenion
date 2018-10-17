@@ -2,9 +2,9 @@ package controller_test
 
 import (
 	"github.com/inconshreveable/log15"
-	"github.com/proskenion/proskenion/commit"
 	. "github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/proto"
@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func initializeAPIGate(t *testing.T) ([]*AccountWithPri, proskenion.APIGateServer) {
+func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIGateServer) {
 	fc := NewTestFactory()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
@@ -30,8 +30,6 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, proskenion.APIGateServe
 
 	server := NewAPIGateServer(fc, api, logger)
 
-	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
-
 	// genesis Commit
 	acs := []*AccountWithPri{
 		NewAccountWithPri("authoirzer@com"),
@@ -40,33 +38,62 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, proskenion.APIGateServe
 		NewAccountWithPri("target3@com"),
 	}
 	GenesisCommitFromAccounts(t, rp, acs)
-
-	txs := []model.Transaction{
-		CreateAccountTx(t, acs[0], "target3@com"),
-		CreateAccountTx(t, acs[0], "target4@com"),
-		CreateAccountTx(t, acs[0], "target5@com"),
-		CreateAccountTx(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target6@com"),
-	}
-	for _, tx := range txs {
-		require.NoError(t, api.Write(tx))
-	}
-	// Commit
-	_, txList, err := cm.CreateBlock()
-	require.NoError(t, err)
-
-	assert.Equal(t, 2, txList.Size())
-	assert.Equal(t, MustHash(txs[1]), MustHash(txList.List()[0]))
-	assert.Equal(t, MustHash(txs[2]), MustHash(txList.List()[1]))
-
-	return acs, server
+	return acs, queue, server
 }
 
 func statusCheck(t *testing.T, err error, code codes.Code) {
+	require.Error(t, err)
 	assert.Equalf(t, status.Code(err), code, err.Error())
 }
 
 func TestAPIGateServer_Write(t *testing.T) {
-	acs, server := initializeAPIGate(t)
+	acs, queue, server := initializeAPIGate(t)
+	for _, c := range []struct {
+		name string
+		tx   model.Transaction
+		code codes.Code
+	}{
+		{
+			"case 1 ok",
+			CreateAccountTx(t, acs[0], "target3@com"),
+			codes.OK,
+		},
+		{
+			"case 2 ok",
+			CreateAccountTx(t, acs[0], "target4@com"),
+			codes.OK,
+		},
+		{
+			"case 3 ok",
+			CreateAccountTx(t, acs[0], "target5@com"),
+			codes.OK,
+		},
+		{
+			"case 4 invalid",
+			RandomInvalidTx(t),
+			codes.InvalidArgument,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			_, err := server.Write(context.TODO(), c.tx.(*convertor.Transaction).Transaction)
+			if c.code != codes.OK {
+				statusCheck(t, err, c.code)
+				return
+			}
+			require.NoError(t, err)
+
+			_, err = server.Write(context.TODO(), c.tx.(*convertor.Transaction).Transaction)
+			statusCheck(t, err, codes.AlreadyExists)
+
+			actTx, ok := queue.Pop()
+			require.True(t, ok)
+			assert.Equal(t, MustHash(c.tx), MustHash(actTx))
+		})
+	}
+}
+
+func TestAPIGateServer_Query(t *testing.T) {
+	acs, _, server := initializeAPIGate(t)
 
 	for _, c := range []struct {
 		name    string
@@ -93,24 +120,12 @@ func TestAPIGateServer_Write(t *testing.T) {
 			codes.OK,
 		},
 		{
-			"case 4 ok",
-			GetAccountQuery(t, acs[0], "target4@com"),
-			[]model.PublicKey{},
-			codes.OK,
-		},
-		{
-			"case 5 ok",
-			GetAccountQuery(t, acs[0], "target5@com"),
-			[]model.PublicKey{},
-			codes.OK,
-		},
-		{
 			"case 6 not found",
 			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
 			codes.NotFound,
 		},
-		{//TODO this is invalidArguments
+		{ //TODO this is invalidArguments
 			"case 7 invalid",
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
