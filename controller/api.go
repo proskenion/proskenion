@@ -6,7 +6,6 @@ import (
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
-	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -16,8 +15,16 @@ import (
 // APIGateServer is the server API for APIGate service.
 type APIGateServer struct {
 	fc     model.ModelFactory
+	api    core.APIGate
 	logger log15.Logger
-	api    *gate.APIGate
+}
+
+func NewAPIGateServer(fc model.ModelFactory, api core.APIGate, logger log15.Logger) proskenion.APIGateServer {
+	return &APIGateServer{
+		fc,
+		api,
+		logger,
+	}
 }
 
 func (s *APIGateServer) Write(ctx context.Context, tx *proskenion.Transaction) (*proskenion.TxResponse, error) {

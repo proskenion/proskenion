@@ -1,28 +1,35 @@
-package gate_test
+package controller_test
 
 import (
 	"github.com/inconshreveable/log15"
-	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/commit"
-	"github.com/proskenion/proskenion/core"
+	. "github.com/proskenion/proskenion/controller"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
-	. "github.com/proskenion/proskenion/gate"
+	"github.com/proskenion/proskenion/gate"
+	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"testing"
 )
 
-func TestAPIGate_WriteAndRead(t *testing.T) {
+func initializeAPIGate(t *testing.T) ([]*AccountWithPri, proskenion.APIGateServer) {
 	fc := NewTestFactory()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(rp, fc)
-	api := NewAPIGate(queue, logger, qp)
+	api := gate.NewAPIGate(queue, logger, qp)
+
+	server := NewAPIGateServer(fc, api, logger)
+
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
 
 	// genesis Commit
@@ -51,60 +58,78 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	assert.Equal(t, MustHash(txs[1]), MustHash(txList.List()[0]))
 	assert.Equal(t, MustHash(txs[2]), MustHash(txList.List()[1]))
 
-	for _, q := range []struct {
+	return acs, server
+}
+
+func statusCheck(t *testing.T, err error, code codes.Code) {
+	assert.Equalf(t, status.Code(err), code, err.Error())
+}
+
+func TestAPIGateServer_Write(t *testing.T) {
+	acs, server := initializeAPIGate(t)
+
+	for _, c := range []struct {
+		name    string
 		query   model.Query
 		pubkeys []model.PublicKey
-		err     error
+		code    codes.Code
 	}{
 		{
+			"case 1 ok",
 			GetAccountQuery(t, acs[0], "target1@com"),
 			[]model.PublicKey{acs[1].Pubkey},
-			nil,
+			codes.OK,
 		},
 		{
+			"case 2 ok",
 			GetAccountQuery(t, acs[0], "target2@com"),
 			[]model.PublicKey{acs[2].Pubkey},
-			nil,
+			codes.OK,
 		},
 		{
+			"case 3 ok",
 			GetAccountQuery(t, acs[0], "target3@com"),
 			[]model.PublicKey{acs[3].Pubkey},
-			nil,
+			codes.OK,
 		},
 		{
+			"case 4 ok",
 			GetAccountQuery(t, acs[0], "target4@com"),
 			[]model.PublicKey{},
-			nil,
+			codes.OK,
 		},
 		{
+			"case 5 ok",
 			GetAccountQuery(t, acs[0], "target5@com"),
 			[]model.PublicKey{},
-			nil,
+			codes.OK,
 		},
 		{
+			"case 6 not found",
 			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
-			core.ErrAPIGateQueryNotFound,
+			codes.NotFound,
 		},
-		{
+		{//TODO this is invalidArguments
+			"case 7 invalid",
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			core.ErrQueryProcessorNotSignedAuthorizer,
-		},
-		{
-			GetAccountQuery(t, &AccountWithPri{"auth@com", acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
-			[]model.PublicKey{},
-			core.ErrQueryProcessorNotExistAuthoirizer,
+			codes.Internal,
 		},
 	} {
-		res, err := api.Read(q.query)
-		if q.err != nil {
-			assert.EqualError(t, errors.Cause(err), q.err.Error())
-		} else {
-			require.NoError(t, err)
-			assert.Equal(t, q.query.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
-			assert.Equal(t, q.pubkeys, res.GetPayload().GetAccount().GetPublicKeys())
-			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetAmount())
-		}
+		t.Run(c.name, func(t *testing.T) {
+			res, err := server.Read(context.TODO(), c.query.(*convertor.Query).Query)
+			if c.code != codes.OK {
+				statusCheck(t, err, c.code)
+			} else {
+				require.NoError(t, err)
+				resq := NewTestFactory().NewEmptyQueryResponse()
+				resq.(*convertor.QueryResponse).QueryResponse = res
+
+				assert.Equal(t, c.query.GetPayload().GetTargetId(), resq.GetPayload().GetAccount().GetAccountId())
+				assert.Equal(t, c.pubkeys, resq.GetPayload().GetAccount().GetPublicKeys())
+				assert.Equal(t, int64(0), resq.GetPayload().GetAccount().GetAmount())
+			}
+		})
 	}
 }

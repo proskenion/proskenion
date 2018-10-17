@@ -118,6 +118,14 @@ func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) mo
 	return q
 }
 
+func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
+	tx := NewTestFactory().NewTxBuilder().
+		CreateAccount(authorizer.AccountId, target).
+		Build()
+	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return tx
+}
+
 /*
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {
