@@ -92,7 +92,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		{
 			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
-			core.ErrQueryProcessorNotFound,
+			core.ErrAPIGateQueryNotFound,
 		},
 		{
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),

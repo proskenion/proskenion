@@ -11,6 +11,14 @@ message TxResponse {}
  * TxGate は Client から Transaction を受け取る
  **/
 service APIGate {
+    /**
+     * Write は Transaction を受け付ける。
+     *
+     * InvalidArgument (code = 3) : One of following conditions:
+     *  1 ) StatelessValidator で落ちる場合
+     * AlreadyExist (code = 6) : One of following conditions:
+     *  1 ) 既に同じ Transaction を受け取っていた場合
+     **/
     rpc Write (Transaction) returns (TxResponse);
     rpc Read (Query) returns (QueryResponse);
 }
