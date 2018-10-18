@@ -31,7 +31,7 @@ func (c *Consensus) Boot() {
 		}
 		top, ok = c.rp.Top()
 
-		// 1. 自分が Block の生成者か判定
+		// TODO 1. 自分が Block の生成者か判定
 		if true {
 			// 2. block を生成
 			block, txList, err := c.cs.CreateBlock()
