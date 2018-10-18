@@ -9,6 +9,7 @@ import (
 
 type Consensus struct {
 	commitChan chan interface{}
+	customize  *Customize
 	cs         core.CommitSystem
 	rp         core.Repository
 	gossip     core.Gossip
@@ -21,7 +22,9 @@ func (c *Consensus) Boot() {
 		panic("Must be genesis commit after call this func.")
 	}
 	for {
-		timer := time.NewTimer(time.Duration(top.GetPayload().GetCreatedTime() - commit.Now()))
+		timer := time.NewTimer(
+			c.customize.MaxWaitngCommitInterval +
+				time.Duration(top.GetPayload().GetCreatedTime()-commit.Now()))
 		// commit を待つ
 		select {
 		case <-c.commitChan:

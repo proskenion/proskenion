@@ -8,3 +8,6 @@ type Consensus interface {
 	// TODO
 	CommitValidate(block Block) error
 }
+
+type ConsensusCustomize interface {
+}
