@@ -6,20 +6,24 @@ import (
 )
 
 type Consensus struct {
-	commitChan chan interface{}
-	cc         core.ConsensusCustomize
-	cs         core.CommitSystem
-	rp         core.Repository
-	gossip     core.Gossip
-	logger     log15.Logger
+	cc     core.ConsensusCustomize
+	cs     core.CommitSystem
+	gossip core.Gossip
+	logger log15.Logger
+}
+
+func NewConsensus(cc core.ConsensusCustomize, cs core.CommitSystem, gossip core.Gossip, logger log15.Logger) core.Consensus {
+	return &Consensus{cc, cs, gossip, logger}
 }
 
 func (c *Consensus) Boot() {
 	for {
+		c.logger.Info("============= Wait Until Come Next Block =============")
 		c.cc.WaitUntilComeNextBlock()
 
-		// TODO 1. 自分が Block の生成者か判定
+		// 1. 自分が Block の生成者か判定
 		if c.cc.IsBlockCreator() {
+			c.logger.Info("============= Create Block =============")
 			// 2. block を生成
 			block, txList, err := c.cs.CreateBlock()
 			if err != nil {
@@ -34,5 +38,4 @@ func (c *Consensus) Boot() {
 			}
 		}
 	}
-
 }

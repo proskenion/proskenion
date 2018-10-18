@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/core"
 	"time"
@@ -42,14 +43,19 @@ type MockCustomize struct {
 	commitChan chan interface{}
 }
 
+func NewMockCustomize(rp core.Repository, commitChan chan interface{}) core.ConsensusCustomize {
+	return &MockCustomize{rp, commitChan}
+}
+
 func (mc *MockCustomize) WaitUntilComeNextBlock() {
 	top, ok := mc.rp.Top()
 	if !ok {
 		panic("Must be Genesis Commit after boot consensus")
 	}
+	fmt.Println("Height: ", top.GetPayload().GetHeight())
 
 	timer := time.NewTimer(
-		time.Duration(1000) +
+		time.Second +
 			time.Duration(top.GetPayload().GetCreatedTime()-commit.Now()))
 	// commit を待つ
 	select {
