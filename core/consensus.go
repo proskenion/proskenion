@@ -10,4 +10,6 @@ type Consensus interface {
 }
 
 type ConsensusCustomize interface {
+	WaitUntilComeNextBlock()
+	IsBlockCreator() bool
 }

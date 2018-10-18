@@ -2,14 +2,12 @@ package consensus
 
 import (
 	"github.com/inconshreveable/log15"
-	"github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/core"
-	"time"
 )
 
 type Consensus struct {
 	commitChan chan interface{}
-	customize  *Customize
+	cc         core.ConsensusCustomize
 	cs         core.CommitSystem
 	rp         core.Repository
 	gossip     core.Gossip
@@ -17,25 +15,11 @@ type Consensus struct {
 }
 
 func (c *Consensus) Boot() {
-	top, ok := c.rp.Top()
-	if !ok {
-		panic("Must be genesis commit after call this func.")
-	}
 	for {
-		timer := time.NewTimer(
-			c.customize.MaxWaitngCommitInterval +
-				time.Duration(top.GetPayload().GetCreatedTime()-commit.Now()))
-		// commit を待つ
-		select {
-		case <-c.commitChan:
-			break
-		case <-timer.C:
-			break
-		}
-		top, ok = c.rp.Top()
+		c.cc.WaitUntilComeNextBlock()
 
 		// TODO 1. 自分が Block の生成者か判定
-		if true {
+		if c.cc.IsBlockCreator() {
 			// 2. block を生成
 			block, txList, err := c.cs.CreateBlock()
 			if err != nil {
