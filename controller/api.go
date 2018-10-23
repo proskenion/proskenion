@@ -33,6 +33,7 @@ func (s *APIGateServer) Write(ctx context.Context, tx *proskenion.Transaction) (
 
 	err := s.api.Write(modelTx)
 	if err != nil {
+		s.logger.Error(err.Error())
 		if errors.Cause(err) == core.ErrAPIGateWriteVerifyError {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -50,6 +51,7 @@ func (s *APIGateServer) Read(ctx context.Context, query *proskenion.Query) (*pro
 
 	res, err := s.api.Read(modelQuery)
 	if err != nil {
+		s.logger.Error(err.Error())
 		if errors.Cause(err) == core.ErrAPIGateQueryVerifyError ||
 			errors.Cause(err) == core.ErrAPIGateQueryValidateError {
 			return nil, status.Error(codes.InvalidArgument, err.Error())

@@ -21,8 +21,8 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc)
-	api := NewAPIGate(queue, logger, qp)
+	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
+	api := NewAPIGate(queue, qp, logger)
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
 
 	// genesis Commit

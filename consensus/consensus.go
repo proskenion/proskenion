@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/core"
 )
@@ -30,6 +31,7 @@ func (c *Consensus) Boot() {
 				c.logger.Error(err.Error())
 				continue
 			}
+			c.logger.Info(fmt.Sprintf("txLen :: %d", len(txList.List())))
 			// 3. block を Gosship
 			err = c.gossip.GossipBlock(block, txList)
 			if err != nil {

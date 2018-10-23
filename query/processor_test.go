@@ -32,7 +32,7 @@ func TestQueryProcessor_Query(t *testing.T) {
 	authorizer := NewAccountWithPri("authorizer@com")
 	genesisCommit(t, rp, authorizer)
 
-	qp := NewQueryProcessor(rp, fc)
+	qp := NewQueryProcessor(rp, fc, NewTestConfig())
 
 	query := GetAccountQuery(t, authorizer, "target@com")
 	res, err := qp.Query(query)

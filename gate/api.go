@@ -14,7 +14,7 @@ type APIGate struct {
 	qp     core.QueryProcessor
 }
 
-func NewAPIGate(queue core.ProposalTxQueue, logger log15.Logger, qp core.QueryProcessor) core.APIGate {
+func NewAPIGate(queue core.ProposalTxQueue, qp core.QueryProcessor, logger log15.Logger) core.APIGate {
 	return &APIGate{queue, logger, qp}
 }
 

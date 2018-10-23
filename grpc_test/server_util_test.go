@@ -1,8 +1,7 @@
-package main
+package grpc_test
 
 import (
-	"encoding/hex"
-	"flag"
+	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -22,27 +21,24 @@ import (
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"net"
+	"os"
+	"testing"
 )
 
-func main() {
+func clearData(t *testing.T, conf *config.Config) {
+	require.NoError(t, os.Remove(fmt.Sprintf("%s/%s.sqlite", conf.DB.Path, conf.DB.Name)))
+}
+
+func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
+	clearData(t, conf)
+
 	logger := log15.New()
-	logger.Info("=================== boot proskenion ==========================")
+	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
-	// Arguents ====
-	configFile := "config/config.yaml"
-	if len(flag.Args()) != 0 {
-		configFile = flag.Arg(0)
-	}
-
-	conf := config.NewConfig(configFile)
 	cryptor := crypto.NewEd25519Sha256Cryptor()
-
-	// WIP : set public key and private key, this peer
-	pub, pri := cryptor.NewKeyPairs()
-	conf.Peer.PublicKey = hex.EncodeToString(pub)
-	conf.Peer.PrivateKey = hex.EncodeToString(pri)
 
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor()
@@ -69,27 +65,19 @@ func main() {
 		txList := repository.NewTxList(cryptor)
 		txList.Push(fc.NewTxBuilder().
 			CreateAccount("root", "root@com").
-			AddPublicKey("root", "root@com", pub).
+			AddPublicKey("root", "root@com", conf.Peer.PublicKeyBytes()).
+			CreateAccount("root", "authorizer@com").
 			Build())
 		return txList
 	}
-	rp.GenesisCommit(genesisTxList())
+	require.NoError(t, rp.GenesisCommit(genesisTxList()))
 
 	// ==================== gate =======================
 	logger.Info("================= Gate Boot =================")
 	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
-	if err != nil {
-		panic(err.Error())
-	}
+	require.NoError(t, err)
 
 	api := gate.NewAPIGate(queue, qp, logger)
-	s := grpc.NewServer([]grpc.ServerOption{
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_validator.UnaryServerInterceptor(),
-			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
-		)),
-	}...)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
 
 	logger.Info("================= Consensus Boot =================")
@@ -98,6 +86,16 @@ func main() {
 	}()
 
 	if err := s.Serve(l); err != nil {
-		logger.Error("Failed to server grpc: %s", err.Error())
+		require.NoError(t, err)
 	}
+}
+
+func NewTestServer() *grpc.Server {
+	return grpc.NewServer([]grpc.ServerOption{
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_validator.UnaryServerInterceptor(),
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(),
+		)),
+	}...)
 }

@@ -25,8 +25,8 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, p
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc)
-	api := gate.NewAPIGate(queue, logger, qp)
+	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
+	api := gate.NewAPIGate(queue, qp, logger)
 
 	server := NewAPIGateServer(fc, api, logger)
 
@@ -100,7 +100,7 @@ func TestAPIGateServer_Query(t *testing.T) {
 		query   model.Query
 		pubkeys []model.PublicKey
 		code    codes.Code
-	} {
+	}{
 		{
 			"case 1 ok",
 			GetAccountQuery(t, acs[0], "target1@com"),

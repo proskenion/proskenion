@@ -31,6 +31,7 @@ func (am *AccountManager) SetAuthorizer(t *testing.T) {
 	tx := am.fc.NewTxBuilder().
 		AddPublicKey(am.authorizer.AccountId, am.authorizer.AccountId, am.authorizer.Pubkey).
 		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
 }
 
@@ -40,7 +41,6 @@ func (am *AccountManager) CreateAccount(t *testing.T, ac *AccountWithPri) {
 		AddPublicKey(am.authorizer.AccountId, ac.AccountId, ac.Pubkey).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
-
 	require.NoError(t, am.client.Write(tx))
 }
 

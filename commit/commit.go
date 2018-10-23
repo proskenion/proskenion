@@ -2,6 +2,7 @@ package commit
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -106,18 +107,22 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	for txList.Size() < c.property.NumTxInBlock {
 		tx, ok := c.queue.Pop()
 		if !ok {
+			fmt.Println("tx pop break!!!")
 			break
 		}
 
 		// tx を構築
 		if err := tx.Validate(wsv, txHistory); err != nil {
+			fmt.Println(err.Error())
 			goto txskip
 		}
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
+				fmt.Println(err.Error())
 				goto txskip
 			}
 			if err := cmd.Execute(wsv); err != nil {
+				fmt.Println(err.Error())
 				goto txskip // WIP : 要考
 				//return nil, nil, rollBackTx(dtx, err)
 			}
