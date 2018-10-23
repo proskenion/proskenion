@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"flag"
 	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/commit"
@@ -20,7 +21,13 @@ func main() {
 	logger := log15.New()
 	logger.Info("=================== boot proskenion ==========================")
 
-	conf := config.NewConfig("config/config.yaml")
+	// Arguents ====
+	configFile := "config/config.yaml"
+	if len(flag.Args()) != 0 {
+		configFile = flag.Arg(0)
+	}
+
+	conf := config.NewConfig(configFile)
 	cryptor := crypto.NewEd25519Sha256Cryptor()
 
 	// WIP : set public key and private key, this peer

@@ -18,8 +18,14 @@ build-linux:
 
 .PHONY: test
 test:
-	go test -cover -v $(shell glide novendor)
+	go test -cover -v $(shell glide novendor | grep -v grpc_test)
 
 .PHONY: test-ci
 test-ci:
-	go test -v $(shell glide novendor)
+	go test -v $(shell glide novendor nogrpc_test | grep -v grpc_test)
+
+.PHONY: test-grpc
+test-grpc:
+	./bin/proskenion ../grpc_test/config.yaml &
+	sleep 1
+	go test -cover -v ./grpc_test

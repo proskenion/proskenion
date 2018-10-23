@@ -100,7 +100,7 @@ func TestAPIGateServer_Query(t *testing.T) {
 		query   model.Query
 		pubkeys []model.PublicKey
 		code    codes.Code
-	}{
+	} {
 		{
 			"case 1 ok",
 			GetAccountQuery(t, acs[0], "target1@com"),
