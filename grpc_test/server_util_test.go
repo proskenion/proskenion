@@ -29,7 +29,7 @@ import (
 )
 
 func clearData(t *testing.T, conf *config.Config) {
-	require.NoError(t, os.Remove(fmt.Sprintf("%s/%s.sqlite", conf.DB.Path, conf.DB.Name)))
+	os.Remove(fmt.Sprintf("%s/%s.sqlite", conf.DB.Path, conf.DB.Name))
 }
 
 func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
