@@ -31,7 +31,6 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	assert.NoError(t, cs2.VerifyCommit(block, txList))
 	assert.NoError(t, cs2.Commit(block, txList))
 
-	fmt.Println("blockHash: ", MustHash(block))
 	rtx, err := rp.Begin()
 	require.NoError(t, err)
 
