@@ -1,7 +1,6 @@
 package commit_test
 
 import (
-	"fmt"
 	. "github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
