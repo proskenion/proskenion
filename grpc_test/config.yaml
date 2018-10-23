@@ -1,0 +1,12 @@
+# config.yaml grpctest
+db:
+  path: database
+  kind: sqlite3
+  name: testdb
+proposal_txs_limits: 1000
+commit:
+  num_tx_in_block: 1000
+peer:
+  public_key: 3ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
+  private_key: 820d31b8bbfaaa835de50fd82ee5f40a80e1dd681498efc119bae23de2af9ed73ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
+  port: 50023

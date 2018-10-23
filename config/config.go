@@ -10,8 +10,8 @@ import (
 type Config struct {
 	DB                DBConfig     `yaml:"db"`
 	ProposalTxsLimits int          `yaml:"proposal_txs_limits"`
-	Commit            CommitConfig `yaml:"commit_config"`
-	Peer              PeerConfig   `yaml:"peer_config"`
+	Commit            CommitConfig `yaml:"commit"`
+	Peer              PeerConfig   `yaml:"peer"`
 }
 
 type DBConfig struct {
@@ -21,12 +21,13 @@ type DBConfig struct {
 }
 
 type CommitConfig struct {
-	NumTxInBlock int
+	NumTxInBlock int `yaml:"num_tx_in_block"`
 }
 
 type PeerConfig struct {
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
+	Port       string `yaml:"port"`
 }
 
 func (c PeerConfig) PublicKeyBytes() model.PublicKey {

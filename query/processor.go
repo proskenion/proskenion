@@ -3,17 +3,19 @@ package query
 import (
 	"bytes"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type QueryProcessor struct {
-	rp core.Repository
-	fc model.ModelFactory
+	rp   core.Repository
+	fc   model.ModelFactory
+	conf *config.Config
 }
 
-func NewQueryProcessor(rp core.Repository, fc model.ModelFactory) core.QueryProcessor {
-	return &QueryProcessor{rp, fc}
+func NewQueryProcessor(rp core.Repository, fc model.ModelFactory, conf *config.Config) core.QueryProcessor {
+	return &QueryProcessor{rp, fc, conf}
 }
 
 func containsPublicKey(keys []model.PublicKey, pub model.PublicKey) bool {
@@ -78,6 +80,9 @@ func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV)
 	qr := q.fc.NewQueryResponseBuilder().
 		Account(ac).
 		Build()
+	if err := q.signedResponse(qr); err != nil {
+		return nil, err
+	}
 	return qr, nil
 }
 
@@ -91,5 +96,12 @@ func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (m
 	qr := q.fc.NewQueryResponseBuilder().
 		Peer(peer).
 		Build()
+	if err := q.signedResponse(qr); err != nil {
+		return nil, err
+	}
 	return qr, nil
+}
+
+func (q *QueryProcessor) signedResponse(res model.QueryResponse) error {
+	return res.Sign(q.conf.Peer.PublicKeyBytes(), q.conf.Peer.PrivateKeyBytes())
 }
