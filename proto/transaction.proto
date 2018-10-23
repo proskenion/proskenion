@@ -6,7 +6,6 @@ import "commands.proto";
 
 /**
  * Transaction は Client が送信する取引の内容を記述したもの。
- * 中身は TODO
  **/
 message Transaction {
     message Payload {
