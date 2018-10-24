@@ -12,9 +12,10 @@ build:
 build-osx:
 	GOOS=darwin GOARCH=amd64 go build -o ./bin/darwin64/proskenion main.go
 
+# https://github.com/mattn/go-sqlite3/issues/372#issuecomment-396863368
 .PHONY: build-linux
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o ./bin/linux/proskenion main.go
+	CC=x86_64-linux-musl-gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -o ./bin/linux/proskenion main.go
 
 .PHONY: test
 test:
