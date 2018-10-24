@@ -3,6 +3,7 @@ package grpc_test
 import (
 	"github.com/proskenion/proskenion/config"
 	. "github.com/proskenion/proskenion/test_utils"
+	"sync"
 	"testing"
 	"time"
 )
@@ -46,11 +47,15 @@ func TestScenario(t *testing.T) {
 		NewAccountMnager(t, serverPeer),
 		NewAccountMnager(t, serverPeer),
 	}
+	w := &sync.WaitGroup{}
 	for i, ac := range acs {
+		w.Add(1)
 		go func(ac *AccountWithPri) {
 			ams[i].QueryAccountPassed(t, ac)
+			w.Done()
 		}(ac)
 	}
+	w.Wait()
 
 	// server stop
 	server.GracefulStop()
