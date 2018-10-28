@@ -6,7 +6,61 @@ import (
 	"github.com/proskenion/proskenion/proto"
 )
 
+type ObjectFactory struct {
+	cryptor core.Cryptor
+}
+
+func NewObjectFactory(cryptor core.Cryptor) model.ObjectFactory {
+	return &ObjectFactory{cryptor}
+}
+
+func (f *ObjectFactory) NewEmptyAccount() model.Account {
+	return &Account{
+		f.cryptor,
+		&proskenion.Account{},
+	}
+}
+
+func (f *ObjectFactory) NewEmptyPeer() model.Peer {
+	return &Peer{
+		f.cryptor,
+		&proskenion.Peer{},
+	}
+}
+
+func (f *ObjectFactory) NewSignature(pubkey model.PublicKey, signature []byte) model.Signature {
+	return &Signature{
+		&proskenion.Signature{
+			PublicKey: []byte(pubkey),
+			Signature: signature,
+		},
+	}
+}
+
+func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, amount int64) model.Account {
+	return &Account{
+		f.cryptor,
+		&proskenion.Account{
+			AccountId:   accountId,
+			AccountName: accountName,
+			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
+			Amount:      amount,
+		},
+	}
+}
+
+func (f *ObjectFactory) NewPeer(address string, pubkey model.PublicKey) model.Peer {
+	return &Peer{
+		f.cryptor,
+		&proskenion.Peer{
+			Address:   address,
+			PublicKey: []byte(pubkey),
+		},
+	}
+}
+
 type ModelFactory struct {
+	model.ObjectFactory
 	cryptor          core.Cryptor
 	executor         core.CommandExecutor
 	commandValidator core.CommandValidator
@@ -17,7 +71,7 @@ func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
 	cmdValidator core.CommandValidator,
 	queryValidator core.QueryValidator) model.ModelFactory {
-	factory := &ModelFactory{cryptor, executor, cmdValidator, queryValidator}
+	factory := &ModelFactory{NewObjectFactory(cryptor), cryptor, executor, cmdValidator, queryValidator}
 	executor.SetFactory(factory)
 	cmdValidator.SetFactory(factory)
 	return factory
@@ -33,20 +87,6 @@ func (f *ModelFactory) NewEmptyBlock() model.Block {
 	}
 }
 
-func (f *ModelFactory) NewEmptyAccount() model.Account {
-	return &Account{
-		f.cryptor,
-		&proskenion.Account{},
-	}
-}
-
-func (f *ModelFactory) NewEmptyPeer() model.Peer {
-	return &Peer{
-		f.cryptor,
-		&proskenion.Peer{},
-	}
-}
-
 func (f *ModelFactory) NewEmptyTx() model.Transaction {
 	return f.NewTxBuilder().Build()
 }
@@ -57,37 +97,6 @@ func (f *ModelFactory) NewEmptyQuery() model.Query {
 
 func (f *ModelFactory) NewEmptyQueryResponse() model.QueryResponse {
 	return f.NewQueryResponseBuilder().Build()
-}
-
-func (f *ModelFactory) NewSignature(pubkey model.PublicKey, signature []byte) model.Signature {
-	return &Signature{
-		&proskenion.Signature{
-			PublicKey: []byte(pubkey),
-			Signature: signature,
-		},
-	}
-}
-
-func (f *ModelFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, amount int64) model.Account {
-	return &Account{
-		f.cryptor,
-		&proskenion.Account{
-			AccountId:   accountId,
-			AccountName: accountName,
-			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
-			Amount:      amount,
-		},
-	}
-}
-
-func (f *ModelFactory) NewPeer(address string, pubkey model.PublicKey) model.Peer {
-	return &Peer{
-		f.cryptor,
-		&proskenion.Peer{
-			Address:   address,
-			PublicKey: []byte(pubkey),
-		},
-	}
 }
 
 func (f *ModelFactory) NewBlockBuilder() model.BlockBuilder {
