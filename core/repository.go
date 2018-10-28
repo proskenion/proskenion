@@ -51,6 +51,7 @@ type MerklePatriciaController interface {
 	Upsert(KVNode) (MerklePatriciaNodeIterator, error)
 	// hash を Root にする
 	Set(hash Hash) error
+	Get(hash Hash) (MerklePatriciaNodeIterator, error)
 	Hasher
 	Marshaler
 	Unmarshaler

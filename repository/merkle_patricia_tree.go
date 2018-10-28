@@ -3,6 +3,7 @@ package repository
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -75,6 +76,10 @@ func (t *MerklePatriciaTree) Iterator() core.MerklePatriciaNodeIterator {
 // Hash に root を変更
 func (t *MerklePatriciaTree) Set(hash model.Hash) error {
 	return t.Iterator().Set(hash)
+}
+
+func (t *MerklePatriciaTree) Get(hash model.Hash) (core.MerklePatriciaNodeIterator, error) {
+	return t.Iterator().Get(hash)
 }
 
 // key で参照した先の iterator を取得
@@ -529,11 +534,22 @@ func (t *MerklePatriciaNodeIterator) Set(hash model.Hash) error {
 	return t.dba.Load(hash, t)
 }
 
+func (t *MerklePatriciaNodeIterator) Get(hash model.Hash) (core.MerklePatriciaNodeIterator, error) {
+	it := t.newEmptyInternalIterator()
+	err := t.dba.Load(hash, it)
+	if err != nil {
+		return nil, err
+	}
+	return it, nil
+}
+
 func (t *MerklePatriciaNodeIterator) SubLeafs() ([]core.MerklePatriciaNodeIterator, error) {
+	fmt.Println(t.Key())
 	if t.node.Leaf() {
 		return []core.MerklePatriciaNodeIterator{t}, nil
 	} else {
 		rets := make([]core.MerklePatriciaNodeIterator, 0, len(t.Childs()))
+		fmt.Println(len(t.Childs()))
 		if len(t.DataHash()) != 0 {
 			it, err := t.getLeaf()
 			if err != nil {
@@ -543,6 +559,8 @@ func (t *MerklePatriciaNodeIterator) SubLeafs() ([]core.MerklePatriciaNodeIterat
 			rets = append(rets, its...)
 		}
 		for key, _ := range t.Childs() {
+			fmt.Printf(" :%d", key)
+
 			it, err := t.getChild(key)
 			if err != nil {
 				return nil, err

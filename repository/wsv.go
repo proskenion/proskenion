@@ -2,6 +2,7 @@ package repository
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -17,8 +18,8 @@ type WSV struct {
 }
 
 var WSV_ROOT_KEY byte = 0
-var OBJECT_ROOT_KEY byte = 0
-var PEER_ROOT_KEY byte = 1
+var OBJECT_ROOT_KEY byte = 5
+var PEER_ROOT_KEY byte = 6
 
 func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV, error) {
 	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
@@ -68,16 +69,13 @@ func (w *WSV) Query(targetId string, value model.Unmarshaler) error {
 }
 
 func (w *WSV) getPeerRoot() (core.MerklePatriciaNodeIterator, error) {
-	mtHash, err := w.tree.Hash()
-	if err != nil {
-		return nil, err
-	}
-	wsvRootHash := w.tree.Iterator().Childs()[WSV_ROOT_KEY]
-	w.tree.Set(wsvRootHash)
 	if peerRootHash, ok := w.tree.Iterator().Childs()[PEER_ROOT_KEY]; ok {
-		w.tree.Set(peerRootHash)
-		it := w.tree.Iterator()
-		w.tree.Set(mtHash)
+		it, err := w.tree.Get(peerRootHash)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("it Key()")
+		fmt.Println(it.Key())
 		return it, nil
 	}
 	return nil, errors.Errorf("not found peerservice")
@@ -99,10 +97,14 @@ func (w *WSV) PeerService() (core.PeerService, error) {
 			return w.ps, nil
 		}
 	}
+
+	fmt.Println("peerRoot Key()")
+	fmt.Println(peerRoot.Key())
 	leafs, err := peerRoot.SubLeafs()
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(len(leafs))
 	peers := make([]model.Peer, 0, len(leafs))
 	for _, leaf := range leafs {
 		peer := w.fc.NewEmptyPeer()
@@ -110,6 +112,7 @@ func (w *WSV) PeerService() (core.PeerService, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(peer.GetAddress())
 		peers = append(peers, peer)
 	}
 	w.ps = NewPeerService(peers)
