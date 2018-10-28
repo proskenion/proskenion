@@ -192,13 +192,6 @@ type MerklePatriciaNodeIterator struct {
 	node    MerklePatriciaNode
 }
 
-func NewMerklePatriciaNodeIterator(dba core.KeyValueStore, cryptor core.Cryptor) core.MerklePatriciaNodeIterator {
-	return &MerklePatriciaNodeIterator{
-		dba:     dba,
-		cryptor: cryptor,
-	}
-}
-
 // new** は単に型の生成、データの保存は行わない
 func (t *MerklePatriciaNodeIterator) newEmptyLeafIterator() core.MerklePatriciaNodeIterator {
 	return &MerklePatriciaNodeIterator{
@@ -534,4 +527,32 @@ func (t *MerklePatriciaNodeIterator) DataHash() model.Hash {
 // Hash に現在の Iterator を変更
 func (t *MerklePatriciaNodeIterator) Set(hash model.Hash) error {
 	return t.dba.Load(hash, t)
+}
+
+func (t *MerklePatriciaNodeIterator) SubLeafs() ([]core.MerklePatriciaNodeIterator, error) {
+	if t.node.Leaf() {
+		return []core.MerklePatriciaNodeIterator{t}, nil
+	} else {
+		rets := make([]core.MerklePatriciaNodeIterator, 0, len(t.Childs()))
+		if len(t.DataHash()) != 0 {
+			it, err := t.getLeaf()
+			if err != nil {
+				return nil, err
+			}
+			its, err := it.SubLeafs()
+			rets = append(rets, its...)
+		}
+		for key, _ := range t.Childs() {
+			it, err := t.getChild(key)
+			if err != nil {
+				return nil, err
+			}
+			its, err := it.SubLeafs()
+			if err != nil {
+				return nil, err
+			}
+			rets = append(rets, its...)
+		}
+		return rets, nil
+	}
 }

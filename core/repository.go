@@ -71,6 +71,7 @@ type MerklePatriciaNodeIterator interface {
 	Leaf() bool
 	Data(unmarshaler Unmarshaler) error
 	Prev() (MerklePatriciaNodeIterator, error)
+	SubLeafs() ([]MerklePatriciaNodeIterator, error)
 }
 
 // WSV (MerklePatriciaTree で管理)

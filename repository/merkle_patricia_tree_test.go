@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -99,6 +100,28 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		assert.NoError(t, err)
 		assert.Equal(t, MustHash(acs[i]), MustHash(ac))
 	}
+	// Check SubTree1
+	it := tree1.Iterator()
+	leafs, err := it.SubLeafs()
+	require.NoError(t, err)
+	exAcs := acs
+	assert.Equal(t, 5, len(leafs))
+	assertAcs := func(ac model.Account) {
+		for i, exAc := range exAcs {
+			if bytes.Equal(MustHash(exAc), MustHash(ac)) {
+				exAcs = append(exAcs[:i], exAcs[i+1:]...)
+				return
+			}
+		}
+		assert.Failf(t, "assert accounts.", "%x is not found.", MustHash(ac))
+	}
+	for i, leaf := range leafs {
+		ac := RandomAccount()
+		require.NoError(t, leaf.Data(ac))
+		assertAcs(ac)
+		assert.Equal(t, 5-i-1, len(exAcs))
+	}
+	assert.Equal(t, 0, len(exAcs))
 
 	// Second Upsert part 2 tree1
 	err = tree1.Set(lastHash)
@@ -111,6 +134,20 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		assert.NoError(t, err)
 		assert.Equal(t, MustHash(acs2[i]), MustHash(ac))
 	}
+
+	// Check SubTree2
+	it = tree1.Iterator()
+	leafs, err = it.SubLeafs()
+	require.NoError(t, err)
+	exAcs = acs2
+	assert.Equal(t, 5, len(leafs))
+	for i, leaf := range leafs {
+		ac := RandomAccount()
+		require.NoError(t, leaf.Data(ac))
+		assertAcs(ac)
+		assert.Equal(t, 5-i-1, len(exAcs))
+	}
+	assert.Equal(t, 0, len(exAcs))
 }
 
 func TestMerklePatriciaTree(t *testing.T) {
