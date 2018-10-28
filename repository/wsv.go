@@ -1,24 +1,35 @@
 package repository
 
 import (
+	"bytes"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type WSV struct {
-	tx   core.DBATx
-	tree core.MerklePatriciaTree
+	tx     core.DBATx
+	tree   core.MerklePatriciaTree
+	fc     model.ObjectFactory
+	ps     core.PeerService
+	psHash model.Hash
 }
 
 var WSV_ROOT_KEY byte = 0
+var OBJECT_ROOT_KEY byte = 0
+var PEER_ROOT_KEY byte = 1
 
 func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV, error) {
 	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
 	if err != nil {
 		return nil, err
 	}
-	return &WSV{tx, tree}, nil
+	return &WSV{
+		tx:   tx,
+		tree: tree,
+		fc:   convertor.NewObjectFactory(cryptor),
+	}, nil
 }
 
 func (w *WSV) Hash() (model.Hash, error) {
@@ -28,8 +39,13 @@ func (w *WSV) Hash() (model.Hash, error) {
 // targetId を MerklePatriciaTree の key バイト列に変換
 // WIP : @, ., # に対応
 func TargetIdToKey(id string) []byte {
-	ret := make([]byte, 1)
+	ret := make([]byte, 2)
 	ret[0] = WSV_ROOT_KEY
+	if id[0] == ':' {
+		ret[1] = PEER_ROOT_KEY
+	} else {
+		ret[1] = OBJECT_ROOT_KEY
+	}
 	for _, c := range id {
 		ret = append(ret, byte(c))
 	}
@@ -49,6 +65,56 @@ func (w *WSV) Query(targetId string, value model.Unmarshaler) error {
 		return errors.Wrap(core.ErrWSVQueryUnmarshal, err.Error())
 	}
 	return nil
+}
+
+func (w *WSV) getPeerRoot() (core.MerklePatriciaNodeIterator, error) {
+	mtHash, err := w.tree.Hash()
+	if err != nil {
+		return nil, err
+	}
+	wsvRootHash := w.tree.Iterator().Childs()[WSV_ROOT_KEY]
+	w.tree.Set(wsvRootHash)
+	if peerRootHash, ok := w.tree.Iterator().Childs()[PEER_ROOT_KEY]; ok {
+		w.tree.Set(peerRootHash)
+		it := w.tree.Iterator()
+		w.tree.Set(mtHash)
+		return it, nil
+	}
+	return nil, errors.Errorf("not found peerservice")
+}
+
+// PeerService gets value from targetId
+func (w *WSV) PeerService() (core.PeerService, error) {
+	peerRoot, err := w.getPeerRoot()
+	if err != nil {
+		return nil, err
+	}
+	peerRootHash, err := peerRoot.Hash()
+	if err != nil {
+		return nil, err
+	}
+	if len(w.psHash) != 0 {
+		// キャッシュがあったら再利用
+		if bytes.Equal(w.psHash, peerRootHash) {
+			return w.ps, nil
+		}
+	}
+	leafs, err := peerRoot.SubLeafs()
+	if err != nil {
+		return nil, err
+	}
+	peers := make([]model.Peer, 0, len(leafs))
+	for _, leaf := range leafs {
+		peer := w.fc.NewEmptyPeer()
+		err := leaf.Data(peer)
+		if err != nil {
+			return nil, err
+		}
+		peers = append(peers, peer)
+	}
+	w.ps = NewPeerService(peers)
+	w.psHash = peerRootHash
+	return NewPeerService(peers), nil
 }
 
 type KVNode struct {

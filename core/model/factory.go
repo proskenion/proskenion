@@ -9,18 +9,24 @@ var (
 	ErrNewProposal = errors.Errorf("Failed Factory NewProposal")
 )
 
-type ModelFactory interface {
+type ObjectFactory interface {
 	NewSignature(pubkey PublicKey, signature []byte) Signature
 	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
 	NewPeer(address string, pubkey PublicKey) Peer
+
+	NewEmptyAccount() Account
+	NewEmptyPeer() Peer
+}
+
+type ModelFactory interface {
+	ObjectFactory
+
 	NewBlockBuilder() BlockBuilder
 	NewTxBuilder() TxBuilder
 	NewQueryBuilder() QueryBuilder
 	NewQueryResponseBuilder() QueryResponseBuilder
 
 	NewEmptyBlock() Block
-	NewEmptyAccount() Account
-	NewEmptyPeer() Peer
 	NewEmptyTx() Transaction
 	NewEmptyQuery() Query
 	NewEmptyQueryResponse() QueryResponse

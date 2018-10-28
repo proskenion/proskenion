@@ -17,9 +17,9 @@ var (
 )
 
 var (
-	ErrRepositoryCommitLoadPreBlock   = errors.Errorf("Failed Repository Commit Load PreBlockchain")
-	ErrRepositoryCommitLoadWSV        = errors.Errorf("Failed Repository Commit Load WSV")
-	ErrRepositoryCommitLoadTxHistory  = errors.Errorf("Failed Repository Commit Load TxHistory")
+	ErrRepositoryCommitLoadPreBlock  = errors.Errorf("Failed Repository Commit Load PreBlockchain")
+	ErrRepositoryCommitLoadWSV       = errors.Errorf("Failed Repository Commit Load WSV")
+	ErrRepositoryCommitLoadTxHistory = errors.Errorf("Failed Repository Commit Load TxHistory")
 )
 
 // Transaction 列の管理
@@ -79,6 +79,8 @@ type WSV interface {
 	Hash() (Hash, error)
 	// Query gets value from targetId
 	Query(targetId string, value Unmarshaler) error
+	// Get PeerService
+	PeerService() (PeerService, error)
 	// Append [targetId] = value
 	Append(targetId string, value Marshaler) error
 	// Commit appenging nodes
@@ -128,4 +130,9 @@ type RepositoryTx interface {
 	Blockchain(Hash) (Blockchain, error)
 	Commit() error
 	Rollback() error
+}
+
+// Peer 取得機構
+type PeerService interface {
+	List() []Peer
 }
