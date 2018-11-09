@@ -1,0 +1,134 @@
+syntax = "proto3";
+package proskenion;
+
+import "objects.proto";
+
+enum FormulaErrCode {
+    OK = 0;
+    AllErr = 1;
+    SyntaxErr = 2;
+    InternalErr = 3;
+}
+
+message ProSL {
+    TxFormula txFormula = 1;
+    ComparableFormula comparableFormula = 2;
+
+    Define define = 3;
+    Conditional conditional = 4;
+
+    ProSL prosl = 5;
+}
+
+message Define {
+    string variableName = 1;
+    ProSL prosl = 2;
+    Define define = 3;
+}
+
+message Conditional {
+    If if = 1;
+    Elif elif = 2;
+    Else else = 3;
+    ErrCatch errcatch = 4;
+}
+
+message If {
+    BoolFormula boolFormula = 1;
+    Do do = 2;
+}
+message Elif {
+    BoolFormula boolFormula = 1;
+    Do do = 2;
+    Elif elif = 3;
+}
+message Else {
+    Do do = 1;
+}
+message ErrCatch {
+    FormulaErrCode errCode = 1;
+    Do do = 2;
+    ErrCatch errCatch = 3;
+}
+message Do {
+    ProSL prosl = 1;
+}
+
+message BoolFormula {
+    bool tf = 1;
+    And and = 2;
+    Or or = 3;
+    Not not = 4;
+    Eq eq = 5;
+    Ne ne = 6;
+    Ge ge = 7;
+    Gt gt = 8;
+    Le le = 9;
+    Lt lt = 10;
+}
+
+message And {
+    BoolFormula left = 1;
+    BoolFormula right = 2;
+}
+message Or {
+    BoolFormula left = 1;
+    BoolFormula right = 2;
+}
+message Not {
+    BoolFormula left = 1;
+}
+message Eq {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+message Ne {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+message Ge {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+message Gt {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+message Le {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+message Lt {
+    ComparableFormula left = 1;
+    ComparableFormula right = 2;
+}
+
+message ComparableFormula {
+    string variableName = 1;
+    StringFormula stringFormula = 2;
+    BoolFormula boolFormula = 3;
+    QueryFormula queryFormula = 4;
+}
+message StringFormula {
+    string variableName = 1;
+    string baseString = 2;
+    StringFormula stringFormula = 3;
+}
+
+message QueryFormula {
+    StringFormula authorizerId = 1;
+    StringFormula targetId = 2;
+    ObjectCode requestCode = 3;
+    string key = 4;
+    string orderBy = 5;
+    string Where = 6;
+    int32 limit = 7;
+}
+
+message TxFormula {
+    repeated CommandFormula commands = 1;
+}
+
+message CommandFormula {
+    StringFormula todo = 1;
+}
