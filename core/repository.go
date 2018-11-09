@@ -129,6 +129,7 @@ type RepositoryTx interface {
 	WSV(Hash) (WSV, error)
 	TxHistory(Hash) (TxHistory, error)
 	Blockchain(Hash) (Blockchain, error)
+	Top() (Block, bool)
 	Commit() error
 	Rollback() error
 }

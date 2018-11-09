@@ -39,7 +39,7 @@ func (r *Repository) Begin() (core.RepositoryTx, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RepositoryTx{tx, r.cryptor, r.fc}, nil
+	return &RepositoryTx{tx, r.cryptor, r.fc, r.top}, nil
 }
 
 func (r *Repository) Top() (model.Block, bool) {
@@ -195,6 +195,8 @@ type RepositoryTx struct {
 	tx      core.DBATx
 	cryptor core.Cryptor
 	fc      model.ModelFactory
+
+	tmpTop model.Block
 }
 
 func (r *RepositoryTx) WSV(hash model.Hash) (core.WSV, error) {
@@ -209,8 +211,11 @@ func (r *RepositoryTx) Blockchain(topBlockHash model.Hash) (core.Blockchain, err
 	return NewBlockchainFromTopBlock(r.tx, r.fc, r.cryptor, topBlockHash)
 }
 
-func (r *RepositoryTx) Top() (model.Block, error) {
-	return nil, nil
+func (r *RepositoryTx) Top() (model.Block, bool) {
+	if r.tmpTop == nil {
+		return nil, false
+	}
+	return r.tmpTop, true
 }
 
 func (r *RepositoryTx) Commit() error {
