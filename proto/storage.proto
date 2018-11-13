@@ -1,0 +1,42 @@
+syntax = "proto3";
+package proskenion;
+
+import "primitive.proto";
+
+message Storage {
+    map<string, Object> object = 1;
+}
+
+message ObjectList {
+    repeated Object list = 1;
+}
+
+message Object {
+    string variableName = 1;
+    oneof object {
+        bool boolean = 2;
+        int32 i32 = 3;
+        int64 i64 = 4;
+        uint32 u32 = 5;
+        uint64 u64 = 6;
+        string str = 7;
+        bytes data = 8;
+        Signature sig = 9;
+        ObjectList list = 10;
+    }
+}
+
+message MegaStorage {
+    map<string, Object> meta = 1;
+    // MerkleTree で管理
+    bytes megaBinaryHash = 2;
+}
+
+// 参考 : https://triple-underscore.github.io/RFC2616-ja.html#section-3.6.1
+message MegaBinaryChunk {
+    // 全体
+    int64 chunkSize = 1;
+    // どこから始まるか
+    int64 lastChunk = 2;
+    bytes data = 3;
+}
