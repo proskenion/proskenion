@@ -12,7 +12,6 @@ message ObjectList {
 }
 
 message Object {
-    string variableName = 1;
     oneof object {
         bool boolean = 2;
         int32 i32 = 3;
