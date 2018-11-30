@@ -6,6 +6,11 @@ enum ObjectCode {
     PeerObjectCode = 1;
 }
 
+message Signature {
+    bytes publicKey = 1;
+    bytes signature = 2;
+}
+
 message Account {
     string accountId = 1;
     string accountName = 2;
@@ -16,4 +21,22 @@ message Account {
 message Peer {
     string address = 1;
     bytes publicKey = 2;
+}
+
+message ObjectList {
+    repeated Object list = 1;
+}
+
+message Object {
+    oneof object {
+        bool boolean = 2;
+        int32 i32 = 3;
+        int64 i64 = 4;
+        uint32 u32 = 5;
+        uint64 u64 = 6;
+        string str = 7;
+        bytes data = 8;
+        Signature sig = 9;
+        ObjectList list = 10;
+    }
 }

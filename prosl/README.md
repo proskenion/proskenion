@@ -3,12 +3,20 @@
 Prosl means (Proskenion specific language) based on yaml.
 
 
-## pro
+## prosl convertor
 
 Yaml file convert to protobuf format.
 
 ```
-$ ./prosl prosl.yaml
+$ ./proslc prosl.yaml
+```
+
+## prosl validator
+
+Yaml file validate(type check).
+
+```
+$ ./proslv prosl.yaml
 ```
 
 ## For example to write yaml
