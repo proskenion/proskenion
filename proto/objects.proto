@@ -2,8 +2,20 @@ syntax = "proto3";
 package proskenion;
 
 enum ObjectCode {
-    AccountObjectCode = 0;
-    PeerObjectCode = 1;
+    AnythingObjectCode = 0;
+    BoolObjectCode = 1;
+    Int32ObjectCode = 2;
+    Int64ObjectCode = 3;
+    Uint32ObjectCode = 4;
+    Uint64ObjectCode = 5;
+    StringObjectCode = 6;
+    BytesObjectCode = 7;
+    AddressObjectCode = 8;
+    SignatureObjectCode = 9;
+    AccountObjectCode = 10;
+    PeerObjectCode = 11;
+    ListObjectCode = 12;
+    DictObjectCode = 13;
 }
 
 message Address {
@@ -33,7 +45,12 @@ message ObjectList {
     repeated Object list = 1;
 }
 
+message ObjectDict {
+    map<string, Object> dict = 2;
+}
+
 message Object {
+    ObjectCode type = 1;
     oneof object {
         bool boolean = 2;
         int32 i32 = 3;
@@ -47,5 +64,6 @@ message Object {
         Account account = 11;
         Peer peer = 12;
         ObjectList list = 13;
+        ObjectDict dict = 14;
     }
 }
