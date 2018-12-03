@@ -61,3 +61,23 @@ func (a *Peer) Hash() (model.Hash, error) {
 	}
 	return a.cryptor.Hash(a)
 }
+
+type ObjectList struct {
+	cryptor core.Cryptor
+	*proskenion.ObjectList
+}
+
+func (a *ObjectList) Marshal() ([]byte, error) {
+	return proto.Marshal(a.ObjectList)
+}
+
+func (a *ObjectList) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, a.ObjectList)
+}
+
+
+
+type Object struct {
+	cryptor core.Cryptor
+	*proskenion.Object
+}

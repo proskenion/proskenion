@@ -23,6 +23,7 @@ type Peer interface {
 
 type ObjectList interface {
 	GetList() []Object
+	Modelor
 }
 
 type Object interface {
@@ -37,4 +38,5 @@ type Object interface {
 	GetAccount() Account
 	GetPeer() Peer
 	GetList() ObjectList
+	Modelor
 }
