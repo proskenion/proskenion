@@ -16,6 +16,7 @@ type ObjectFactory interface {
 
 	NewStorageBuilder() StorageBuilder
 
+	NewEmptySignature() Signature
 	NewEmptyAccount() Account
 	NewEmptyPeer() Peer
 	NewEmptyStorage() Storage

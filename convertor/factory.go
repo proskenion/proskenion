@@ -14,6 +14,12 @@ func NewObjectFactory(cryptor core.Cryptor) model.ObjectFactory {
 	return &ObjectFactory{cryptor}
 }
 
+func (f *ObjectFactory) NewEmptySignature() model.Signature {
+	return &Signature{
+		&proskenion.Signature{},
+	}
+}
+
 func (f *ObjectFactory) NewEmptyAccount() model.Account {
 	return &Account{
 		f.cryptor,
