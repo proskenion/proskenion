@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
@@ -29,14 +28,7 @@ func newDefaultMarshaler(a []byte, b []byte) *DefaultMarshaler {
 }
 
 func (t *AccumulateHash) Push(hasher model.Hasher) error {
-	hash, err := hasher.Hash()
-	if err != nil {
-		return errors.Wrap(core.ErrHash, err.Error())
-	}
-	rh, err := t.cryptor.Hash(newDefaultMarshaler(t.Top(), hash))
-	if err != nil {
-		return errors.Wrap(core.ErrHash, err.Error())
-	}
+	rh := t.cryptor.Hash(newDefaultMarshaler(t.Top(), hasher.Hash()))
 	t.hashes = append(t.hashes, rh)
 	return nil
 }

@@ -17,7 +17,7 @@ type Validator interface {
 var (
 	ErrCommandExecutorTransferNotFoundSrcAccountId      = fmt.Errorf("Failed Command Executor Transfer Can Not Load SrcAccounId")
 	ErrCommandExecutorTransferNotFoundDestAccountId     = fmt.Errorf("Failed Command Executor Transfer Can Not Load DestAccounId")
-	ErrCommandExecutorTransferNotEnoughSrcAccountAmount = fmt.Errorf("Failed Command Executor Transfer Not Enough SrcAccount Amount")
+	ErrCommandExecutorTransferNotEnoughSrcAccountBalance = fmt.Errorf("Failed Command Executor Transfer Not Enough SrcAccount Balance")
 )
 
 // CreateAccount Err

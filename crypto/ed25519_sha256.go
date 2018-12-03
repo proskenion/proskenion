@@ -16,14 +16,14 @@ func NewEd25519Sha256Cryptor() Cryptor {
 	return Ed25519Sha256Cryptor{}
 }
 
-func (c Ed25519Sha256Cryptor) Hash(marshaler Marshaler) (Hash, error) {
+func (c Ed25519Sha256Cryptor) Hash(marshaler Marshaler) Hash {
 	marshal, err := marshaler.Marshal()
 	if err != nil {
-		return nil, errors.Wrap(ErrMarshal, err.Error())
+		return nil
 	}
 	sha := sha256.New()
 	sha.Write(marshal)
-	return sha.Sum(nil), nil
+	return sha.Sum(nil)
 }
 
 func (c Ed25519Sha256Cryptor) ConcatHash(hashes ...Hash) Hash {
@@ -43,18 +43,15 @@ func (c Ed25519Sha256Cryptor) ConcatHash(hashes ...Hash) Hash {
 }
 
 func (c Ed25519Sha256Cryptor) Sign(hasher Hasher, privateKey PrivateKey) ([]byte, error) {
-	hash, err := hasher.Hash()
-	if err != nil {
-		return nil, errors.Wrap(ErrHash, err.Error())
+	hash := hasher.Hash()
+	if hash == nil {
+		return nil, ErrHash
 	}
 	return ed25519.Sign(ed25519.PrivateKey(privateKey), hash), nil
 }
 
 func (c Ed25519Sha256Cryptor) Verify(publicKey PublicKey, hasher Hasher, signature []byte) error {
-	hash, err := hasher.Hash()
-	if err != nil {
-		return err
-	}
+	hash := hasher.Hash()
 	if l := len(publicKey); l != ed25519.PublicKeySize {
 		return errors.Errorf("ed25519: bad public key length: " + strconv.Itoa(l))
 	}

@@ -37,14 +37,14 @@ func (f *ObjectFactory) NewSignature(pubkey model.PublicKey, signature []byte) m
 	}
 }
 
-func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, amount int64) model.Account {
+func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, balance int64) model.Account {
 	return &Account{
 		f.cryptor,
 		&proskenion.Account{
 			AccountId:   accountId,
 			AccountName: accountName,
 			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
-			Amount:      amount,
+			Balance:      balance,
 		},
 	}
 }
@@ -193,13 +193,13 @@ func (t *TxBuilder) CreatedTime(time int64) model.TxBuilder {
 	return t
 }
 
-func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, amount int64) model.TxBuilder {
+func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_Transfer{
 				Transfer: &proskenion.Transfer{
 					DestAccountId: destAccountId,
-					Amount:        amount,
+					Balance:        balance,
 				},
 			},
 			TargetId:     srcAccountId,
@@ -220,12 +220,12 @@ func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.T
 	return t
 }
 
-func (t *TxBuilder) AddAsset(accountId string, amount int64) model.TxBuilder {
+func (t *TxBuilder) AddAsset(accountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_AddAsset{
 				AddAsset: &proskenion.AddAsset{
-					Amount: amount,
+					Balance: balance,
 				},
 			},
 			TargetId:     accountId,
@@ -294,7 +294,7 @@ func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuil
 			AccountId:   ac.GetAccountId(),
 			AccountName: ac.GetAccountName(),
 			PublicKeys:  model.BytesListFromPublicKeys(ac.GetPublicKeys()),
-			Amount:      ac.GetAmount(),
+			Balance:      ac.GetBalance(),
 		},
 	}
 	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_AccountObjectCode

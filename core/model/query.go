@@ -14,16 +14,13 @@ type QueryPayload interface {
 	GetTargetId() string
 	GetCreatedTime() int64
 	GetRequestCode() ObjectCode
-	Marshal() ([]byte, error)
-	Hash() (Hash, error)
+	Modelor
 }
 
 type QueryResponse interface {
 	GetPayload() QueryResponsePayload
 	GetSignature() Signature
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
-	Hash() (Hash, error)
+	Modelor
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
 }
@@ -32,6 +29,5 @@ type QueryResponsePayload interface {
 	ResponseCode() ObjectCode
 	GetAccount() Account
 	GetPeer() Peer
-	Marshal() ([]byte, error)
-	Hash() (Hash, error)
+	Modelor
 }

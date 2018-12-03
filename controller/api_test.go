@@ -143,7 +143,7 @@ func TestAPIGateServer_Query(t *testing.T) {
 
 				assert.Equal(t, c.query.GetPayload().GetTargetId(), resq.GetPayload().GetAccount().GetAccountId())
 				assert.Equal(t, c.pubkeys, resq.GetPayload().GetAccount().GetPublicKeys())
-				assert.Equal(t, int64(0), resq.GetPayload().GetAccount().GetAmount())
+				assert.Equal(t, int64(0), resq.GetPayload().GetAccount().GetBalance())
 			}
 		})
 	}

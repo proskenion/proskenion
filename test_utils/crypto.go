@@ -34,8 +34,7 @@ func RandomPurivateKey() model.PrivateKey {
 }
 
 func MustHash(hasher model.Hasher) model.Hash {
-	hash, _ := hasher.Hash()
-	return hash
+	return hasher.Hash()
 }
 
 type RandomMockMarshaler struct {
@@ -51,8 +50,9 @@ func (m *RandomMockMarshaler) Unmarshal(pb []byte) error {
 	return nil
 }
 
-func (m *RandomMockMarshaler) Hash() (model.Hash, error) {
-	return m.Marshal()
+func (m *RandomMockMarshaler) Hash() model.Hash {
+	ret, _ := m.Marshal()
+	return ret
 }
 
 func RandomMarshaler() *RandomMockMarshaler {

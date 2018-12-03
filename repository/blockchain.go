@@ -69,7 +69,7 @@ func (b *Blockchain) Get(blockHash model.Hash) (model.Block, error) {
 
 // Commit is allowed only Commitable Block, ohterwise panic
 func (b *Blockchain) Append(block model.Block) (err error) {
-	blockHash, err := block.Hash()
+	blockHash := block.Hash()
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (b *Blockchain) Append(block model.Block) (err error) {
 		return err
 	}
 
-	rootHash, err := it.Hash()
+	rootHash := it.Hash()
 	if err != nil {
 		return err
 	}

@@ -77,7 +77,7 @@ type MerklePatriciaNodeIterator interface {
 
 // WSV (MerklePatriciaTree で管理)
 type WSV interface {
-	Hash() (Hash, error)
+	Hasher
 	// Query gets value from targetId
 	Query(targetId string, value Unmarshaler) error
 	// Get PeerService
@@ -92,7 +92,7 @@ type WSV interface {
 
 // 全Tx履歴 (MerklePatriciaTree で管理)
 type TxHistory interface {
-	Hash() (Hash, error)
+	Hasher
 	// Query gets tx from txHash
 	Query(txHash Hash) (Transaction, error)
 	// Append tx
