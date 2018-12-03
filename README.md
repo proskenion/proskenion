@@ -1,4 +1,7 @@
 # proskenion
+
+[![CircleCI](https://circleci.com/gh/proskenion/proskenion.svg?style=svg)](https://circleci.com/gh/proskenion/proskenion)
+
 Blockchain project for creators.
 
 ## Develop Environment
