@@ -21,7 +21,7 @@ message Command {
  **/
 message Transfer {
     string destAccountId = 2;
-    int64 amount = 3;
+    int64 balance = 3;
 }
 
 /**
@@ -33,7 +33,7 @@ message CreateAccount {}
  * AddAsset は targetId の amount を増やす。
  **/
 message AddAsset {
-    int64 amount = 1;
+    int64 balance = 1;
 }
 
 /**

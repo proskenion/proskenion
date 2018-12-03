@@ -1,29 +1,10 @@
 syntax = "proto3";
 package proskenion;
 
-import "primitive.proto";
+import "objects.proto";
 
 message Storage {
     map<string, Object> object = 1;
-}
-
-message ObjectList {
-    repeated Object list = 1;
-}
-
-message Object {
-    string variableName = 1;
-    oneof object {
-        bool boolean = 2;
-        int32 i32 = 3;
-        int64 i64 = 4;
-        uint32 u32 = 5;
-        uint64 u64 = 6;
-        string str = 7;
-        bytes data = 8;
-        Signature sig = 9;
-        ObjectList list = 10;
-    }
 }
 
 message MegaStorage {

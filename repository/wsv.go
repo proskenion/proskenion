@@ -33,7 +33,7 @@ func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV,
 	}, nil
 }
 
-func (w *WSV) Hash() (model.Hash, error) {
+func (w *WSV) Hash() model.Hash {
 	return w.tree.Hash()
 }
 
@@ -87,7 +87,7 @@ func (w *WSV) PeerService() (core.PeerService, error) {
 	if err != nil {
 		return nil, err
 	}
-	peerRootHash, err := peerRoot.Hash()
+	peerRootHash := peerRoot.Hash()
 	if err != nil {
 		return nil, err
 	}

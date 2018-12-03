@@ -15,7 +15,7 @@ var (
 )
 
 type Cryptor interface {
-	Hash(marshaler Marshaler) (Hash, error)
+	Hash(marshaler Marshaler) Hash
 	ConcatHash(hash ...Hash) Hash
 	Sign(hasher Hasher, privateKey PrivateKey) ([]byte, error)
 	Verify(publicKey PublicKey, hasher Hasher, signature []byte) error

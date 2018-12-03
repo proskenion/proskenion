@@ -22,7 +22,7 @@ func NewTxHistory(tx core.DBATx, factory model.ModelFactory, cryptor core.Crypto
 	return &TxHistory{tx, factory, tree}, nil
 }
 
-func (w *TxHistory) Hash() (model.Hash, error) {
+func (w *TxHistory) Hash() model.Hash {
 	return w.tree.Hash()
 }
 
@@ -49,12 +49,9 @@ func (w *TxHistory) Query(txHash model.Hash) (model.Transaction, error) {
 
 // Append [targetId] = value
 func (w *TxHistory) Append(tx model.Transaction) error {
-	txHash, err := tx.Hash()
+	txHash := tx.Hash()
 	txHash = TxHashToKey(txHash)
-	if err != nil {
-		return err
-	}
-	_, err = w.tree.Upsert(&KVNode{txHash, tx})
+	_, err := w.tree.Upsert(&KVNode{txHash, tx})
 	return err
 }
 

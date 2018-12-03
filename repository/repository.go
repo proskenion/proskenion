@@ -103,14 +103,14 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 	}
 
 	// hash check
-	wsvHash, err := wsv.Hash()
+	wsvHash := wsv.Hash()
 	if err != nil {
 		return rollBackTx(dtx, err)
 	}
 	if !bytes.Equal(block.GetPayload().GetWSVHash(), wsvHash) {
 		return rollBackTx(dtx, errors.Errorf("not equaled wsv Hash : %x", wsvHash))
 	}
-	txHistoryHash, err := txHistory.Hash()
+	txHistoryHash := txHistory.Hash()
 	if err != nil {
 		return rollBackTx(dtx, err)
 	}
@@ -163,11 +163,11 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 	}
 
 	// hash check and block 生成
-	wsvHash, err := wsv.Hash()
+	wsvHash := wsv.Hash()
 	if err != nil {
 		return rollBackTx(dtx, err)
 	}
-	txHistoryHash, err := txHistory.Hash()
+	txHistoryHash := txHistory.Hash()
 	if err != nil {
 		return rollBackTx(dtx, err)
 	}

@@ -1,7 +1,0 @@
-syntax = "proto3";
-package proskenion;
-
-message Signature {
-    bytes publicKey = 1;
-    bytes signature = 2;
-}

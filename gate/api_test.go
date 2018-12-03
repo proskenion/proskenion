@@ -104,7 +104,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, q.query.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
 			assert.Equal(t, q.pubkeys, res.GetPayload().GetAccount().GetPublicKeys())
-			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetAmount())
+			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetBalance())
 		}
 	}
 }

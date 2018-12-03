@@ -129,7 +129,7 @@ func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) mo
 /*
 
 func GetHash(t *testing.T, hasher model.Hasher) []byte {
-	hash, err := hasher.GetHash()
+	hash := hasher.Ge.Hash()
 	require.NoError(t, err)
 	return hash
 }

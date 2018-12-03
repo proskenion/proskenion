@@ -41,9 +41,9 @@ func (t *Transaction) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, t.Transaction)
 }
 
-func (t *Transaction) Hash() (model.Hash, error) {
+func (t *Transaction) Hash() model.Hash {
 	if t.Transaction == nil {
-		return nil, errors.New("Transaction is nil")
+		return nil
 	}
 	return t.cryptor.Hash(t)
 }
@@ -95,7 +95,11 @@ func (t *TransactionPayload) Marshal() ([]byte, error) {
 	return proto.Marshal(t.Transaction_Payload)
 }
 
-func (t *TransactionPayload) Hash() (model.Hash, error) {
+func (t *TransactionPayload) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, t.Transaction_Payload)
+}
+
+func (t *TransactionPayload) Hash() model.Hash {
 	return t.cryptor.Hash(t)
 }
 

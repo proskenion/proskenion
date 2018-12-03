@@ -30,6 +30,5 @@ type BlockPayload interface {
 	GetTxHistoryHash() Hash
 	GetTxsHash() Hash
 	GetRound() int32
-	Marshal() ([]byte, error)
-	Hash() (Hash, error)
+	Modelor
 }

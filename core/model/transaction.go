@@ -18,8 +18,7 @@ type Transaction interface {
 }
 
 type TransactionPayload interface {
-	Marshal() ([]byte, error)
-	Hash() (Hash, error)
 	GetCreatedTime() int64
 	GetCommands() []Command
+	Modelor
 }
