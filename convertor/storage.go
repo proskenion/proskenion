@@ -12,6 +12,20 @@ type Storage struct {
 	*proskenion.Storage
 }
 
+func (s *Storage) GetObject() map[string]model.Object {
+	if s.Storage == nil {
+		return nil
+	}
+	dict := make(map[string]model.Object)
+	for k, v := range s.Storage.GetObject() {
+		dict[k] = &Object{
+			s.cryptor,
+			v,
+		}
+	}
+	return dict
+}
+
 func (s *Storage) Marshal() ([]byte, error) {
 	return proto.Marshal(s.Storage)
 }

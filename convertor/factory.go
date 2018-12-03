@@ -144,54 +144,33 @@ func (b *StorageBuilder) Peer(key string, value model.Peer) model.StorageBuilder
 	return b
 }
 
-func (b *StorageBuilder) List(key string, value model.ObjectList) model.StorageBuilder {
+func (b *StorageBuilder) List(key string, value []model.Object) model.StorageBuilder {
+	list := make([]*proskenion.Object, len(value))
+	for _, object := range value {
+		list = append(list, object.(*Object).Object)
+	}
+
 	b.Object[key] = &proskenion.Object{
 		Type:   proskenion.ObjectCode_ListObjectCode,
-		Object: &proskenion.Object_List{List: value.(*ObjectList).List},
+		Object: &proskenion.Object_List{List: &proskenion.ObjectList{List: list}},
 	}
 	return b
 }
 
-func (b *StorageBuilder) Dict(key string, value model.ObjectDict) model.StorageBuilder {
+func (b *StorageBuilder) Dict(key string, value map[string]model.Object) model.StorageBuilder {
+	dict := make(map[string]*proskenion.Object)
+	for key, object := range value {
+		dict[key] = object.(*Object).Object
+	}
 	b.Object[key] = &proskenion.Object{
 		Type:   proskenion.ObjectCode_DictObjectCode,
-		Object: &proskenion.Object_Dict{Dict: value.(*ObjectDict).Dict},
+		Object: &proskenion.Object_Dict{Dict: &proskenion.ObjectDict{Dict: dict}},
 	}
 	return b
 }
 
 func (b *StorageBuilder) Build() model.Storage {
 	return b.Storage
-}
-
-type ObjectListBuilder interface {
-	Int32(key string, value int32) ObjectListBuilder
-	Int64(key string, value int64) ObjectListBuilder
-	Uint32(key string, value uint32) ObjectListBuilder
-	Uint64(key string, value uint32) ObjectListBuilder
-	Str(key string, value string) ObjectListBuilder
-	Data(key string, value []byte) ObjectListBuilder
-	Address(key string, value string) ObjectListBuilder
-	Sig(key string, value Signature) ObjectListBuilder
-	Account(key string, value Account) ObjectListBuilder
-	Peer(key string, value Peer) ObjectListBuilder
-	List(key string, value []Object) ObjectListBuilder
-	Build() ObjectList
-}
-
-type ObjectDictBuilder interface {
-	Int32(key string, value int32) ObjectDictBuilder
-	Int64(key string, value int64) ObjectDictBuilder
-	Uint32(key string, value uint32) ObjectDictBuilder
-	Uint64(key string, value uint32) ObjectDictBuilder
-	Str(key string, value string) ObjectDictBuilder
-	Data(key string, value []byte) ObjectDictBuilder
-	Address(key string, value string) ObjectDictBuilder
-	Sig(key string, value Signature) ObjectDictBuilder
-	Account(key string, value Account) ObjectDictBuilder
-	Peer(key string, value Peer) ObjectDictBuilder
-	List(key string, value []Object) ObjectDictBuilder
-	Build() ObjectDict
 }
 
 type ModelFactory struct {
