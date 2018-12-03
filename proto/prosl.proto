@@ -1,0 +1,175 @@
+syntax = "proto3";
+package proskenion;
+
+import "objects.proto";
+
+message Prosl {
+    repeated ProslOperator ops = 1;
+}
+
+message ProslOperator {
+    oneof op {
+        SetOperator setOperator = 1;
+    }
+}
+
+message SetOperator {
+    string variableName = 1;
+    ValueOperator value = 2;
+}
+
+message IfOperator {
+
+}
+
+message ElifOperator {
+
+}
+
+message ElseOperator {
+
+}
+
+message ErrCatchOperator {
+
+}
+
+message ValueOperator {
+
+}
+
+message QueryOperator {
+
+}
+
+message CommandOperator {
+
+}
+
+message TxOperator {
+
+}
+
+message PlusOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message MinusOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message MultipleOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message DivisionOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message ModOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message OrOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message AndOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message XorOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message ConcatOperator {
+    repeated ValueOperator ops = 1;
+}
+
+message ValuedOperator {
+    ValueOperator object = 1;
+    ObjectCode type = 2;
+    string key = 3;
+}
+
+message IndexedOperator {
+    ValueOperator object = 1;
+    ObjectCode type = 2;
+    int32 index = 3;
+}
+
+message BoolFormula {
+    oneof op {
+        OrFormula or = 1;
+        AndFormula and = 2;
+        NotFormula not = 3;
+        EqFormula eq = 4;
+        NeFormula ne = 5;
+        GtFormula gt = 6;
+        GeFormula ge = 7;
+        LtFormula lt = 8;
+        LeFormula le = 9;
+    }
+}
+
+message OrFormula {
+    repeated ValueOperator ops = 1;
+}
+
+message AndFormula {
+    repeated ValueOperator ops = 1;
+}
+
+message NotFormula {
+    repeated ValueOperator ops = 1;
+}
+
+message EqFormula {
+    repeated ValueOperator ops = 1;
+}
+
+message NeFormula {
+    ValueOperator lop = 1;
+    ValueOperator rop = 2;
+}
+
+message GtFormula {
+    ValueOperator lop = 1;
+    ValueOperator rop = 2;
+}
+
+message GeFormula {
+    ValueOperator lop = 1;
+    ValueOperator rop = 2;
+}
+
+message LtFormula {
+    ValueOperator lop = 1;
+    ValueOperator rop = 2;
+}
+
+message LeFormula {
+    ValueOperator lop = 1;
+    ValueOperator rop = 2;
+}
+
+message IsDefinedFormula {
+    string variableName = 1;
+}
+
+
+message RequireOperator {
+    BoolFormula op = 1;
+}
+
+message AssertOperator {
+    BoolFormula op = 1;
+}
+
+message Verify {
+    ValueOperator op = 1;
+}
+
+message Return {
+    ValueOperator op = 1;
+}
