@@ -251,7 +251,7 @@ func TestModelFactory_NewQueryBuilder(t *testing.T) {
 		assert.Equal(t, int64(1), query.GetPayload().GetCreatedTime())
 		assert.Equal(t, "a", query.GetPayload().GetTargetId())
 		assert.Equal(t, "b", query.GetPayload().GetAuthorizerId())
-		assert.Equal(t, model.AccountObjectCode, query.GetPayload().GetRequestCode())
+		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), query.GetPayload().GetRequestCode())
 	})
 }
 
@@ -277,4 +277,5 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 		assert.Equal(t, expPeer.GetPublicKey(), actPeer.GetPublicKey())
 		assert.Equal(t, expPeer.GetAddress(), actPeer.GetAddress())
 	})
+
 }

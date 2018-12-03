@@ -59,9 +59,30 @@ func (f *ObjectFactory) NewPeer(address string, pubkey model.PublicKey) model.Pe
 	}
 }
 
+func (f *ObjectFactory) NewStorageBuilder() model.StorageBuilder {
+	return &StorageBuilder{
+		f.cryptor,
+		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
+	}
+}
+
+func (f *ObjectFactory) NewEmptyStorage() model.Storage {
+	return &Storage{
+		f.cryptor,
+		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
+	}
+}
+
+func (f *ObjectFactory) NewEmptyObject() model.Object {
+	return &Object{
+		f.cryptor,
+		&proskenion.Object{},
+	}
+}
+
 type StorageBuilder struct {
 	cryptor core.Cryptor
-	*Storage
+	*proskenion.Storage
 }
 
 func (b *StorageBuilder) Int32(key string, value int32) model.StorageBuilder {
@@ -170,7 +191,10 @@ func (b *StorageBuilder) Dict(key string, value map[string]model.Object) model.S
 }
 
 func (b *StorageBuilder) Build() model.Storage {
-	return b.Storage
+	return &Storage{
+		b.cryptor,
+		b.Storage,
+	}
 }
 
 type ModelFactory struct {
