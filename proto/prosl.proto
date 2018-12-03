@@ -3,13 +3,26 @@ package proskenion;
 
 import "objects.proto";
 
+enum ErrCode {
+    AnythingErrCode = 0;
+}
+
 message Prosl {
     repeated ProslOperator ops = 1;
 }
 
+// === ProslOperator ====
 message ProslOperator {
     oneof op {
-        SetOperator setOperator = 1;
+        SetOperator setOp = 1;
+        IfOperator ifOp = 2;
+        ElifOperator erifOp = 3;
+        ElseOperator elseOp = 4;
+        ErrCatchOperator errOp = 5;
+        RequireOperator requireOp = 6;
+        AssertOperator assertOp = 7;
+        VerifyOperator verifyOp = 8;
+        ReturnOperator returnOp = 9;
     }
 }
 
@@ -19,35 +32,88 @@ message SetOperator {
 }
 
 message IfOperator {
-
+    ConditionalFormula op = 1;
+    Prosl prosl = 2;
 }
 
 message ElifOperator {
-
+    ConditionalFormula op = 1;
+    Prosl prosl = 2;
 }
 
 message ElseOperator {
-
+    Prosl prosl = 1;
 }
 
 message ErrCatchOperator {
-
+    ErrCode code = 1;
+    Prosl prosl = 2;
 }
 
-message ValueOperator {
+message RequireOperator {
+    ConditionalFormula op = 1;
+}
 
+message AssertOperator {
+    ConditionalFormula op = 1;
+}
+
+message VerifyOperator {
+    ValueOperator op = 1;
+}
+
+message ReturnOperator {
+    ValueOperator op = 1;
+}
+
+
+// === ValueOperator ===
+message ValueOperator {
+    oneof op {
+        QueryOperator queryOp = 1;
+        TxOperator txOp = 2;
+        CommandOperator cmdOp = 3;
+        PlusOperator plusOp = 4;
+        MinusOperator minusOp = 5;
+
+        MultipleOperator mulOp = 6;
+        DivisionOperator divOp = 7;
+        ModOperator modOp = 8;
+        OrOperator orOp = 9;
+        AndOperator andOp = 10;
+        XorOperator xorOp = 11;
+        ConcatOperator concatOp = 12;
+
+        ValuedOperator valuedOp = 13;
+        IndexedOperator indexedOp = 14;
+    }
 }
 
 message QueryOperator {
-
+    enum Order {
+        DESC = 0;
+        ASC = 1;
+    }
+    message OrderBy {
+        string key = 1;
+        Order order = 2;
+    }
+    string select = 1;
+    ObjectCode type = 2;
+    string from = 3;
+    ConditionalFormula where = 4;
+    OrderBy orderBy = 5;
+    int32 limit = 6;
 }
 
 message CommandOperator {
-
+    string command_name = 1;
+    map<string, ValueOperator> params = 2;
 }
 
 message TxOperator {
-
+    repeated CommandOperator commands = 1;
+    int64 createdTime = 2;
 }
 
 message PlusOperator {
@@ -98,7 +164,8 @@ message IndexedOperator {
     int32 index = 3;
 }
 
-message BoolFormula {
+// === CodntionalFormula ====
+message ConditionalFormula {
     oneof op {
         OrFormula or = 1;
         AndFormula and = 2;
@@ -155,21 +222,4 @@ message LeFormula {
 
 message IsDefinedFormula {
     string variableName = 1;
-}
-
-
-message RequireOperator {
-    BoolFormula op = 1;
-}
-
-message AssertOperator {
-    BoolFormula op = 1;
-}
-
-message Verify {
-    ValueOperator op = 1;
-}
-
-message Return {
-    ValueOperator op = 1;
 }
