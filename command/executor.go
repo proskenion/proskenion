@@ -30,21 +30,21 @@ func (c *CommandExecutor) Transfer(wsv model.ObjectFinder, cmd model.Command) er
 	if err := wsv.Query(transfer.GetDestAccountId(), destAccount); err != nil {
 		return errors.Wrap(core.ErrCommandExecutorTransferNotFoundDestAccountId, err.Error())
 	}
-	if srcAccount.GetAmount()-transfer.GetAmount() < 0 {
-		return errors.Wrap(core.ErrCommandExecutorTransferNotEnoughSrcAccountAmount,
-			fmt.Errorf("srcAccount Amount: %d, transfer Acmount: %d", srcAccount.GetAmount(), transfer.GetAmount()).Error())
+	if srcAccount.GetBalance()-transfer.GetBalance() < 0 {
+		return errors.Wrap(core.ErrCommandExecutorTransferNotEnoughSrcAccountBalance,
+			fmt.Errorf("srcAccount Amount: %d, transfer Acmount: %d", srcAccount.GetBalance(), transfer.GetBalance()).Error())
 	}
 	newSrcAccount := c.factory.NewAccount(
 		srcAccount.GetAccountId(),
 		srcAccount.GetAccountName(),
 		srcAccount.GetPublicKeys(),
-		srcAccount.GetAmount()-transfer.GetAmount(),
+		srcAccount.GetBalance()-transfer.GetBalance(),
 	)
 	newDestAccount := c.factory.NewAccount(
 		destAccount.GetAccountId(),
 		destAccount.GetAccountName(),
 		destAccount.GetPublicKeys(),
-		destAccount.GetAmount()+transfer.GetAmount(),
+		destAccount.GetBalance()+transfer.GetBalance(),
 	)
 	if err := wsv.Append(newSrcAccount.GetAccountId(), newSrcAccount); err != nil {
 		return err
@@ -83,7 +83,7 @@ func (c *CommandExecutor) AddAsset(wsv model.ObjectFinder, cmd model.Command) er
 		ac.GetAccountId(),
 		ac.GetAccountName(),
 		ac.GetPublicKeys(),
-		ac.GetAmount()+aa.GetAmount(),
+		ac.GetBalance()+aa.GetBalance(),
 	)
 	if err := wsv.Append(newAc.GetAccountId(), newAc); err != nil {
 		return err
@@ -117,7 +117,7 @@ func (c *CommandExecutor) AddPublicKey(wsv model.ObjectFinder, cmd model.Command
 		ac.GetAccountId(),
 		ac.GetAccountName(),
 		append(ac.GetPublicKeys(), ap.GetPublicKey()),
-		ac.GetAmount(),
+		ac.GetBalance(),
 	)
 	if err := wsv.Append(newAc.GetAccountId(), newAc); err != nil {
 		return err

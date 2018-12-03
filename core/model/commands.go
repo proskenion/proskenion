@@ -15,13 +15,13 @@ type Command interface {
 
 type Transfer interface {
 	GetDestAccountId() string
-	GetAmount() int64
+	GetBalance() int64
 }
 
 type CreateAccount interface{}
 
 type AddAsset interface {
-	GetAmount() int64
+	GetBalance() int64
 }
 
 type AddPublicKey interface {

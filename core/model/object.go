@@ -11,7 +11,7 @@ type Account interface {
 	GetAccountId() string
 	GetAccountName() string
 	GetPublicKeys() []PublicKey
-	GetAmount() int64
+	GetBalance() int64
 	Modelor
 }
 

@@ -79,11 +79,8 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	if top, ok := c.rp.Top(); ok {
 		wsvHash = top.GetPayload().GetWSVHash()
 		txHistoryHash = top.GetPayload().GetTxHistoryHash()
-		topHash, err = top.Hash()
+		topHash = top.Hash()
 		topHeight = top.GetPayload().GetHeight()
-		if err != nil {
-			return nil, nil, err
-		}
 	}
 
 	dtx, err := c.rp.Begin()
@@ -130,11 +127,11 @@ func (c *CommitSystem) CreateBlock() (model.Block, core.TxList, error) {
 	txskip:
 	}
 
-	newTxHistoryHash, err := txHistory.Hash()
+	newTxHistoryHash := txHistory.Hash()
 	if err != nil {
 		return nil, nil, rollBackTx(dtx, err)
 	}
-	newWSVHash, err := wsv.Hash()
+	newWSVHash := wsv.Hash()
 	if err != nil {
 		return nil, nil, rollBackTx(dtx, err)
 	}

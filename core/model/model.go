@@ -9,7 +9,7 @@ type Unmarshaler interface {
 }
 
 type Hasher interface {
-	Hash() (Hash, error)
+	Hash() Hash
 }
 
 type Modelor interface {

@@ -1,7 +1,6 @@
 package convertor
 
 import (
-	"errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -28,9 +27,9 @@ func (a *Account) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, a.Account)
 }
 
-func (a *Account) Hash() (model.Hash, error) {
+func (a *Account) Hash() model.Hash {
 	if a.Account == nil {
-		return nil, errors.New("Account is nil")
+		return nil
 	}
 	return a.cryptor.Hash(a)
 }
@@ -55,9 +54,9 @@ func (a *Peer) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, a.Peer)
 }
 
-func (a *Peer) Hash() (model.Hash, error) {
+func (a *Peer) Hash() model.Hash {
 	if a.Peer == nil {
-		return nil, errors.New("Peer is nil")
+		return nil
 	}
 	return a.cryptor.Hash(a)
 }
@@ -74,8 +73,6 @@ func (a *ObjectList) Marshal() ([]byte, error) {
 func (a *ObjectList) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, a.ObjectList)
 }
-
-
 
 type Object struct {
 	cryptor core.Cryptor

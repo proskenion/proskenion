@@ -49,15 +49,13 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 	for _, tx := range txs {
 		test_TxHistory_Upserts(t, TxHistory, tx)
 	}
-	firstHash, err := TxHistory.Hash()
-	require.NoError(t, err)
+	firstHash := TxHistory.Hash()
 	require.NoError(t, TxHistory.Commit())
 
 	for _, tx := range txs2 {
 		test_TxHistory_Upserts(t, TxHistory, tx)
 	}
-	secondHash, err := TxHistory.Hash()
-	require.NoError(t, err)
+	secondHash := TxHistory.Hash()
 	require.NoError(t, TxHistory.Commit())
 
 	tx, err := dba.Begin()
@@ -69,7 +67,7 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 	}
 	require.NoError(t, err)
 	require.NoError(t, txFirstHistory.Commit())
-	secondHash2, err := txFirstHistory.Hash()
+	secondHash2 := txFirstHistory.Hash()
 	assert.Equal(t, secondHash, secondHash2)
 
 	txFirstHistory2, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), firstHash)
@@ -78,7 +76,7 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 	}
 	require.NoError(t, err)
 	require.NoError(t, txFirstHistory2.Commit())
-	secondHash3, err := txFirstHistory2.Hash()
+	secondHash3 := txFirstHistory2.Hash()
 	assert.NotEqual(t, secondHash, secondHash3)
 
 	for _, tx := range txs2 {

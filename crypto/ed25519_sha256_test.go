@@ -33,45 +33,36 @@ func TestEd25519Sha256Cryptor_Hash(t *testing.T) {
 		name      string
 		marshaler model.Marshaler
 		exp       string
-		expErr    error
 	}{
 		{
 			"success case 1",
 			&MockMarshaler{""},
 			"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-			nil,
 		},
 		{
 			"success case 2",
 			&MockMarshaler{"a"},
 			"ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
-			nil,
 		},
 		{
 			"failed err marshal",
 			&MockErrMarshaler{""},
 			"",
-			core.ErrMarshal,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			hash, err := cryptor.Hash(c.marshaler)
-			if c.expErr != nil {
-				assert.EqualError(t, errors.Cause(err), c.expErr.Error())
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, c.exp, fmt.Sprintf("%x", hash))
-			}
+			hash := cryptor.Hash(c.marshaler)
+			assert.Equal(t, c.exp, fmt.Sprintf("%x", hash))
 		})
 	}
 }
 
-func (m *MockMarshaler) Hash() (model.Hash, error) {
+func (m *MockMarshaler) Hash() model.Hash {
 	return NewEd25519Sha256Cryptor().Hash(m)
 }
 
-func (m *MockErrMarshaler) Hash() (model.Hash, error) {
-	return nil, errors.Errorf("Mock Error Hash")
+func (m *MockErrMarshaler) Hash() model.Hash {
+	return nil
 }
 
 func TestEd25519Sha256Cryptor_SignAndVerify(t *testing.T) {

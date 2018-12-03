@@ -96,7 +96,7 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 				err = wsv.Query(c.exTargetId, ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
-				assert.Equal(t, int64(0), ac.GetAmount())
+				assert.Equal(t, int64(0), ac.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), ac.GetPublicKeys())
 			}
 		})
@@ -112,8 +112,8 @@ func TestCommandExecutor_AddAsset(t *testing.T) {
 		name           string
 		exAuthoirzerId string
 		exTargetId     string
-		addAmount      int64
-		exAmount       int64
+		addBalance      int64
+		exBalance       int64
 		exErr          error
 	}{
 		{
@@ -154,7 +154,7 @@ func TestCommandExecutor_AddAsset(t *testing.T) {
 				Command: &proskenion.Command{
 					Command: &proskenion.Command_AddAsset{
 						AddAsset: &proskenion.AddAsset{
-							Amount: c.addAmount,
+							Balance: c.addBalance,
 						},
 					},
 					TargetId:     c.exTargetId,
@@ -170,7 +170,7 @@ func TestCommandExecutor_AddAsset(t *testing.T) {
 				err = wsv.Query(c.exTargetId, ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
-				assert.Equal(t, c.exAmount, ac.GetAmount())
+				assert.Equal(t, c.exBalance, ac.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), ac.GetPublicKeys())
 			}
 		})
@@ -188,9 +188,9 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 		exAuthoirzerId  string
 		exTargetId      string
 		exDestAccountId string
-		transAmount     int64
-		exSrcAmount     int64
-		exDestAmount    int64
+		transBalance     int64
+		exSrcBalance     int64
+		exDestBalance    int64
 		exErr           error
 	}{
 		{
@@ -241,7 +241,7 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 			100,
 			100,
 			100,
-			core.ErrCommandExecutorTransferNotEnoughSrcAccountAmount,
+			core.ErrCommandExecutorTransferNotEnoughSrcAccountBalance,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
@@ -250,7 +250,7 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 					Command: &proskenion.Command_Transfer{
 						Transfer: &proskenion.Transfer{
 							DestAccountId: c.exDestAccountId,
-							Amount:        c.transAmount,
+							Balance:        c.transBalance,
 						},
 					},
 					TargetId:     c.exTargetId,
@@ -266,14 +266,14 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 				err = wsv.Query(c.exTargetId, srcAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, srcAc.GetAccountId())
-				assert.Equal(t, c.exSrcAmount, srcAc.GetAmount())
+				assert.Equal(t, c.exSrcBalance, srcAc.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), srcAc.GetPublicKeys())
 
 				destAc := fc.NewEmptyAccount()
 				err = wsv.Query(c.exDestAccountId, destAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exDestAccountId, destAc.GetAccountId())
-				assert.Equal(t, c.exDestAmount, destAc.GetAmount())
+				assert.Equal(t, c.exDestBalance, destAc.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), destAc.GetPublicKeys())
 
 			}

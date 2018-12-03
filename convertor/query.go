@@ -36,7 +36,7 @@ func (q *Query) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, q.Query)
 }
 
-func (q *Query) Hash() (model.Hash, error) {
+func (q *Query) Hash() model.Hash {
 	return q.cryptor.Hash(q)
 }
 
@@ -79,7 +79,11 @@ func (p *QueryPaylaod) Marshal() ([]byte, error) {
 	return proto.Marshal(p.Query_Payload)
 }
 
-func (p *QueryPaylaod) Hash() (model.Hash, error) {
+func (q *QueryPaylaod) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, q.Query_Payload)
+}
+
+func (p *QueryPaylaod) Hash() model.Hash {
 	return p.cryptor.Hash(p)
 }
 
@@ -110,7 +114,7 @@ func (q *QueryResponse) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, q.QueryResponse)
 }
 
-func (q *QueryResponse) Hash() (model.Hash, error) {
+func (q *QueryResponse) Hash() model.Hash {
 	return q.cryptor.Hash(q)
 }
 
@@ -163,6 +167,10 @@ func (p *QueryResponsePayload) Marshal() ([]byte, error) {
 	return proto.Marshal(p.QueryResponse_Payload)
 }
 
-func (p *QueryResponsePayload) Hash() (model.Hash, error) {
+func (q *QueryResponsePayload) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, q.QueryResponse_Payload)
+}
+
+func (p *QueryResponsePayload) Hash() model.Hash {
 	return p.cryptor.Hash(p)
 }

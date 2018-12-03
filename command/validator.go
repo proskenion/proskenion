@@ -49,11 +49,8 @@ func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) 
 // 2. Authorizer アカウントが存在するか
 // 3. Authorozer の権限を行使するための署名が揃っているか
 func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx model.Transaction) error {
-	hash, err := tx.Hash()
-	if err != nil {
-		return err
-	}
-	_, err = txh.Query(hash)
+	hash := tx.Hash()
+	_, err := txh.Query(hash)
 	if errors.Cause(err) != core.ErrTxHistoryNotFound {
 		return core.ErrTxValidateAlreadyExist
 	}

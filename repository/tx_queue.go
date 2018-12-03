@@ -45,10 +45,7 @@ func (q *ProposalTxQueueOnMemory) Push(tx model.Transaction) error {
 		return errors.Wrapf(model.ErrInvalidTransaction, "push transaction is nil")
 	}
 
-	hash, err := tx.Hash()
-	if err != nil {
-		return errors.Wrapf(model.ErrTransactionHash, err.Error())
-	}
+	hash := tx.Hash()
 	if _, ok := q.findTx[string(hash)]; ok {
 		return errors.Wrapf(ErrProposalTxQueueAlreadyExistTx, "already tx : %x, push to proposal tx queue", hash)
 	}
@@ -70,10 +67,7 @@ func (q *ProposalTxQueueOnMemory) Pop() (model.Transaction, bool) {
 	for len(q.findTx) != 0 {
 		tx, ok := q.queue[q.head]
 		if ok {
-			txHash, err := tx.Hash()
-			if err != nil {
-				return nil, false
-			}
+			txHash := tx.Hash()
 			delete(q.findTx, string(txHash))
 			delete(q.queue, q.head)
 			q.head++

@@ -35,7 +35,7 @@ func (b *Block) Unmarshal(pb []byte) error {
 	return proto.Unmarshal(pb, b.Block)
 }
 
-func (b *Block) Hash() (model.Hash, error) {
+func (b *Block) Hash() model.Hash {
 	return b.cryptor.Hash(b)
 }
 
@@ -61,7 +61,11 @@ func (p *BlockPayload) Marshal() ([]byte, error) {
 	return proto.Marshal(p.Block_Payload)
 }
 
-func (p *BlockPayload) Hash() (model.Hash, error) {
+func (p *BlockPayload) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, p.Block_Payload)
+}
+
+func (p *BlockPayload) Hash() model.Hash {
 	return p.cryptor.Hash(p)
 }
 

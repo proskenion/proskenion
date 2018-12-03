@@ -146,14 +146,14 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransfer().GetDestAccountId())
-		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetAmount())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetBalance())
 
 		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
 		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
 
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
-		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetAmount())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetBalance())
 
 		assert.Equal(t, "auth", tx.GetPayload().GetCommands()[3].GetAuthorizerId())
 		assert.Equal(t, "ac", tx.GetPayload().GetCommands()[3].GetTargetId())
@@ -200,7 +200,7 @@ func TestNewAccount(t *testing.T) {
 			assert.Equal(t, c.accountId, ac.GetAccountId())
 			assert.Equal(t, c.accountName, ac.GetAccountName())
 			assert.Equal(t, c.pubkeys, ac.GetPublicKeys())
-			assert.Equal(t, c.amount, ac.GetAmount())
+			assert.Equal(t, c.amount, ac.GetBalance())
 		})
 	}
 }
@@ -264,7 +264,7 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 		assert.Equal(t, expAc.GetAccountId(), actAc.GetAccountId())
 		assert.Equal(t, expAc.GetAccountName(), actAc.GetAccountName())
 		assert.Equal(t, expAc.GetPublicKeys(), actAc.GetPublicKeys())
-		assert.Equal(t, expAc.GetAmount(), actAc.GetAmount())
+		assert.Equal(t, expAc.GetBalance(), actAc.GetBalance())
 	})
 
 	t.Run("case 2 peer query", func(t *testing.T) {

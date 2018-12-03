@@ -37,11 +37,7 @@ func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, has
 	}
 	if hash == nil {
 		newInternal = makeInitializeMerklePatriciaNodeItreator(kvStore, cryptor, rootKey)
-		var err error
-		hash, err = newInternal.Hash()
-		if err != nil {
-			return nil, err
-		}
+		hash = newInternal.Hash()
 	}
 	err := kvStore.Load(hash, newInternal)
 	if err != nil {
@@ -49,12 +45,10 @@ func NewMerklePatriciaTree(kvStore core.KeyValueStore, cryptor core.Cryptor, has
 			return nil, err
 		}
 
-		// ROOT Internal Noed
+		// ROOT Internal Node
 		newInternal = makeInitializeMerklePatriciaNodeItreator(kvStore, cryptor, rootKey)
-		hash, err := newInternal.Hash()
-		if err != nil {
-			return nil, err
-		}
+		hash := newInternal.Hash()
+
 		// saved
 		err = kvStore.Store(hash, newInternal)
 		if err != nil {
@@ -97,7 +91,7 @@ func (t *MerklePatriciaTree) Upsert(node core.KVNode) (core.MerklePatriciaNodeIt
 	return it, nil
 }
 
-func (t *MerklePatriciaTree) Hash() (model.Hash, error) {
+func (t *MerklePatriciaTree) Hash() model.Hash {
 	return t.Iterator().Hash()
 }
 
@@ -247,12 +241,9 @@ func (t *MerklePatriciaNodeIterator) createMerklePatriciaNodeIterator(node Merkl
 		cryptor: t.cryptor,
 		node:    node,
 	}
-	hash, err := it.Hash()
-	if err != nil {
-		return nil, err
-	}
+	hash := it.Hash()
 	// saved
-	err = t.dba.Store(hash, it)
+	err := t.dba.Store(hash, it)
 	if err != nil {
 		if errors.Cause(err) == core.ErrDBADuplicateStore { // Duplicate, but return this node
 			return it, nil
@@ -278,10 +269,7 @@ func (t *MerklePatriciaNodeIterator) createLeafIterator(node core.KVNode) (core.
 	}
 
 	if len(node.Key()) > 0 {
-		hash, err := newLeafIt.Hash()
-		if err != nil {
-			return nil, err
-		}
+		hash := newLeafIt.Hash()
 		newInternalIt, err := t.createMerklePatriciaNodeIterator(
 			&MerklePatriciaInternalNode{
 				Key_:      node.Key(),
@@ -289,6 +277,9 @@ func (t *MerklePatriciaNodeIterator) createLeafIterator(node core.KVNode) (core.
 				Childs_:   make(map[byte]model.Hash),
 			},
 		)
+		if err != nil {
+			return nil, err
+		}
 		return newInternalIt, nil
 	}
 	return newLeafIt, nil
@@ -357,10 +348,7 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 		newDataHash = t.DataHash()
 		newChilds = t.Childs()
 		if child.Leaf() {
-			newDataHash, err = child.Hash()
-			if err != nil {
-				return nil, err
-			}
+			newDataHash = child.Hash()
 		}
 	} else { // 分裂するときは分裂後の子を生成する
 		// 分岐後の自分(child)
@@ -377,10 +365,7 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 
 		if child.Leaf() {
 			// 追加する子が葉であるとき、葉は DataHash に、自分のみを子にする
-			newDataHash, err = child.Hash()
-			if err != nil {
-				return nil, err
-			}
+			newDataHash = child.Hash()
 			childs = []core.MerklePatriciaNodeIterator{it}
 		} else {
 			// そうでなければ自分の分身を新しい子の集合に加える
@@ -392,7 +377,7 @@ func (t *MerklePatriciaNodeIterator) createInternalIterator(cnt int, child core.
 		if child.Leaf() {
 			continue
 		}
-		hash, err := child.Hash()
+		hash := child.Hash()
 		if err != nil {
 			return nil, err
 		}
@@ -452,7 +437,7 @@ func (t *MerklePatriciaNodeIterator) Append(value model.Marshaler) (core.MerkleP
 	if err != nil {
 		return nil, err
 	}
-	thisHash, err := t.Hash()
+	thisHash := t.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -482,18 +467,18 @@ func (t *MerklePatriciaNodeIterator) Prev() (core.MerklePatriciaNodeIterator, er
 	return it, nil
 }
 
-func (t *MerklePatriciaNodeIterator) Hash() (model.Hash, error) {
+func (t *MerklePatriciaNodeIterator) Hash() model.Hash {
 	if t.Leaf() {
 		return t.cryptor.ConcatHash(t.node.PrevHash(),
 			t.node.DataObject(),
-			[]byte(strconv.FormatInt(t.node.Height(), 10))), nil
+			[]byte(strconv.FormatInt(t.node.Height(), 10)))
 	} else {
 		childs := make([]model.Hash, 256)
 		for k, v := range t.node.Childs() {
 			childs[k] = v
 		}
 		hash := t.cryptor.ConcatHash(childs...)
-		return t.cryptor.ConcatHash(hash, t.node.DataHash(), t.Key()), nil
+		return t.cryptor.ConcatHash(hash, t.node.DataHash(), t.Key())
 	}
 }
 
