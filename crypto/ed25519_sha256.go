@@ -17,6 +17,9 @@ func NewEd25519Sha256Cryptor() Cryptor {
 }
 
 func (c Ed25519Sha256Cryptor) Hash(marshaler Marshaler) Hash {
+	if marshaler == nil {
+		return nil
+	}
 	marshal, err := marshaler.Marshal()
 	if err != nil {
 		return nil

@@ -30,7 +30,7 @@ type Object interface {
 	GetI32() int32
 	GetI64() int64
 	GetU32() uint32
-	GetUint64() uint64
+	GetU64() uint64
 	GetStr() string
 	GetData() []byte
 	GetAddress() string

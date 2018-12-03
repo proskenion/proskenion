@@ -66,15 +66,86 @@ type ObjectList struct {
 	*proskenion.ObjectList
 }
 
-func (a *ObjectList) Marshal() ([]byte, error) {
-	return proto.Marshal(a.ObjectList)
+func (o *ObjectList) modelObjectListFromProtoObjectList(objects []*proskenion.Object) []model.Object {
+	ret := make([]model.Object, len(objects))
+	for i, object := range objects {
+		ret[i] = &Object{
+			o.cryptor,
+			object,
+		}
+	}
+	return ret
 }
 
-func (a *ObjectList) Unmarshal(pb []byte) error {
-	return proto.Unmarshal(pb, a.ObjectList)
+func (o *ObjectList) GetList() []model.Object {
+	if o.ObjectList == nil {
+		return nil
+	}
+	return o.modelObjectListFromProtoObjectList(o.ObjectList.GetList())
+}
+
+func (o *ObjectList) Marshal() ([]byte, error) {
+	return proto.Marshal(o.ObjectList)
+}
+
+func (o *ObjectList) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, o.ObjectList)
+}
+
+func (o *ObjectList) Hash() model.Hash {
+	return o.cryptor.Hash(o)
 }
 
 type Object struct {
 	cryptor core.Cryptor
 	*proskenion.Object
+}
+
+func (o *Object) GetSig() model.Signature {
+	if o.Object == nil {
+		return nil
+	}
+	return &Signature{o.Object.GetSig()}
+}
+
+func (o *Object) GetAccount() model.Account {
+	if o.Object == nil {
+		return nil
+	}
+	return &Account{
+		o.cryptor,
+		o.Object.GetAccount(),
+	}
+}
+
+func (o *Object) GetPeer() model.Peer {
+	if o.Object == nil {
+		return nil
+	}
+	return &Peer{
+		o.cryptor,
+		o.Object.GetPeer(),
+	}
+}
+
+func (o *Object) GetList() model.ObjectList {
+	if o.Object == nil {
+		return nil
+	}
+	return &ObjectList{
+		o.cryptor,
+		o.Object.GetList(),
+	}
+}
+
+func (o *Object) Marshal() ([]byte, error) {
+	return proto.Marshal(o.Object)
+}
+
+func (o *Object) Unmarshal(pb []byte) error {
+	return proto.Unmarshal(pb, o.Object)
+}
+
+func (o *Object) Hash() model.Hash {
+	return o.cryptor.Hash(o)
 }
