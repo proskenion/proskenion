@@ -44,7 +44,7 @@ func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicK
 			AccountId:   accountId,
 			AccountName: accountName,
 			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
-			Balance:      balance,
+			Balance:     balance,
 		},
 	}
 }
@@ -57,6 +57,141 @@ func (f *ObjectFactory) NewPeer(address string, pubkey model.PublicKey) model.Pe
 			PublicKey: []byte(pubkey),
 		},
 	}
+}
+
+type StorageBuilder struct {
+	cryptor core.Cryptor
+	*Storage
+}
+
+func (b *StorageBuilder) Int32(key string, value int32) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_Int32ObjectCode,
+		Object: &proskenion.Object_I32{I32: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Int64(key string, value int64) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_Int64ObjectCode,
+		Object: &proskenion.Object_I64{I64: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Uint32(key string, value uint32) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_Uint32ObjectCode,
+		Object: &proskenion.Object_U32{U32: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Uint64(key string, value uint64) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_Uint64ObjectCode,
+		Object: &proskenion.Object_U64{U64: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Str(key string, value string) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_StringObjectCode,
+		Object: &proskenion.Object_Str{Str: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Data(key string, value []byte) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_BytesObjectCode,
+		Object: &proskenion.Object_Data{Data: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Address(key string, value string) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_AddressObjectCode,
+		Object: &proskenion.Object_Address{Address: value},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Sig(key string, value model.Signature) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_SignatureObjectCode,
+		Object: &proskenion.Object_Sig{Sig: value.(*Signature).Signature},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Account(key string, value model.Account) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_AccountObjectCode,
+		Object: &proskenion.Object_Account{Account: value.(*Account).Account},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Peer(key string, value model.Peer) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_PeerObjectCode,
+		Object: &proskenion.Object_Peer{Peer: value.(*Peer).Peer},
+	}
+	return b
+}
+
+func (b *StorageBuilder) List(key string, value model.ObjectList) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_ListObjectCode,
+		Object: &proskenion.Object_List{List: value.(*ObjectList).List},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Dict(key string, value model.ObjectDict) model.StorageBuilder {
+	b.Object[key] = &proskenion.Object{
+		Type:   proskenion.ObjectCode_DictObjectCode,
+		Object: &proskenion.Object_Dict{Dict: value.(*ObjectDict).Dict},
+	}
+	return b
+}
+
+func (b *StorageBuilder) Build() model.Storage {
+	return b.Storage
+}
+
+type ObjectListBuilder interface {
+	Int32(key string, value int32) ObjectListBuilder
+	Int64(key string, value int64) ObjectListBuilder
+	Uint32(key string, value uint32) ObjectListBuilder
+	Uint64(key string, value uint32) ObjectListBuilder
+	Str(key string, value string) ObjectListBuilder
+	Data(key string, value []byte) ObjectListBuilder
+	Address(key string, value string) ObjectListBuilder
+	Sig(key string, value Signature) ObjectListBuilder
+	Account(key string, value Account) ObjectListBuilder
+	Peer(key string, value Peer) ObjectListBuilder
+	List(key string, value []Object) ObjectListBuilder
+	Build() ObjectList
+}
+
+type ObjectDictBuilder interface {
+	Int32(key string, value int32) ObjectDictBuilder
+	Int64(key string, value int64) ObjectDictBuilder
+	Uint32(key string, value uint32) ObjectDictBuilder
+	Uint64(key string, value uint32) ObjectDictBuilder
+	Str(key string, value string) ObjectDictBuilder
+	Data(key string, value []byte) ObjectDictBuilder
+	Address(key string, value string) ObjectDictBuilder
+	Sig(key string, value Signature) ObjectDictBuilder
+	Account(key string, value Account) ObjectDictBuilder
+	Peer(key string, value Peer) ObjectDictBuilder
+	List(key string, value []Object) ObjectDictBuilder
+	Build() ObjectDict
 }
 
 type ModelFactory struct {
@@ -199,7 +334,7 @@ func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, balance 
 			Command: &proskenion.Command_Transfer{
 				Transfer: &proskenion.Transfer{
 					DestAccountId: destAccountId,
-					Balance:        balance,
+					Balance:       balance,
 				},
 			},
 			TargetId:     srcAccountId,
@@ -294,7 +429,7 @@ func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuil
 			AccountId:   ac.GetAccountId(),
 			AccountName: ac.GetAccountName(),
 			PublicKeys:  model.BytesListFromPublicKeys(ac.GetPublicKeys()),
-			Balance:      ac.GetBalance(),
+			Balance:     ac.GetBalance(),
 		},
 	}
 	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_AccountObjectCode

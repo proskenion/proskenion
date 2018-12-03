@@ -61,44 +61,13 @@ func (a *Peer) Hash() model.Hash {
 	return a.cryptor.Hash(a)
 }
 
-type ObjectList struct {
-	cryptor core.Cryptor
-	*proskenion.ObjectList
-}
-
-func (o *ObjectList) modelObjectListFromProtoObjectList(objects []*proskenion.Object) []model.Object {
-	ret := make([]model.Object, len(objects))
-	for i, object := range objects {
-		ret[i] = &Object{
-			o.cryptor,
-			object,
-		}
-	}
-	return ret
-}
-
-func (o *ObjectList) GetList() []model.Object {
-	if o.ObjectList == nil {
-		return nil
-	}
-	return o.modelObjectListFromProtoObjectList(o.ObjectList.GetList())
-}
-
-func (o *ObjectList) Marshal() ([]byte, error) {
-	return proto.Marshal(o.ObjectList)
-}
-
-func (o *ObjectList) Unmarshal(pb []byte) error {
-	return proto.Unmarshal(pb, o.ObjectList)
-}
-
-func (o *ObjectList) Hash() model.Hash {
-	return o.cryptor.Hash(o)
-}
-
 type Object struct {
 	cryptor core.Cryptor
 	*proskenion.Object
+}
+
+func (o *Object) GetType() model.ObjectCode {
+	return model.ObjectCode(o.Type)
 }
 
 func (o *Object) GetSig() model.Signature {
@@ -128,14 +97,40 @@ func (o *Object) GetPeer() model.Peer {
 	}
 }
 
-func (o *Object) GetList() model.ObjectList {
+func (o *Object) modelObjectListFromProtoObjectList(objects *proskenion.ObjectList) []model.Object {
+	ret := make([]model.Object, len(objects.GetList()))
+	for i, object := range objects.GetList() {
+		ret[i] = &Object{
+			o.cryptor,
+			object,
+		}
+	}
+	return ret
+}
+
+func (o *Object) GetList() []model.Object {
 	if o.Object == nil {
 		return nil
 	}
-	return &ObjectList{
-		o.cryptor,
-		o.Object.GetList(),
+	return o.modelObjectListFromProtoObjectList(o.Object.GetList())
+}
+
+func (o *Object) modelObjectDictFromProtoObjectDict(objects *proskenion.ObjectDict) map[string]model.Object {
+	ret := make(map[string]model.Object)
+	for key, object := range objects.GetDict() {
+		ret[key] = &Object{
+			o.cryptor,
+			object,
+		}
 	}
+	return ret
+}
+
+func (o *Object) GetDict() map[string]model.Object {
+	if o.Object == nil {
+		return nil
+	}
+	return o.modelObjectDictFromProtoObjectDict(o.Object.GetDict())
 }
 
 func (o *Object) Marshal() ([]byte, error) {

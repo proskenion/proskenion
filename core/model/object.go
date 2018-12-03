@@ -33,16 +33,6 @@ type Peer interface {
 	Modelor
 }
 
-type ObjectList interface {
-	GetList() []Object
-	Modelor
-}
-
-type ObjectDict interface {
-	GetDict() map[string]Object
-	Modelor
-}
-
 type Object interface {
 	GetType() ObjectCode
 	GetI32() int32
@@ -55,7 +45,7 @@ type Object interface {
 	GetSig() Signature
 	GetAccount() Account
 	GetPeer() Peer
-	GetList() ObjectList
+	GetList() []Object
 	GetDict() map[string]Object
 	Modelor
 }
