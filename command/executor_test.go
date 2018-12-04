@@ -38,11 +38,11 @@ func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	}
 }
 
-func prePareAddAsset(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
+func prePareAddBalance(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	tx := fc.NewTxBuilder().
-		AddAsset("authorizer", 1000).
-		AddAsset("account1", 100).
-		AddAsset("account2", 100).
+		AddBalance("authorizer", 1000).
+		AddBalance("account1", 100).
+		AddBalance("account2", 100).
 		Build()
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		require.NoError(t, cmd.Execute(wsv))
@@ -104,7 +104,7 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 	require.NoError(t, dtx.Commit())
 }
 
-func TestCommandExecutor_AddAsset(t *testing.T) {
+func TestCommandExecutor_AddBalance(t *testing.T) {
 	fc, ex, dtx, wsv := prePareCommandExecutor(t)
 	prePareCreateAccounts(t, fc, wsv)
 
@@ -146,21 +146,21 @@ func TestCommandExecutor_AddAsset(t *testing.T) {
 			"unk",
 			10,
 			10,
-			core.ErrCommandExecutorAddAssetNotExistAccount,
+			core.ErrCommandExecutorAddBalanceNotExistAccount,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			cmd := &convertor.Command{
 				Command: &proskenion.Command{
-					Command: &proskenion.Command_AddAsset{
-						AddAsset: &proskenion.AddAsset{
+					Command: &proskenion.Command_AddBalance{
+						AddBalance: &proskenion.AddBalance{
 							Balance: c.addBalance,
 						},
 					},
 					TargetId:     c.exTargetId,
 					AuthorizerId: c.exAuthoirzerId,
 				}}
-			err := ex.AddAsset(wsv, cmd)
+			err := ex.AddBalance(wsv, cmd)
 			if c.exErr != nil {
 				assert.EqualError(t, errors.Cause(err), c.exErr.Error())
 			} else {
@@ -178,10 +178,10 @@ func TestCommandExecutor_AddAsset(t *testing.T) {
 	require.NoError(t, dtx.Commit())
 }
 
-func TestCommandExecutor_Transfer(t *testing.T) {
+func TestCommandExecutor_TransferBalance(t *testing.T) {
 	fc, ex, dtx, wsv := prePareCommandExecutor(t)
 	prePareCreateAccounts(t, fc, wsv)
-	prePareAddAsset(t, fc, wsv)
+	prePareAddBalance(t, fc, wsv)
 
 	for _, c := range []struct {
 		name            string
@@ -221,7 +221,7 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 			100,
 			100,
 			100,
-			core.ErrCommandExecutorTransferNotFoundSrcAccountId,
+			core.ErrCommandExecutorTransferBalanceNotFoundSrcAccountId,
 		},
 		{
 			"case 3 : no dest account",
@@ -231,7 +231,7 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 			100,
 			100,
 			100,
-			core.ErrCommandExecutorTransferNotFoundDestAccountId,
+			core.ErrCommandExecutorTransferBalanceNotFoundDestAccountId,
 		},
 		{
 			"case 4 : not enough src account ammount",
@@ -241,14 +241,14 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 			100,
 			100,
 			100,
-			core.ErrCommandExecutorTransferNotEnoughSrcAccountBalance,
+			core.ErrCommandExecutorTransferBalanceNotEnoughSrcAccountBalance,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			cmd := &convertor.Command{
 				Command: &proskenion.Command{
-					Command: &proskenion.Command_Transfer{
-						Transfer: &proskenion.Transfer{
+					Command: &proskenion.Command_TransferBalance{
+						TransferBalance: &proskenion.TransferBalance{
 							DestAccountId: c.exDestAccountId,
 							Balance:        c.transBalance,
 						},
@@ -256,7 +256,7 @@ func TestCommandExecutor_Transfer(t *testing.T) {
 					TargetId:     c.exTargetId,
 					AuthorizerId: c.exAuthoirzerId,
 				}}
-			err := ex.Transfer(wsv, cmd)
+			err := ex.TransferBalance(wsv, cmd)
 			if c.exErr != nil {
 				assert.EqualError(t, errors.Cause(err), c.exErr.Error())
 			} else {
@@ -352,15 +352,15 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			cmd := &convertor.Command{
 				Command: &proskenion.Command{
-					Command: &proskenion.Command_AddPublicKey{
-						AddPublicKey: &proskenion.AddPublicKey{
-							PublicKey: c.key,
+					Command: &proskenion.Command_AddPublicKeys{
+						AddPublicKeys: &proskenion.AddPublicKeys{
+							PublicKeys: [][]byte{c.key},
 						},
 					},
 					TargetId:     c.targetId,
 					AuthorizerId: c.authorizerId,
 				}}
-			err := ex.AddPublicKey(wsv, cmd)
+			err := ex.AddPublicKeys(wsv, cmd)
 			if c.err != nil {
 				assert.EqualError(t, errors.Cause(err), c.err.Error())
 			} else {

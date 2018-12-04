@@ -4,26 +4,26 @@ type Command interface {
 	GetAuthorizerId() string
 	GetTargetId() string
 
-	GetTransfer() Transfer
+	GetTransferBalance() TransferBalance
 	GetCreateAccount() CreateAccount
-	GetAddAsset() AddAsset
-	GetAddPublicKey() AddPublicKey
+	GetAddBalance() AddBalance
+	GetAddPublicKeys() AddPublicKeys
 
 	Execute(ObjectFinder) error
 	Validate(ObjectFinder) error
 }
 
-type Transfer interface {
+type TransferBalance interface {
 	GetDestAccountId() string
 	GetBalance() int64
 }
 
 type CreateAccount interface{}
 
-type AddAsset interface {
+type AddBalance interface {
 	GetBalance() int64
 }
 
-type AddPublicKey interface {
-	GetPublicKey() []byte
+type AddPublicKeys interface {
+	GetPublicKeys() [][]byte
 }

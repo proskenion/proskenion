@@ -337,11 +337,11 @@ func (t *TxBuilder) CreatedTime(time int64) model.TxBuilder {
 	return t
 }
 
-func (t *TxBuilder) Transfer(srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
-			Command: &proskenion.Command_Transfer{
-				Transfer: &proskenion.Transfer{
+			Command: &proskenion.Command_TransferBalance{
+				TransferBalance: &proskenion.TransferBalance{
 					DestAccountId: destAccountId,
 					Balance:       balance,
 				},
@@ -364,11 +364,11 @@ func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.T
 	return t
 }
 
-func (t *TxBuilder) AddAsset(accountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
-			Command: &proskenion.Command_AddAsset{
-				AddAsset: &proskenion.AddAsset{
+			Command: &proskenion.Command_AddBalance{
+				AddBalance: &proskenion.AddBalance{
 					Balance: balance,
 				},
 			},
@@ -381,9 +381,9 @@ func (t *TxBuilder) AddAsset(accountId string, balance int64) model.TxBuilder {
 func (t *TxBuilder) AddPublicKey(authorizerId string, accountId string, pubkey model.PublicKey) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
-			Command: &proskenion.Command_AddPublicKey{
-				AddPublicKey: &proskenion.AddPublicKey{
-					PublicKey: pubkey,
+			Command: &proskenion.Command_AddPublicKeys{
+				AddPublicKeys: &proskenion.AddPublicKeys{
+					PublicKeys: [][]byte{pubkey},
 				},
 			},
 			TargetId:     accountId,

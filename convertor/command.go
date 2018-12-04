@@ -15,14 +15,14 @@ type Command struct {
 
 func (c *Command) Execute(wsv model.ObjectFinder) error {
 	switch x := c.GetCommand().(type) {
-	case *proskenion.Command_Transfer:
-		return c.executor.Transfer(wsv, c)
-	case *proskenion.Command_AddAsset:
-		return c.executor.AddAsset(wsv, c)
+	case *proskenion.Command_TransferBalance:
+		return c.executor.TransferBalance(wsv, c)
+	case *proskenion.Command_AddBalance:
+		return c.executor.AddBalance(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.executor.CreateAccount(wsv, c)
-	case *proskenion.Command_AddPublicKey:
-		return c.executor.AddPublicKey(wsv, c)
+	case *proskenion.Command_AddPublicKeys:
+		return c.executor.AddPublicKeys(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -30,31 +30,31 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 
 func (c *Command) Validate(wsv model.ObjectFinder) error {
 	switch x := c.GetCommand().(type) {
-	case *proskenion.Command_Transfer:
-		return c.validator.Transfer(wsv, c)
-	case *proskenion.Command_AddAsset:
-		return c.validator.AddAsset(wsv, c)
+	case *proskenion.Command_TransferBalance:
+		return c.validator.TransferBalance(wsv, c)
+	case *proskenion.Command_AddBalance:
+		return c.validator.AddBalance(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.validator.CreateAccount(wsv, c)
-	case *proskenion.Command_AddPublicKey:
-		return c.validator.AddPublicKey(wsv, c)
+	case *proskenion.Command_AddPublicKeys:
+		return c.validator.AddPublicKeys(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
 }
 
-func (c *Command) GetTransfer() model.Transfer {
-	return c.Command.GetTransfer()
+func (c *Command) GetTransferBalance() model.TransferBalance {
+	return c.Command.GetTransferBalance()
 }
 
 func (c *Command) GetCreateAccount() model.CreateAccount {
 	return c.Command.GetCreateAccount()
 }
 
-func (c *Command) GetAddAsset() model.AddAsset {
-	return c.Command.GetAddAsset()
+func (c *Command) GetAddBalance() model.AddBalance {
+	return c.Command.GetAddBalance()
 }
 
-func (c *Command) GetAddPublicKey() model.AddPublicKey {
-	return c.Command.GetAddPublicKey()
+func (c *Command) GetAddPublicKeys() model.AddPublicKeys {
+	return c.Command.GetAddPublicKeys()
 }
