@@ -251,7 +251,7 @@ func TestModelFactory_NewQueryBuilder(t *testing.T) {
 		assert.Equal(t, int64(1), query.GetPayload().GetCreatedTime())
 		assert.Equal(t, "a", query.GetPayload().GetTargetId())
 		assert.Equal(t, "b", query.GetPayload().GetAuthorizerId())
-		assert.Equal(t, model.AccountObjectCode, query.GetPayload().GetRequestCode())
+		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), query.GetPayload().GetRequestCode())
 	})
 }
 
@@ -276,5 +276,63 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 		actPeer := res.GetPayload().GetPeer()
 		assert.Equal(t, expPeer.GetPublicKey(), actPeer.GetPublicKey())
 		assert.Equal(t, expPeer.GetAddress(), actPeer.GetAddress())
+	})
+
+}
+
+func NewObjectFactory_NewStorageBuilder(t *testing.T) {
+	fc := NewTestFactory()
+	t.Run("case 1 storage builder", func(t *testing.T) {
+		builder := fc.NewStorageBuilder()
+		storage := builder.Dict("dict", map[string]model.Object{"key": fc.NewEmptyObject()}).
+			List("list", []model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}).
+			Account("account", fc.NewEmptyAccount()).
+			Sig("sig", fc.NewEmptySignature()).
+			Address("address", "target@account.com").
+			Data("data", []byte("aaaa")).
+			Str("str", "str").
+			Peer("peer", fc.NewEmptyPeer()).
+			Int32("int32", 32).
+			Int64("int64", 64).
+			Uint32("uint32", 1).
+			Uint64("uint64", 2).
+			Build()
+
+		dict := storage.GetObject()
+		assert.Equal(t, map[string]model.Object{"key": fc.NewEmptyObject()}, dict["dict"].GetDict())
+		assert.Equal(t, model.ObjectCode(model.DictObjectCode), dict["dict"].GetType())
+
+		assert.Equal(t, []model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}, dict["list"].GetList())
+		assert.Equal(t, model.ObjectCode(model.ListObjectCode), dict["list"].GetType())
+
+		assert.Equal(t, fc.NewEmptyAccount(), dict["account"].GetAccount())
+		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), dict["account"].GetType())
+
+		assert.Equal(t, fc.NewEmptySignature(), dict["sig"].GetSig())
+		assert.Equal(t, model.ObjectCode(model.SignatureObjectCode), dict["sig"].GetType())
+
+		assert.Equal(t, "target@account.com", dict["address"].GetAddress())
+		assert.Equal(t, model.ObjectCode(model.AddressObjectCode), dict["address"].GetType())
+
+		assert.Equal(t, []byte("aaaa"), dict["data"].GetAddress())
+		assert.Equal(t, model.ObjectCode(model.BytesObjectCode), dict["data"].GetType())
+
+		assert.Equal(t, "str", dict["str"].GetStr())
+		assert.Equal(t, model.ObjectCode(model.StringObjectCode), dict["str"].GetType())
+
+		assert.Equal(t, fc.NewEmptyPeer(), dict["peer"].GetPeer())
+		assert.Equal(t, model.ObjectCode(model.PeerObjectCode), dict["peer"].GetType())
+
+		assert.Equal(t, 32, dict["int32"].GetI32())
+		assert.Equal(t, model.ObjectCode(model.Int32ObjectCode), dict["int32"].GetType())
+
+		assert.Equal(t, 64, dict["int64"].GetI64())
+		assert.Equal(t, model.ObjectCode(model.Int64ObjectCode), dict["int64"].GetType())
+
+		assert.Equal(t, 1, dict["uint64"].GetU32())
+		assert.Equal(t, model.ObjectCode(model.Uint32ObjectCode), dict["uint32"].GetType())
+
+		assert.Equal(t, 2, dict["uint64"].GetU64())
+		assert.Equal(t, model.ObjectCode(model.Uint64ObjectCode), dict["uint64"].GetType())
 	})
 }

@@ -14,8 +14,13 @@ type ObjectFactory interface {
 	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
 	NewPeer(address string, pubkey PublicKey) Peer
 
+	NewStorageBuilder() StorageBuilder
+
+	NewEmptySignature() Signature
 	NewEmptyAccount() Account
 	NewEmptyPeer() Peer
+	NewEmptyStorage() Storage
+	NewEmptyObject() Object
 }
 
 type ModelFactory interface {
@@ -30,6 +35,22 @@ type ModelFactory interface {
 	NewEmptyTx() Transaction
 	NewEmptyQuery() Query
 	NewEmptyQueryResponse() QueryResponse
+}
+
+type StorageBuilder interface {
+	Int32(key string, value int32) StorageBuilder
+	Int64(key string, value int64) StorageBuilder
+	Uint32(key string, value uint32) StorageBuilder
+	Uint64(key string, value uint64) StorageBuilder
+	Str(key string, value string) StorageBuilder
+	Data(key string, value []byte) StorageBuilder
+	Address(key string, value string) StorageBuilder
+	Sig(key string, value Signature) StorageBuilder
+	Account(key string, value Account) StorageBuilder
+	Peer(key string, value Peer) StorageBuilder
+	List(key string, value []Object) StorageBuilder
+	Dict(key string, value map[string]Object) StorageBuilder
+	Build() Storage
 }
 
 type BlockBuilder interface {
