@@ -66,9 +66,9 @@ type BlockBuilder interface {
 
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
-	Transfer(srcAccountId string, destAccountId string, amount int64) TxBuilder
+	TransferBalance(srcAccountId string, destAccountId string, amount int64) TxBuilder
 	CreateAccount(authorizerId string, accountId string) TxBuilder
-	AddAsset(accountId string, amount int64) TxBuilder
+	AddBalance(accountId string, amount int64) TxBuilder
 	AddPublicKey(authorizerId string, accountId string, pubkey PublicKey) TxBuilder
 	Build() Transaction
 }

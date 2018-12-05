@@ -13,11 +13,11 @@ type Validator interface {
 	Validate(ObjectFinder) error
 }
 
-// Transfer Err
+// TransferBalance Err
 var (
-	ErrCommandExecutorTransferNotFoundSrcAccountId      = fmt.Errorf("Failed Command Executor Transfer Can Not Load SrcAccounId")
-	ErrCommandExecutorTransferNotFoundDestAccountId     = fmt.Errorf("Failed Command Executor Transfer Can Not Load DestAccounId")
-	ErrCommandExecutorTransferNotEnoughSrcAccountBalance = fmt.Errorf("Failed Command Executor Transfer Not Enough SrcAccount Balance")
+	ErrCommandExecutorTransferBalanceNotFoundSrcAccountId      = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load SrcAccounId")
+	ErrCommandExecutorTransferBalanceNotFoundDestAccountId     = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load DestAccounId")
+	ErrCommandExecutorTransferBalanceNotEnoughSrcAccountBalance = fmt.Errorf("Failed Command Executor TransferBalance Not Enough SrcAccount Balance")
 )
 
 // CreateAccount Err
@@ -25,9 +25,9 @@ var (
 	ErrCommandExecutorCreateAccountAlreadyExistAccount = fmt.Errorf("Failed Command Executor CreateAccount AlreadyExist AccountId")
 )
 
-// AddAsset Err
+// AddBalance Err
 var (
-	ErrCommandExecutorAddAssetNotExistAccount = fmt.Errorf("Failed Command Executor AddAsset Not Exist Account")
+	ErrCommandExecutorAddBalanceNotExistAccount = fmt.Errorf("Failed Command Executor AddBalance Not Exist Account")
 )
 
 // AddPublicKeys Err
@@ -45,17 +45,17 @@ var (
 
 type CommandExecutor interface {
 	SetFactory(factory ModelFactory)
-	Transfer(ObjectFinder, Command) error
+	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
-	AddAsset(ObjectFinder, Command) error
-	AddPublicKey(ObjectFinder, Command) error
+	AddBalance(ObjectFinder, Command) error
+	AddPublicKeys(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
 	SetFactory(factory ModelFactory)
-	Transfer(ObjectFinder, Command) error
+	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
-	AddAsset(ObjectFinder, Command) error
-	AddPublicKey(ObjectFinder, Command) error
+	AddBalance(ObjectFinder, Command) error
+	AddPublicKeys(ObjectFinder, Command) error
 	Tx(ObjectFinder, TxFinder, Transaction) error
 }

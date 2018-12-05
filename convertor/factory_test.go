@@ -136,28 +136,28 @@ func TestTxModelBuilder(t *testing.T) {
 	t.Run("case transfer", func(t *testing.T) {
 		txBuilder := NewTestFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
-			Transfer("a", "b", 10).
+			TransferBalance("a", "b", 10).
 			CreateAccount("x", "y").
-			AddAsset("w", 10).
+			AddBalance("w", 10).
 			AddPublicKey("auth", "ac", []byte{1, 2, 3}).
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
-		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransfer().GetDestAccountId())
-		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransfer().GetBalance())
+		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransferBalance().GetDestAccountId())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransferBalance().GetBalance())
 
 		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
 		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
 
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
-		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddAsset().GetBalance())
+		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddBalance().GetBalance())
 
 		assert.Equal(t, "auth", tx.GetPayload().GetCommands()[3].GetAuthorizerId())
 		assert.Equal(t, "ac", tx.GetPayload().GetCommands()[3].GetTargetId())
-		assert.Equal(t, []byte{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKey().GetPublicKey())
+		assert.Equal(t, []byte{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKeys().GetPublicKeys()[0])
 	})
 }
 

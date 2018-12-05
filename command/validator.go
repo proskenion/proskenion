@@ -19,7 +19,7 @@ func (c *CommandValidator) SetFactory(factory model.ModelFactory) {
 	c.fc = factory
 }
 
-func (c *CommandValidator) Transfer(wsv model.ObjectFinder, cmd model.Command) error {
+func (c *CommandValidator) TransferBalance(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }
 
@@ -27,11 +27,11 @@ func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Comma
 	return nil
 }
 
-func (c *CommandValidator) AddAsset(wsv model.ObjectFinder, cmd model.Command) error {
+func (c *CommandValidator) AddBalance(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }
 
-func (c *CommandValidator) AddPublicKey(wsv model.ObjectFinder, cmd model.Command) error {
+func (c *CommandValidator) AddPublicKeys(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }
 
