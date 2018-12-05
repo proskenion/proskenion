@@ -109,7 +109,7 @@ func (t *TransactionPayload) GetCommands() []model.Command {
 	}
 	ret := make([]model.Command, len(t.Commands))
 	for i, cmd := range t.Transaction_Payload.GetCommands() {
-		ret[i] = &Command{cmd, t.executor, t.validator}
+		ret[i] = &Command{cmd, t.executor, t.validator, t.cryptor}
 	}
 	return ret
 }
