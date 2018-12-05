@@ -103,7 +103,9 @@ message AddObject {
 /**
  * TransferObject Command は Storage 内の Object を key を指定して送る。（list or dict)
  **/
-message TransferObject {}
+message TransferObject {
+    string destAccountId = 1;
+}
 
 /**
  * AddPeer Command は Peer を追加する。
