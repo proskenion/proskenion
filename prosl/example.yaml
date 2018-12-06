@@ -1,0 +1,11 @@
+- set:
+  - peers
+  - query:
+      select: peer
+      type: Peer
+      from: domain.com#degrader.accounts
+      order_by:
+        - fav
+        - DESC
+      limit: 20
+- return: peers

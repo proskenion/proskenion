@@ -16,7 +16,7 @@ message ProslOperator {
     oneof op {
         SetOperator setOp = 1;
         IfOperator ifOp = 2;
-        ElifOperator erifOp = 3;
+        ElifOperator elifOp = 3;
         ElseOperator elseOp = 4;
         ErrCatchOperator errOp = 5;
         RequireOperator requireOp = 6;
