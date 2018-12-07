@@ -188,7 +188,7 @@ message AndFormula {
 }
 
 message NotFormula {
-    repeated ValueOperator ops = 1;
+    ValueOperator op = 1;
 }
 
 message EqFormula {
