@@ -86,6 +86,8 @@ message ValueOperator {
 
         ValuedOperator valuedOp = 13;
         IndexedOperator indexedOp = 14;
+
+        Object object = 15;
     }
 }
 
