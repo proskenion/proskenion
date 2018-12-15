@@ -66,6 +66,10 @@ message ReturnOperator {
     ValueOperator op = 1;
 }
 
+message VariableOperator {
+    string variableName = 1;
+}
+
 
 // === ValueOperator ===
 message ValueOperator {
@@ -87,7 +91,8 @@ message ValueOperator {
         ValuedOperator valuedOp = 13;
         IndexedOperator indexedOp = 14;
 
-        Object object = 15;
+        VariableOperator variableOp = 15;
+        Object object = 16;
     }
 }
 

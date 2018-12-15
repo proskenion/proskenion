@@ -8,4 +8,5 @@
         - fav
         - DESC
       limit: 20
-- return: peers
+- return:
+      variable: peers
