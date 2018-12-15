@@ -115,7 +115,6 @@ message CommandOperator {
 
 message TxOperator {
     repeated CommandOperator commands = 1;
-    int64 createdTime = 2;
 }
 
 message PlusOperator {
