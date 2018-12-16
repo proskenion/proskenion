@@ -25,6 +25,7 @@ import:
   - assert
   - require
 - package: go.uber.org/multierr
+- package: go.uber.org/atomic
 - package: github.com/inconshreveable/log15
 - package: github.com/go-stack/stack
 - package: gopkg.in/yaml.v2
