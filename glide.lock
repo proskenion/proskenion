@@ -1,5 +1,5 @@
-hash: ed3c41135606c83ed5fc625e07850da02d52018025114f0868de115b1e2bc571
-updated: 2018-10-24T17:37:21.285011+09:00
+hash: 85d8ccb964276d9e9b597af2f7772168e45f18636b1751a500b615e66788e8bc
+updated: 2018-12-17T00:48:34.649298+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
@@ -8,7 +8,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
 - name: github.com/gogo/protobuf
-  version: 6f222ca7387001523464e651447e272d9d2aa6f6
+  version: 4cbf7e384e768b4e01799441fdf2a706a5635ae7
   subpackages:
   - proto
 - name: github.com/golang/protobuf
@@ -33,7 +33,7 @@ imports:
 - name: github.com/inconshreveable/log15
   version: 67afb5ed74ec82fd7ac8f49d27c509ac6f991970
 - name: github.com/jmoiron/sqlx
-  version: 3a411660be52b3236199fbfe1919f515cfc1ca32
+  version: 82935fac6c1a317907c8f43ed3f7f85ea844a78b
   subpackages:
   - reflectx
 - name: github.com/kelseyhightower/envconfig
@@ -43,7 +43,7 @@ imports:
 - name: github.com/lann/ps
   version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
 - name: github.com/Masterminds/squirrel
-  version: 79d7b377db060f9b4781ab3573722b72a5c65f0f
+  version: a8c1880ebb4dd72ef19a1a337f75e9f6d0b7d89f
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
@@ -61,6 +61,8 @@ imports:
   subpackages:
   - assert
   - require
+- name: go.uber.org/atomic
+  version: 1ea20fb1cbb1cc08cbd0d913a96dead89aa18289
 - name: go.uber.org/multierr
   version: ddea229ff1dff9e6fe8a6c0344ac73b09e81fce5
 - name: golang.org/x/crypto
@@ -122,5 +124,5 @@ imports:
   - tap
   - transport
 - name: gopkg.in/yaml.v2
-  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
+  version: 51d6538a90f86fe93ac480b35f37b2be17fef232
 testImports: []

@@ -90,21 +90,25 @@ message CreateStorage {}
  * UpdateObject Command は Storage 内のObjectを更新する。
  **/
 message UpdateObject {
-    Object object = 1;
+    string key = 1;
+    Object object = 2;
 }
 
 /**
  * AddObject Command は target_id で指定した Storage に Object を追加する。（list or dict)
  **/
 message AddObject {
-    Object object = 1;
+    string key = 1;
+    Object object = 2;
 }
 
 /**
  * TransferObject Command は Storage 内の Object を key を指定して送る。（list or dict)
  **/
 message TransferObject {
-    string destAccountId = 1;
+    string key = 1;
+    string destAccountId = 2;
+    Object object = 3;
 }
 
 /**
