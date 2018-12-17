@@ -76,6 +76,11 @@ func (t *MerklePatriciaTree) Get(hash model.Hash) (core.MerklePatriciaNodeIterat
 	return t.Iterator().Get(hash)
 }
 
+// key と prefix が一致している最も浅い internal iterator を取得
+func (t *MerklePatriciaTree) Search(key []byte) (MerklePatriciaNodeIterator, error) {
+	return t.Iterator().Search(key)
+}
+
 // key で参照した先の iterator を取得
 func (t *MerklePatriciaTree) Find(key []byte) (core.MerklePatriciaNodeIterator, error) {
 	return t.Iterator().Find(key)
@@ -285,6 +290,24 @@ func (t *MerklePatriciaNodeIterator) createLeafIterator(node core.KVNode) (core.
 	return newLeafIt, nil
 }
 
+// key と prefix が一致している最も浅い internal iterator を取得
+func (t *MerklePatriciaNodeIterator) Search(key []byte) (core.MerklePatriciaNodeIterator, error) {
+	if t.Leaf() {
+		return t, nil
+	}
+	if len(t.Key()) >= len(key) {
+		if !bytes.HasPrefix(t.Key(), key) {
+			return nil, core.ErrMerklePatriciaTreeNotSearchKey
+		}
+		return t, nil
+	}
+	nextChild, err := t.getChild(key[len(t.Key())])
+	if err != nil {
+		return nil, err
+	}
+	return nextChild.Search(key[len(t.Key()):])
+}
+
 // key で参照した先の iterator を取得
 func (t *MerklePatriciaNodeIterator) Find(key []byte) (core.MerklePatriciaNodeIterator, error) {
 	if t.Leaf() {
@@ -305,7 +328,7 @@ func (t *MerklePatriciaNodeIterator) Find(key []byte) (core.MerklePatriciaNodeIt
 	}
 	nextChild, err := t.getChild(key[len(t.Key())])
 	if err != nil {
-		return nil, errors.Wrap(core.ErrMerklePatriciaTreeNotFoundKey, err.Error())
+		return nil, err
 	}
 	return nextChild.Find(key[len(t.Key()):])
 }
