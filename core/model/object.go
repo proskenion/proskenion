@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"github.com/proskenion/proskenion/regexp"
+)
+
 type ObjectCode int
 
 const (
@@ -56,9 +61,27 @@ type Address struct {
 	account string
 }
 
-func NewAddress(id string) {
-
+func NewAddress(id string) (*Address, error) {
+	if regexp.GetRegexp().VerifyWalletId.MatchString(id) ||
+		regexp.GetRegexp().VerifyAccountId.MatchString(id) ||
+		regexp.GetRegexp().VerifyDomainId.MatchString(id) ||
+		regexp.GetRegexp().VerifyStorageId.MatchString(id) {
+		ret := regexp.GetRegexp().SplitAddress.FindStringSubmatch(id)
+		return &Address{
+			ret[3],
+			ret[2],
+			ret[1],
+		}, nil
+	}
+	return nil, fmt.Errorf("Failed Parse Address not correct format: %s", id)
 }
 
-func (a Address) Get() {
+const dividedChar = "\\"
+
+func (a *Address) GetBytes() []byte {
+	ret := make([]byte, 2)
+	for _, c := range a.storage + dividedChar + a.domain + dividedChar + a.account {
+		ret = append(ret, byte(c))
+	}
+	return ret
 }
