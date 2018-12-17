@@ -49,3 +49,16 @@ type Object interface {
 	GetDict() map[string]Object
 	Modelor
 }
+
+type Address struct {
+	storage string
+	domain  string
+	account string
+}
+
+func NewAddress(id string) {
+
+}
+
+func (a Address) Get() {
+}
