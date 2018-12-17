@@ -77,13 +77,21 @@ func (t *MerklePatriciaTree) Get(hash model.Hash) (core.MerklePatriciaNodeIterat
 }
 
 // key と prefix が一致している最も浅い internal iterator を取得
-func (t *MerklePatriciaTree) Search(key []byte) (MerklePatriciaNodeIterator, error) {
-	return t.Iterator().Search(key)
+func (t *MerklePatriciaTree) Search(key []byte) (core.MerklePatriciaNodeIterator, error) {
+	ret, err := t.Iterator().Search(key)
+	if err != nil {
+		return nil, errors.Wrap(core.ErrMerklePatriciaTreeNotSearchKey, err.Error())
+	}
+	return ret, nil
 }
 
 // key で参照した先の iterator を取得
 func (t *MerklePatriciaTree) Find(key []byte) (core.MerklePatriciaNodeIterator, error) {
-	return t.Iterator().Find(key)
+	ret, err := t.Iterator().Find(key)
+	if err != nil {
+		return nil, errors.Wrap(core.ErrMerklePatriciaTreeNotFoundKey, err.Error())
+	}
+	return ret, nil
 }
 
 // Upsert したあとの新しい Iterator を生成して取得
