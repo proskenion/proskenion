@@ -82,11 +82,13 @@ type MerklePatriciaNodeIterator interface {
 type WSV interface {
 	Hasher
 	// Query gets value from targetId
-	Query(targetId string, value Unmarshaler) error
+	Query(targetId Address, value Unmarshaler) error
+	// Query All gets value from fromId
+	QueryAll(fromId Address, value UnmarshalerFactory) ([]Unmarshaler, error)
 	// Get PeerService
-	PeerService() (PeerService, error)
+	PeerService(peerRootId Address) (PeerService, error)
 	// Append [targetId] = value
-	Append(targetId string, value Marshaler) error
+	Append(targetId Address, value Marshaler) error
 	// Commit appenging nodes
 	Commit() error
 	// RollBack

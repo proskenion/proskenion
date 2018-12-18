@@ -18,8 +18,6 @@ type WSV struct {
 }
 
 var WSV_ROOT_KEY byte = 0
-var OBJECT_ROOT_KEY byte = 5
-var PEER_ROOT_KEY byte = 6
 
 func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV, error) {
 	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
@@ -38,24 +36,13 @@ func (w *WSV) Hash() model.Hash {
 }
 
 // targetId を MerklePatriciaTree の key バイト列に変換
-// WIP : @, ., # に対応
-func TargetIdToKey(id string) []byte {
-	ret := make([]byte, 2)
-	ret[0] = WSV_ROOT_KEY
-	if id[0] == ':' {
-		ret[1] = PEER_ROOT_KEY
-	} else {
-		ret[1] = OBJECT_ROOT_KEY
-	}
-	for _, c := range id {
-		ret = append(ret, byte(c))
-	}
-	return ret
+func makeWSVId(id model.Address) []byte {
+	return append([]byte{WSV_ROOT_KEY}, id.GetBytes()...)
 }
 
 // Query gets value from targetId
-func (w *WSV) Query(targetId string, value model.Unmarshaler) error {
-	it, err := w.tree.Find(TargetIdToKey(targetId))
+func (w *WSV) Query(targetId model.Address, value model.Unmarshaler) error {
+	it, err := w.tree.Find(makeWSVId(targetId))
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
 			return errors.Wrap(core.ErrWSVNotFound, err.Error())
@@ -68,29 +55,33 @@ func (w *WSV) Query(targetId string, value model.Unmarshaler) error {
 	return nil
 }
 
-func (w *WSV) getPeerRoot() (core.MerklePatriciaNodeIterator, error) {
-	if peerRootHash, ok := w.tree.Iterator().Childs()[PEER_ROOT_KEY]; ok {
-		it, err := w.tree.Get(peerRootHash)
-		if err != nil {
-			return nil, err
+func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]model.Unmarshaler, error) {
+	it, err := w.tree.Search(makeWSVId(fromId))
+	if err != nil {
+		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotSearchKey {
+			return nil, errors.Wrap(core.ErrWSVNotFound, err.Error())
 		}
-		fmt.Println("it Key()")
-		fmt.Println(it.Key())
-		return it, nil
+		return nil, err
 	}
-	return nil, errors.Errorf("not found peerservice")
+	leafs, err := it.SubLeafs()
+	rets := make([]model.Unmarshaler, 0, len(leafs))
+	for _, leaf := range leafs {
+		unm := ufc.CreateUnmarshaler()
+		if err = leaf.Data(unm); err != nil {
+			return nil, errors.Wrap(core.ErrWSVQueryUnmarshal, err.Error())
+		}
+		rets = append(rets, unm)
+	}
+	return rets, nil
 }
 
 // PeerService gets value from targetId
-func (w *WSV) PeerService() (core.PeerService, error) {
-	peerRoot, err := w.getPeerRoot()
+func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
+	peerRoot, err := w.tree.Search(makeWSVId(peerRootId))
 	if err != nil {
 		return nil, err
 	}
 	peerRootHash := peerRoot.Hash()
-	if err != nil {
-		return nil, err
-	}
 	if len(w.psHash) != 0 {
 		// キャッシュがあったら再利用
 		if bytes.Equal(w.psHash, peerRootHash) {
@@ -141,8 +132,8 @@ func (kv *KVNode) Next(cnt int) core.KVNode {
 }
 
 // Append [targetId] = value
-func (w *WSV) Append(targetId string, value model.Marshaler) error {
-	_, err := w.tree.Upsert(&KVNode{TargetIdToKey(targetId), value})
+func (w *WSV) Append(targetId model.Address, value model.Marshaler) error {
+	_, err := w.tree.Upsert(&KVNode{makeWSVId(targetId), value})
 	return err
 }
 
