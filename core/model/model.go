@@ -17,3 +17,7 @@ type Modelor interface {
 	Unmarshaler
 	Hasher
 }
+
+type UnmarshalerFactory interface {
+	CreateUnmarshaler() Unmarshaler
+}

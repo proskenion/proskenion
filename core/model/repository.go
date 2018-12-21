@@ -2,9 +2,11 @@ package model
 
 type ObjectFinder interface {
 	// Query gets value from targetId
-	Query(targetId string, value Unmarshaler) error
+	Query(targetId Address, value Unmarshaler) error
+	// Query All gets value from fromId
+	QueryAll(fromId Address, value UnmarshalerFactory) ([]Unmarshaler, error)
 	// Append [targetId] = value
-	Append(targetId string, value Marshaler) error
+	Append(targetId Address, value Marshaler) error
 }
 
 type TxFinder interface {

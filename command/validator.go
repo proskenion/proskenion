@@ -56,7 +56,11 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 	}
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		ac := c.fc.NewEmptyAccount()
-		err := wsv.Query(cmd.GetAuthorizerId(), ac)
+		authorizerId, err := model.NewAddress(cmd.GetAuthorizerId())
+		if err != nil {
+			return err // TODO ErrAddressParse
+		}
+		err = wsv.Query(authorizerId, ac)
 		if err != nil {
 			return errors.Wrapf(core.ErrTxValidateNotFoundAuthorizer,
 				"authorizer : %s", cmd.GetAuthorizerId())

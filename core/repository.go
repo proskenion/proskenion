@@ -6,14 +6,15 @@ import (
 )
 
 var (
-	ErrMerklePatriciaTreeNotFoundKey = errors.Errorf("Failed MerklePatriciaTree Not Found key")
-	ErrInvalidKVNodes                = errors.Errorf("Failed Key Value Nodes Invalid")
-	ErrWSVNotFound                   = errors.Errorf("Failed WSV Query Not Found")
-	ErrWSVQueryUnmarshal             = errors.Errorf("Failed WSV Query Unmarshal")
-	ErrTxHistoryNotFound             = errors.Errorf("Failed TxHistory Query Not Found")
-	ErrTxHistoryQueryUnmarshal       = errors.Errorf("Failed TxHistory Query Unmarshal")
-	ErrBlockchainNotFound            = errors.Errorf("Failed Blockchain Get Not Found")
-	ErrBlockchainQueryUnmarshal      = errors.Errorf("Failed Blocchain Get Unmarshal")
+	ErrMerklePatriciaTreeNotSearchKey = errors.Errorf("Failed MerklePatriciaTree can not search key")
+	ErrMerklePatriciaTreeNotFoundKey  = errors.Errorf("Failed MerklePatriciaTree Not Found key")
+	ErrInvalidKVNodes                 = errors.Errorf("Failed Key Value Nodes Invalid")
+	ErrWSVNotFound                    = errors.Errorf("Failed WSV Query Not Found")
+	ErrWSVQueryUnmarshal              = errors.Errorf("Failed WSV Query Unmarshal")
+	ErrTxHistoryNotFound              = errors.Errorf("Failed TxHistory Query Not Found")
+	ErrTxHistoryQueryUnmarshal        = errors.Errorf("Failed TxHistory Query Unmarshal")
+	ErrBlockchainNotFound             = errors.Errorf("Failed Blockchain Get Not Found")
+	ErrBlockchainQueryUnmarshal       = errors.Errorf("Failed Blocchain Get Unmarshal")
 )
 
 var (
@@ -45,7 +46,9 @@ type KVNode interface {
 
 // Merkle Patricia Tree に対する操作
 type MerklePatriciaController interface {
-	// key で参照した先の iterator を取得
+	// key と prefix が一致している最も浅い internal iterator を取得
+	Search(key []byte) (MerklePatriciaNodeIterator, error)
+	// key で参照した先の leaf iterator を取得
 	Find(key []byte) (MerklePatriciaNodeIterator, error)
 	// Upsert したあとの Iterator を生成して取得
 	Upsert(KVNode) (MerklePatriciaNodeIterator, error)
@@ -79,11 +82,13 @@ type MerklePatriciaNodeIterator interface {
 type WSV interface {
 	Hasher
 	// Query gets value from targetId
-	Query(targetId string, value Unmarshaler) error
+	Query(targetId Address, value Unmarshaler) error
+	// Query All gets value from fromId
+	QueryAll(fromId Address, value UnmarshalerFactory) ([]Unmarshaler, error)
 	// Get PeerService
-	PeerService() (PeerService, error)
+	PeerService(peerRootId Address) (PeerService, error)
 	// Append [targetId] = value
-	Append(targetId string, value Marshaler) error
+	Append(targetId Address, value Marshaler) error
 	// Commit appenging nodes
 	Commit() error
 	// RollBack

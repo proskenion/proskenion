@@ -93,7 +93,7 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(c.exTargetId, ac)
+				err = wsv.Query(model.MustAddress(c.exTargetId), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
 				assert.Equal(t, int64(0), ac.GetBalance())
@@ -112,8 +112,8 @@ func TestCommandExecutor_AddBalance(t *testing.T) {
 		name           string
 		exAuthoirzerId string
 		exTargetId     string
-		addBalance      int64
-		exBalance       int64
+		addBalance     int64
+		exBalance      int64
 		exErr          error
 	}{
 		{
@@ -167,7 +167,7 @@ func TestCommandExecutor_AddBalance(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(c.exTargetId, ac)
+				err = wsv.Query(model.MustAddress(c.exTargetId), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
 				assert.Equal(t, c.exBalance, ac.GetBalance())
@@ -188,9 +188,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 		exAuthoirzerId  string
 		exTargetId      string
 		exDestAccountId string
-		transBalance     int64
-		exSrcBalance     int64
-		exDestBalance    int64
+		transBalance    int64
+		exSrcBalance    int64
+		exDestBalance   int64
 		exErr           error
 	}{
 		{
@@ -250,7 +250,7 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 					Command: &proskenion.Command_TransferBalance{
 						TransferBalance: &proskenion.TransferBalance{
 							DestAccountId: c.exDestAccountId,
-							Balance:        c.transBalance,
+							Balance:       c.transBalance,
 						},
 					},
 					TargetId:     c.exTargetId,
@@ -263,14 +263,14 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 				assert.NoError(t, err)
 
 				srcAc := fc.NewEmptyAccount()
-				err = wsv.Query(c.exTargetId, srcAc)
+				err = wsv.Query(model.MustAddress(c.exTargetId), srcAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, srcAc.GetAccountId())
 				assert.Equal(t, c.exSrcBalance, srcAc.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), srcAc.GetPublicKeys())
 
 				destAc := fc.NewEmptyAccount()
-				err = wsv.Query(c.exDestAccountId, destAc)
+				err = wsv.Query(model.MustAddress(c.exDestAccountId), destAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exDestAccountId, destAc.GetAccountId())
 				assert.Equal(t, c.exDestBalance, destAc.GetBalance())
@@ -367,7 +367,7 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(c.targetId, ac)
+				err = wsv.Query(model.MustAddress(c.targetId), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.targetId, ac.GetAccountId())
 				assert.ElementsMatch(t, c.exKeys, ac.GetPublicKeys())
