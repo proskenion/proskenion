@@ -41,9 +41,9 @@ func TestVerifyAccountId(t *testing.T) {
 			false,
 		},
 		{
-			"case 5 no domain",
+			"case 5 correct no domain",
 			"account@",
-			false,
+			true,
 		},
 		{
 			"case 6 no accountt",
@@ -155,9 +155,9 @@ func TestNewVerifyStorageId(t *testing.T) {
 			false,
 		},
 		{
-			"case 4 no domain",
+			"case 4 correct no domain",
 			"/storage",
-			false,
+			true,
 		},
 		{
 			"case 5 no storage",
@@ -296,6 +296,27 @@ func TestNewSplitAddress(t *testing.T) {
 			"",
 			"domain.com.a.b",
 			"",
+		},
+		{
+			"case 7 no domain",
+			"account@/storage",
+			"storage",
+			"",
+			"account",
+		},
+		{
+			"case 8 only storage",
+			"/storage",
+			"storage",
+			"",
+			"",
+		},
+		{
+			"case 9 only account",
+			"ac@",
+			"",
+			"",
+			"ac",
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {

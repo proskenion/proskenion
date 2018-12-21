@@ -43,7 +43,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 
 	// 署名チェック
 	ac := q.fc.NewEmptyAccount()
-	err = wsv.Query(query.GetPayload().GetAuthorizerId(), ac)
+	err = wsv.Query(model.MustAddress(query.GetPayload().GetAuthorizerId()), ac)
 	if err != nil {
 		return nil, errors.Wrapf(core.ErrQueryProcessorNotExistAuthoirizer,
 			"authorizer : %s", query.GetPayload().GetAuthorizerId())
@@ -72,7 +72,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 
 func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
 	ac := q.fc.NewEmptyAccount()
-	err := wsv.Query(qp.GetTargetId(), ac)
+	err := wsv.Query(model.MustAddress(qp.GetTargetId()), ac)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV)
 
 func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
 	peer := q.fc.NewEmptyPeer()
-	err := wsv.Query(qp.GetTargetId(), peer)
+	err := wsv.Query(model.MustAddress(qp.GetTargetId()), peer)
 	if err != nil {
 		return nil, err
 	}

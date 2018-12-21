@@ -55,19 +55,26 @@ type Object interface {
 	Modelor
 }
 
-type Address struct {
+type Address interface {
+	Storage() string
+	Domain() string
+	Account() string
+	GetBytes() []byte
+}
+
+type AddressConv struct {
 	storage string
 	domain  string
 	account string
 }
 
-func NewAddress(id string) (*Address, error) {
+func NewAddress(id string) (Address, error) {
 	if regexp.GetRegexp().VerifyWalletId.MatchString(id) ||
 		regexp.GetRegexp().VerifyAccountId.MatchString(id) ||
 		regexp.GetRegexp().VerifyDomainId.MatchString(id) ||
 		regexp.GetRegexp().VerifyStorageId.MatchString(id) {
 		ret := regexp.GetRegexp().SplitAddress.FindStringSubmatch(id)
-		return &Address{
+		return &AddressConv{
 			ret[3],
 			ret[2],
 			ret[1],
@@ -76,12 +83,36 @@ func NewAddress(id string) (*Address, error) {
 	return nil, fmt.Errorf("Failed Parse Address not correct format: %s", id)
 }
 
+func MustAddress(id string) Address {
+	ret, err := NewAddress(id)
+	if err != nil {
+		panic(err)
+	}
+	return ret
+}
+
 const dividedChar = "\\"
 
-func (a *Address) GetBytes() []byte {
-	ret := make([]byte, 2)
-	for _, c := range a.storage + dividedChar + a.domain + dividedChar + a.account {
-		ret = append(ret, byte(c))
+func (a *AddressConv) Storage() string {
+	return a.storage
+}
+
+func (a *AddressConv) Domain() string {
+	return a.domain
+}
+
+func (a *AddressConv) Account() string {
+	return a.account
+}
+
+func (a *AddressConv) GetBytes() []byte {
+	ret := make([]byte, 0)
+	if a.domain == "" && a.account == "" {
+		ret = append(ret, a.storage...)
+	} else if a.account == "" {
+		ret = append(ret, (a.storage + dividedChar + a.domain)...)
+	} else {
+		ret = append(ret, (a.storage + dividedChar + a.domain + dividedChar + a.account)...)
 	}
 	return ret
 }

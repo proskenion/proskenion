@@ -28,7 +28,7 @@ func GetRegexp() *Regexper {
 }
 
 func newVerifyAccountId() *regexp.Regexp {
-	return regexp.MustCompile(`^[a-z_0-9]{1,32}\@[a-z_0-9]{1,32}(\.[a-z_0-9]{1,32}){0,4}$`)
+	return regexp.MustCompile(`^[a-z_0-9]{1,32}\@([a-z_0-9]{1,32}(\.[a-z_0-9]{1,32}){0,4})?$`)
 }
 
 func newVerifyPeerAddress() *regexp.Regexp {
@@ -47,7 +47,7 @@ func newVerifyDomainId() *regexp.Regexp {
 }
 
 func newVerifyStorageId() *regexp.Regexp {
-	return regexp.MustCompile(`^[a-z_0-9]{1,32}(\.[a-z_0-9]{1,32}){0,4}/[a-z_0-9]{1,32}$`)
+	return regexp.MustCompile(`^([a-z_0-9]{1,32}(\.[a-z_0-9]{1,32}){0,4})?/[a-z_0-9]{1,32}$`)
 }
 
 func newVerifyWalletId() *regexp.Regexp {
@@ -55,5 +55,5 @@ func newVerifyWalletId() *regexp.Regexp {
 }
 
 func newSplitAddress() *regexp.Regexp {
-	return regexp.MustCompile(`^(?:([a-z_0-9]{1,32})\@)?([a-z_0-9]{1,32}(?:\.[a-z_0-9]{1,32}){0,4})(?:/([a-z_0-9]{1,32}))?$`)
+	return regexp.MustCompile(`^(?:([a-z_0-9]{1,32})\@)?([a-z_0-9]{1,32}(?:\.[a-z_0-9]{1,32}){0,4})?(?:/([a-z_0-9]{1,32}))?$`)
 }

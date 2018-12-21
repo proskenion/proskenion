@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func test_WSV_Upserts(t *testing.T, wsv core.WSV, id string, ac model.Account) {
+func test_WSV_Upserts(t *testing.T, wsv core.WSV, id model.Address, ac model.Account) {
 	err := wsv.Query(id, ac)
 	require.EqualError(t, errors.Cause(err), core.ErrWSVNotFound.Error())
 	err = wsv.Append(id, ac)
@@ -24,7 +24,7 @@ func test_WSV_Upserts(t *testing.T, wsv core.WSV, id string, ac model.Account) {
 	assert.Equal(t, MustHash(ac), MustHash(unmarshaler))
 }
 
-func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id string, peer model.Peer) {
+func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id model.Address, peer model.Peer) {
 	err := wsv.Query(id, peer)
 	require.EqualError(t, errors.Cause(err), core.ErrWSVNotFound.Error())
 	err = wsv.Append(id, peer)
@@ -44,18 +44,19 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 		RandomAccount(),
 		RandomAccount(),
 	}
-	ids := []string{
-		"targeta",
-		"tartb",
-		"tartbc",
-		"xyz",
-		"target",
+	ids := []model.Address{
+		model.MustAddress("targeta@a"),
+		model.MustAddress("tartb@a"),
+		model.MustAddress("tartbc@a"),
+		model.MustAddress("xyz@a"),
+		model.MustAddress("target@a"),
 	}
 
 	for i, ac := range acs {
 		test_WSV_Upserts(t, wsv, ids[i], ac)
 	}
-	_, err := wsv.PeerService()
+	peerRootAddress := model.MustAddress("/peer")
+	_, err := wsv.PeerService(peerRootAddress)
 	assert.Error(t, err)
 
 	ps := []model.Peer{
@@ -64,11 +65,11 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 		RandomPeer(),
 		RandomPeer(),
 	}
-	pids := []string{
-		":127.32.2.1",
-		":127.32.2.2",
-		":127.32.2.3",
-		":127.32.2.4",
+	pids := []model.Address{
+		model.MustAddress("p1@peer/peer"),
+		model.MustAddress("p2@peer/peer"),
+		model.MustAddress("p3@peer/peer"),
+		model.MustAddress("p4@peer/peer"),
 	}
 
 	for i, p := range ps {
@@ -76,7 +77,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 	}
 	require.NoError(t, wsv.Commit())
 
-	peerService, err := wsv.PeerService()
+	peerService, err := wsv.PeerService(peerRootAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, len(peerService.List()), 4)
 	exPs := ps

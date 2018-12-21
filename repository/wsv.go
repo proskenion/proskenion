@@ -37,7 +37,9 @@ func (w *WSV) Hash() model.Hash {
 
 // targetId を MerklePatriciaTree の key バイト列に変換
 func makeWSVId(id model.Address) []byte {
-	return append([]byte{WSV_ROOT_KEY}, id.GetBytes()...)
+	ret := make([]byte,1)
+	ret[0] = WSV_ROOT_KEY
+	return append(ret, id.GetBytes()...)
 }
 
 // Query gets value from targetId
@@ -77,6 +79,7 @@ func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]mo
 
 // PeerService gets value from targetId
 func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
+	fmt.Println("peerRoot: " ,makeWSVId(peerRootId))
 	peerRoot, err := w.tree.Search(makeWSVId(peerRootId))
 	if err != nil {
 		return nil, err
@@ -133,6 +136,7 @@ func (kv *KVNode) Next(cnt int) core.KVNode {
 
 // Append [targetId] = value
 func (w *WSV) Append(targetId model.Address, value model.Marshaler) error {
+	fmt.Println("append peerRoot: " ,makeWSVId(targetId))
 	_, err := w.tree.Upsert(&KVNode{makeWSVId(targetId), value})
 	return err
 }
