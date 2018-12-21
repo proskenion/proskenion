@@ -11,10 +11,11 @@ var (
 
 type ObjectFactory interface {
 	NewSignature(pubkey PublicKey, signature []byte) Signature
-	NewAccount(accountId string, accountName string, publicKeys []PublicKey, amount int64) Account
-	NewPeer(address string, pubkey PublicKey) Peer
+	NewAccount(accountId string, accountName string, publicKeys []PublicKey, quorum int32, amount int64, peerId string) Account
+	NewPeer(peerId string, address string, pubkey PublicKey) Peer
 
 	NewStorageBuilder() StorageBuilder
+	NewAccountBuilder() AccountBuilder
 
 	NewEmptySignature() Signature
 	NewEmptyAccount() Account
@@ -51,6 +52,16 @@ type StorageBuilder interface {
 	List(key string, value []Object) StorageBuilder
 	Dict(key string, value map[string]Object) StorageBuilder
 	Build() Storage
+}
+
+type AccountBuilder interface {
+	From(Account) AccountBuilder
+	AccountId(string) AccountBuilder
+	AccountName(string) AccountBuilder
+	PublicKeys([]PublicKey) AccountBuilder
+	Quroum(int32) AccountBuilder
+	DelegatePeerId(string) AccountBuilder
+	Build() Account
 }
 
 type BlockBuilder interface {

@@ -49,7 +49,7 @@ func (c *Command) GetTransferBalance() model.TransferBalance {
 }
 
 func (c *Command) GetCreateAccount() model.CreateAccount {
-	return c.Command.GetCreateAccount()
+	return &CreateAccount{c.Command.GetCreateAccount()}
 }
 
 func (c *Command) GetAddBalance() model.AddBalance {
@@ -66,6 +66,17 @@ func (c *Command) GetRemovePublicKeys() model.RemovePublicKeys {
 
 func (c *Command) GetSetQuorum() model.SetQuroum {
 	return c.Command.GetSetQurum()
+}
+
+type CreateAccount struct {
+	*proskenion.CreateAccount
+}
+
+func (c *CreateAccount) GetPublicKeys() []model.PublicKey {
+	if c.CreateAccount == nil {
+		return nil
+	}
+	return model.PublicKeysFromBytesSlice(c.CreateAccount.GetPublicKeys())
 }
 
 type DefineStorage struct {

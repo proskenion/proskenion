@@ -31,8 +31,10 @@ message Account {
     string accountId = 1;
     string accountName = 2;
     repeated bytes publicKeys = 3;
-    int64 balance = 4;
-    string delegatePeerId = 5;
+    int32 quorum = 4;
+    int64 balance = 5;
+    string delegatePeerId = 6;
+
 }
 
 message Peer {

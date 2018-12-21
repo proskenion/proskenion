@@ -43,22 +43,25 @@ func (f *ObjectFactory) NewSignature(pubkey model.PublicKey, signature []byte) m
 	}
 }
 
-func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, balance int64) model.Account {
+func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicKeys []model.PublicKey, quorum int32, balance int64, peerId string) model.Account {
 	return &Account{
 		f.cryptor,
 		&proskenion.Account{
-			AccountId:   accountId,
-			AccountName: accountName,
-			PublicKeys:  model.BytesListFromPublicKeys(publicKeys),
-			Balance:     balance,
+			AccountId:      accountId,
+			AccountName:    accountName,
+			PublicKeys:     model.BytesListFromPublicKeys(publicKeys),
+			Balance:        balance,
+			Quorum:         quorum,
+			DelegatePeerId: peerId,
 		},
 	}
 }
 
-func (f *ObjectFactory) NewPeer(address string, pubkey model.PublicKey) model.Peer {
+func (f *ObjectFactory) NewPeer(peerId string, address string, pubkey model.PublicKey) model.Peer {
 	return &Peer{
 		f.cryptor,
 		&proskenion.Peer{
+			PeerId:    peerId,
 			Address:   address,
 			PublicKey: []byte(pubkey),
 		},
@@ -201,6 +204,10 @@ func (b *StorageBuilder) Build() model.Storage {
 		b.cryptor,
 		b.Storage,
 	}
+}
+
+type AccountBulder struct {
+	// TODO
 }
 
 type ModelFactory struct {

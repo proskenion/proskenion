@@ -29,6 +29,7 @@ type Account interface {
 	GetAccountName() string
 	GetPublicKeys() []PublicKey
 	GetBalance() int64
+	GetQuorum() int32
 	Modelor
 }
 
@@ -60,6 +61,7 @@ type Address interface {
 	Domain() string
 	Account() string
 	GetBytes() []byte
+	Id() string
 }
 
 type AddressConv struct {
@@ -115,4 +117,14 @@ func (a *AddressConv) GetBytes() []byte {
 		ret = append(ret, (a.storage + dividedChar + a.domain + dividedChar + a.account)...)
 	}
 	return ret
+}
+
+func (a *AddressConv) Id() string {
+	if a.account == "" {
+		return a.domain + "/" + a.storage
+	}
+	if a.storage == "" {
+		return a.account + "@" + a.domain
+	}
+	return a.account + "@" + a.domain + "/" + a.storage
 }

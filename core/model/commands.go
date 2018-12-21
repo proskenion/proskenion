@@ -26,7 +26,10 @@ type TransferBalance interface {
 	GetBalance() int64
 }
 
-type CreateAccount interface{}
+type CreateAccount interface {
+	GetPublicKeys() []PublicKey
+	GetQuorum() int32
+}
 
 type AddBalance interface {
 	GetBalance() int64
