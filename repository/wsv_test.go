@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -36,6 +35,28 @@ func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id model.Address, peer mo
 	assert.Equal(t, MustHash(peer), MustHash(unmarshaler))
 }
 
+type AccountUnmarshalerFactory struct {
+	fc model.ModelFactory
+}
+
+func (f *AccountUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
+	return f.fc.NewEmptyAccount()
+}
+
+func NewAccountUnmarshalerFactory() *AccountUnmarshalerFactory {
+	return &AccountUnmarshalerFactory{NewTestFactory()}
+}
+
+func testWSV_QueryAll(t *testing.T, wsv core.WSV, acs []model.Account, id model.Address) {
+	res, err := wsv.QueryAll(id, NewAccountUnmarshalerFactory())
+	assert.NoError(t, err)
+	resAc := make([]model.Account, 0)
+	for _, xxx := range res {
+		resAc = append(resAc, xxx.(model.Account))
+	}
+	AssertSetEqual(t, resAc, acs)
+}
+
 func test_WSV(t *testing.T, wsv core.WSV) {
 	acs := []model.Account{
 		RandomAccount(),
@@ -45,16 +66,20 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 		RandomAccount(),
 	}
 	ids := []model.Address{
-		model.MustAddress("targeta@a"),
-		model.MustAddress("tartb@a"),
-		model.MustAddress("tartbc@a"),
-		model.MustAddress("xyz@a"),
-		model.MustAddress("target@a"),
+		model.MustAddress("targeta@a/account"),
+		model.MustAddress("tartb@a/account"),
+		model.MustAddress("tartbc@a/account"),
+		model.MustAddress("xyz@b/account"),
+		model.MustAddress("target@b/account"),
 	}
 
 	for i, ac := range acs {
 		test_WSV_Upserts(t, wsv, ids[i], ac)
 	}
+	// Queryll test
+	testWSV_QueryAll(t, wsv, acs, model.MustAddress("/account"))
+	testWSV_QueryAll(t, wsv, acs[3:], model.MustAddress("b/account"))
+
 	peerRootAddress := model.MustAddress("/peer")
 	_, err := wsv.PeerService(peerRootAddress)
 	assert.Error(t, err)
@@ -80,20 +105,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 	peerService, err := wsv.PeerService(peerRootAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, len(peerService.List()), 4)
-	exPs := ps
-	assertPs := func(p model.Peer) {
-		for i, exP := range exPs {
-			if bytes.Equal(MustHash(exP), MustHash(p)) {
-				exPs = append(exPs[:i], exPs[i+1:]...)
-				return
-			}
-		}
-		assert.Failf(t, "assert peers.", "%x is not found.", MustHash(p))
-	}
-	for _, p := range peerService.List() {
-		assertPs(p)
-	}
-	assert.Equal(t, len(exPs), 0)
+	AssertSetEqual(t, peerService.List(), ps)
 }
 
 func TestWSV(t *testing.T) {

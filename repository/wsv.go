@@ -2,7 +2,6 @@ package repository
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -37,7 +36,7 @@ func (w *WSV) Hash() model.Hash {
 
 // targetId を MerklePatriciaTree の key バイト列に変換
 func makeWSVId(id model.Address) []byte {
-	ret := make([]byte,1)
+	ret := make([]byte, 1)
 	ret[0] = WSV_ROOT_KEY
 	return append(ret, id.GetBytes()...)
 }
@@ -79,7 +78,6 @@ func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]mo
 
 // PeerService gets value from targetId
 func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
-	fmt.Println("peerRoot: " ,makeWSVId(peerRootId))
 	peerRoot, err := w.tree.Search(makeWSVId(peerRootId))
 	if err != nil {
 		return nil, err
@@ -92,13 +90,11 @@ func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
 		}
 	}
 
-	fmt.Println("peerRoot Key()")
-	fmt.Println(peerRoot.Key())
 	leafs, err := peerRoot.SubLeafs()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(len(leafs))
+
 	peers := make([]model.Peer, 0, len(leafs))
 	for _, leaf := range leafs {
 		peer := w.fc.NewEmptyPeer()
@@ -106,7 +102,6 @@ func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(peer.GetAddress())
 		peers = append(peers, peer)
 	}
 	w.ps = NewPeerService(peers)
@@ -136,7 +131,6 @@ func (kv *KVNode) Next(cnt int) core.KVNode {
 
 // Append [targetId] = value
 func (w *WSV) Append(targetId model.Address, value model.Marshaler) error {
-	fmt.Println("append peerRoot: " ,makeWSVId(targetId))
 	_, err := w.tree.Upsert(&KVNode{makeWSVId(targetId), value})
 	return err
 }
