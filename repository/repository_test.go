@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func TestRepository_Commit(t *testing.T) {
 	txList := RandomTxList()
 	txList.Push(
 		fc.NewTxBuilder().
-			CreateAccount("root", "authorizer@com").
+			CreateAccount("root", "authorizer@com", []model.PublicKey{}, 0).
 			Build())
 	require.NoError(t, rp.GenesisCommit(txList))
 

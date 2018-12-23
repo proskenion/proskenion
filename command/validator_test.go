@@ -40,7 +40,7 @@ func TestCommandValidator_Tx(t *testing.T) {
 		{
 			"case 1 correct",
 			TxSign(t,
-				fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b").Build(),
+				fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b", []model.PublicKey{}, 0).Build(),
 				[]model.PublicKey{acs[0].Pubkey},
 				[]model.PrivateKey{acs[0].Prikey}),
 			nil,
@@ -48,7 +48,7 @@ func TestCommandValidator_Tx(t *testing.T) {
 		{
 			"case 2 different key",
 			TxSign(t,
-				fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b").Build(),
+				fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b", []model.PublicKey{}, 0).Build(),
 				[]model.PublicKey{acs[1].Pubkey},
 				[]model.PrivateKey{acs[1].Prikey}),
 			core.ErrTxValidateNotSignedAuthorizer,

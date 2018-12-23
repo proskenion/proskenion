@@ -26,12 +26,12 @@ func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecu
 
 func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	tx := fc.NewTxBuilder().
-		CreateAccount("authorizer", "authorizer").
-		CreateAccount("authorizer", "account1").
-		CreateAccount("authorizer", "account2").
-		CreateAccount("authorizer", "account3").
-		CreateAccount("authorizer", "account4").
-		CreateAccount("authorizer", "account5").
+		CreateAccount("authorizer", "authorizer", []model.PublicKey{}, 0).
+		CreateAccount("authorizer", "account1", []model.PublicKey{}, 0).
+		CreateAccount("authorizer", "account2", []model.PublicKey{}, 0).
+		CreateAccount("authorizer", "account3", []model.PublicKey{}, 0).
+		CreateAccount("authorizer", "account4", []model.PublicKey{}, 0).
+		CreateAccount("authorizer", "account5", []model.PublicKey{}, 0).
 		Build()
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		require.NoError(t, cmd.Execute(wsv))

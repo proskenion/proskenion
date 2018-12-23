@@ -16,7 +16,7 @@ type AccountManager struct {
 	fc         model.ModelFactory
 }
 
-func andNewAccountManager(t *testing.T, server model.Peer) *AccountManager {
+func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 	fc := NewTestFactory()
 	c, err := client.NewAPIGateClient(server, fc)
 	require.NoError(t, err)
@@ -29,7 +29,7 @@ func andNewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 
 func (am *AccountManager) SetAuthorizer(t *testing.T) {
 	tx := am.fc.NewTxBuilder().
-		AddPublicKey(am.authorizer.AccountId, am.authorizer.AccountId, am.authorizer.Pubkey).
+		AddPublicKeys(am.authorizer.AccountId, am.authorizer.AccountId, []model.PublicKey{am.authorizer.Pubkey}).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -37,8 +37,7 @@ func (am *AccountManager) SetAuthorizer(t *testing.T) {
 
 func (am *AccountManager) CreateAccount(t *testing.T, ac *AccountWithPri) {
 	tx := am.fc.NewTxBuilder().
-		CreateAccount(am.authorizer.AccountId, ac.AccountId).
-		AddPublicKey(am.authorizer.AccountId, ac.AccountId, ac.Pubkey).
+		CreateAccount(am.authorizer.AccountId, ac.AccountId, []model.PublicKey{ac.Pubkey}, 1).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))

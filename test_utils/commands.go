@@ -31,8 +31,7 @@ func GenesisCommitFromAccounts(t *testing.T, rp core.Repository, acs []*AccountW
 
 	builder := NewTestFactory().NewTxBuilder()
 	for _, ac := range acs {
-		builder = builder.CreateAccount("root", ac.AccountId).
-			AddPublicKey("root", ac.AccountId, ac.Pubkey)
+		builder = builder.CreateAccount("root", ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
 	}
 	tx := builder.Build()
 	require.NoError(t, txList.Push(tx))

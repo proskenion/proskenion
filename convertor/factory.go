@@ -416,11 +416,14 @@ func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, b
 	return t
 }
 
-func (t *TxBuilder) CreateAccount(authorizerId string, accountId string) model.TxBuilder {
+func (t *TxBuilder) CreateAccount(authorizerId string, accountId string, publicKeys []model.PublicKey, quorum int32) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_CreateAccount{
-				CreateAccount: &proskenion.CreateAccount{},
+				CreateAccount: &proskenion.CreateAccount{
+					PublicKeys: model.BytesListFromPublicKeys(publicKeys),
+					Quorum:     quorum,
+				},
 			},
 			TargetId:     accountId,
 			AuthorizerId: authorizerId,
@@ -442,13 +445,140 @@ func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder 
 	return t
 }
 
-func (t *TxBuilder) AddPublicKey(authorizerId string, accountId string, pubkey model.PublicKey) model.TxBuilder {
+func (t *TxBuilder) AddPublicKeys(authorizerId string, accountId string, pubkey []model.PublicKey) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_AddPublicKeys{
 				AddPublicKeys: &proskenion.AddPublicKeys{
-					PublicKeys: [][]byte{pubkey},
+					PublicKeys: model.BytesListFromPublicKeys(pubkey),
 				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) RemovePublicKeys(authorizerId string, accountId string, pubkeys []model.PublicKey) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_RemovePublicKeys{
+				RemovePublicKeys: &proskenion.RemovePublicKeys{
+					PublicKeys: model.BytesListFromPublicKeys(pubkeys),
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) SetQuorum(authorizerId string, accountId string, quorum int32) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_SetQurum{
+				SetQurum: &proskenion.SetQuorum{
+					Quorum: quorum,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) DefineStorage(authorizerId string, storageId string, storage model.Storage) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_DefineStorage{
+				DefineStorage: &proskenion.DefineStorage{
+					Storage: storage.(*Storage).Storage,
+				},
+			},
+			TargetId:     storageId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) CreateStorage(authorizerId string, storageId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_CreateStorage{
+				CreateStorage: &proskenion.CreateStorage{},
+			},
+			TargetId:     storageId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) UpdateObject(authorizerId string, walletId string, key string, object model.Object) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_UpdateObject{
+				UpdateObject: &proskenion.UpdateObject{
+					Key:    key,
+					Object: object.(*Object).Object,
+				},
+			},
+			TargetId:     walletId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) AddObject(authorizerId string, walletId string, key string, object model.Object) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddObject{
+				AddObject: &proskenion.AddObject{
+					Key:    key,
+					Object: object.(*Object).Object,
+				},
+			},
+			TargetId:     walletId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) TransferObject(authorizerId string, walletId string, destAccountId string, key string, object model.Object) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_TransferObject{
+				TransferObject: &proskenion.TransferObject{
+					Key:           key,
+					DestAccountId: destAccountId,
+					Object:        object.(*Object).Object,
+				},
+			},
+			TargetId:     walletId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) AddPeer(authorizerId string, accountId string, address string, pubkey model.PublicKey) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_AddPeer{
+				AddPeer: &proskenion.AddPeer{
+					Address:   address,
+					PublicKey: pubkey,
+				},
+			},
+			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_Consign{
+				Consign: &proskenion.Consign{PeerId: peerId},
 			},
 			TargetId:     accountId,
 			AuthorizerId: authorizerId,

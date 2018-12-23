@@ -57,11 +57,11 @@ func (c *Command) GetAddBalance() model.AddBalance {
 }
 
 func (c *Command) GetAddPublicKeys() model.AddPublicKeys {
-	return c.Command.GetAddPublicKeys()
+	return &AddPublicKeys{c.Command.GetAddPublicKeys()}
 }
 
 func (c *Command) GetRemovePublicKeys() model.RemovePublicKeys {
-	return c.Command.GetRemovePublicKeys()
+	return &RemovePublicKeys{c.Command.GetRemovePublicKeys()}
 }
 
 func (c *Command) GetSetQuorum() model.SetQuroum {
@@ -77,6 +77,28 @@ func (c *CreateAccount) GetPublicKeys() []model.PublicKey {
 		return nil
 	}
 	return model.PublicKeysFromBytesSlice(c.CreateAccount.GetPublicKeys())
+}
+
+type AddPublicKeys struct {
+	*proskenion.AddPublicKeys
+}
+
+func (c *AddPublicKeys) GetPublicKeys() []model.PublicKey {
+	if c.AddPublicKeys == nil {
+		return nil
+	}
+	return model.PublicKeysFromBytesSlice(c.AddPublicKeys.GetPublicKeys())
+}
+
+type RemovePublicKeys struct {
+	*proskenion.RemovePublicKeys
+}
+
+func (c *RemovePublicKeys) GetPublicKeys() []model.PublicKey {
+	if c.RemovePublicKeys == nil {
+		return nil
+	}
+	return model.PublicKeysFromBytesSlice(c.RemovePublicKeys.GetPublicKeys())
 }
 
 type DefineStorage struct {
@@ -115,17 +137,30 @@ type AddObject struct {
 }
 
 func (c *AddObject) GetObject() model.Object {
-	return &Object{c.c, c.Object}
+	return &Object{c.c, c.AddObject.Object}
 }
 
 func (c *Command) GetAddObject() model.AddObject {
 	return &AddObject{c.cryptor, c.Command.GetAddObject()}
 }
 
+type TransferObject struct {
+	c core.Cryptor
+	*proskenion.TransferObject
+}
+
+func (c *TransferObject) GetObject() model.Object {
+	return &Object{c.c, c.TransferObject.Object}
+}
+
 func (c *Command) GetTransferObject() model.TransferObject {
-	return c.Command.GetTransferObject()
+	return &TransferObject{c.cryptor, c.Command.GetTransferObject()}
 }
 
 func (c *Command) GetAddPeer() model.AddPeer {
 	return c.Command.GetAddPeer()
+}
+
+func (c *Command) GetConsign() model.Consign {
+	return c.Command.GetConsign()
 }

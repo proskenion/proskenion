@@ -79,9 +79,18 @@ type BlockBuilder interface {
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
 	TransferBalance(srcAccountId string, destAccountId string, amount int64) TxBuilder
-	CreateAccount(authorizerId string, accountId string) TxBuilder
+	CreateAccount(authorizerId string, accountId string, publicKeys []PublicKey, quorum int32) TxBuilder
 	AddBalance(accountId string, amount int64) TxBuilder
-	AddPublicKey(authorizerId string, accountId string, pubkey PublicKey) TxBuilder
+	AddPublicKeys(authorizerId string, accountId string, pubkeys []PublicKey) TxBuilder
+	RemovePublicKeys(authorizerId string, accountId string, pubkeys []PublicKey) TxBuilder
+	SetQuorum(authorizerId string, accountId string, quorum int32) TxBuilder
+	DefineStorage(authorizerId string, storageId string, storage Storage) TxBuilder
+	CreateStorage(authorizerId string, storageId string) TxBuilder
+	UpdateObject(authorizerId string, walletId string, key string, object Object) TxBuilder
+	AddObject(authorizerId string, walletId string, key string, object Object) TxBuilder
+	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder
+	AddPeer(authorizerId string, accountId string, address string, pubkey PublicKey) TxBuilder
+	Consign(authorizerId string, accountId string, peerId string) TxBuilder
 	Build() Transaction
 }
 

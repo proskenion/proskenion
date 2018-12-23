@@ -38,7 +38,7 @@ func RandomInvalidSig() model.Signature {
 func RandomTx() model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
 		CreatedTime(rand.Int63()).
-		CreateAccount(RandomStr(), RandomStr()).
+		CreateAccount(RandomStr(), RandomStr(), []model.PublicKey{}, 1).
 		Build()
 	return tx
 }
@@ -121,7 +121,7 @@ func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) mo
 
 func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
-		CreateAccount(authorizer.AccountId, target).
+		CreateAccount(authorizer.AccountId, target, []model.PublicKey{}, 0).
 		Build()
 	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))
 	return tx

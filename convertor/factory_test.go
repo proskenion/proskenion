@@ -136,28 +136,104 @@ func TestTxModelBuilder(t *testing.T) {
 	t.Run("case transfer", func(t *testing.T) {
 		txBuilder := NewTestFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
-			TransferBalance("a", "b", 10).
-			CreateAccount("x", "y").
-			AddBalance("w", 10).
-			AddPublicKey("auth", "ac", []byte{1, 2, 3}).
+			TransferBalance("a", "b", 10).                                                 // [0]
+			CreateAccount("x", "y", []model.PublicKey{[]byte{1, 2, 3}}, 1).                // [1]
+			AddBalance("w", 10).                                                           // [2]
+			AddPublicKeys("auth", "ac", []model.PublicKey{[]byte{1, 2, 3}}).               // [3]
+			TransferBalance("src", "dest", 200).                                           // [4]
+			AddPublicKeys("authorizer", "account", []model.PublicKey{[]byte{4, 5, 6}}).    // [5]
+			RemovePublicKeys("authorizer", "account", []model.PublicKey{[]byte{4, 5, 6}}). // [6]
+			SetQuorum("authorizer", "account", 2).                                         // [7]
+			DefineStorage("authorizer", "account",
+															NewTestFactory().NewStorageBuilder().Int32("int", 32).Build()). // [8]
+			CreateStorage("authorizer", "wallet_id").                                                    // [9]
+			UpdateObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).           // [10]
+			AddObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).              // [11]
+			TransferObject("authorizer", "wallet_id", "dest", "key", NewTestFactory().NewEmptyObject()). // [12]
+			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                     // [13]
+			Consign("authorizer", "account", "peer").                                                    // [14]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
+		// transfer balance
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransferBalance().GetDestAccountId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransferBalance().GetBalance())
 
+		// create account
 		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
 		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
+		assert.Equal(t, []model.PublicKey{[]byte{1, 2, 3}}, tx.GetPayload().GetCommands()[1].GetCreateAccount().GetPublicKeys())
+		assert.Equal(t, int32(1), tx.GetPayload().GetCommands()[1].GetCreateAccount().GetQuorum())
 
+		// add balance
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddBalance().GetBalance())
 
+		// add public keys
 		assert.Equal(t, "auth", tx.GetPayload().GetCommands()[3].GetAuthorizerId())
 		assert.Equal(t, "ac", tx.GetPayload().GetCommands()[3].GetTargetId())
-		assert.Equal(t, []byte{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKeys().GetPublicKeys()[0])
+		assert.Equal(t, model.PublicKey{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKeys().GetPublicKeys()[0])
+
+		// transfer balance
+		assert.Equal(t, "src", tx.GetPayload().GetCommands()[4].GetTargetId())
+		assert.Equal(t, "dest", tx.GetPayload().GetCommands()[4].GetTransferBalance().GetDestAccountId())
+		assert.Equal(t, int64(200), tx.GetPayload().GetCommands()[4].GetTransferBalance().GetBalance())
+
+		// add publicKeys
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[5].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[5].GetTargetId())
+		assert.EqualValues(t, []model.PublicKey{[]byte{4, 5, 6}}, tx.GetPayload().GetCommands()[5].GetAddPublicKeys().GetPublicKeys())
+
+		// remove publicKeys
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[6].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[6].GetTargetId())
+		assert.EqualValues(t, []model.PublicKey{[]byte{4, 5, 6}}, tx.GetPayload().GetCommands()[6].GetRemovePublicKeys().GetPublicKeys())
+
+		// set quorum
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[7].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[7].GetTargetId())
+		assert.Equal(t, int32(2), tx.GetPayload().GetCommands()[7].GetSetQuorum().GetQuorum())
+
+		// define storage
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[8].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[8].GetTargetId())
+		assert.Equal(t, model.ObjectCode(model.Int32ObjectCode), model.ObjectCode(tx.GetPayload().GetCommands()[8].GetDefineStorage().GetStorage().GetObject()["int"].GetType()))
+		assert.Equal(t, int32(32), tx.GetPayload().GetCommands()[8].GetDefineStorage().GetStorage().GetObject()["int"].GetI32())
+
+		// create storage
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[9].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[9].GetTargetId())
+
+		// update object
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[10].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[10].GetTargetId())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[10].GetUpdateObject().GetObject().GetType())
+
+		// add object
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[11].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[11].GetTargetId())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[11].GetAddObject().GetObject().GetType())
+
+		// transferObject
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[12].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[12].GetTargetId())
+		assert.Equal(t, "dest", tx.GetPayload().GetCommands()[12].GetTransferObject().GetDestAccountId())
+		assert.Equal(t, "key", tx.GetPayload().GetCommands()[12].GetTransferObject().GetKey())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[12].GetTransferObject().GetObject().GetType())
+
+		// add peer
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[13].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[13].GetTargetId())
+		assert.Equal(t, "localhost", tx.GetPayload().GetCommands()[13].GetAddPeer().GetAddress())
+		assert.EqualValues(t, model.PublicKey{2, 2, 2}, tx.GetPayload().GetCommands()[13].GetAddPeer().GetPublicKey())
+
+		// consign
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[14].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[14].GetTargetId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
 	})
 }
 

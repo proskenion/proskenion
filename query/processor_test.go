@@ -3,6 +3,7 @@ package query_test
 import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -15,9 +16,8 @@ func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri)
 	txList := repository.NewTxList(RandomCryptor())
 	require.NoError(t, txList.Push(
 		NewTestFactory().NewTxBuilder().
-			CreateAccount("root", authorizer.AccountId).
-			AddPublicKey("root", authorizer.AccountId, authorizer.Pubkey).
-			CreateAccount("root", "target@com").
+			CreateAccount("root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).
+			CreateAccount("root", "target@com", []model.PublicKey{}, 0).
 			CreatedTime(0).
 			Build()))
 	require.NoError(t, rp.GenesisCommit(txList))

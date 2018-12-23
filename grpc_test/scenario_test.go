@@ -20,7 +20,7 @@ func TestScenario(t *testing.T) {
 
 	fc := NewTestFactory()
 	serverPeer := fc.NewPeer(RandomStr(), ":50023", conf.Peer.PublicKeyBytes())
-	am := andNewAccountManager(t, serverPeer)
+	am := NewAccountManager(t, serverPeer)
 
 	// set authorizer
 	am.SetAuthorizer(t)
@@ -41,11 +41,11 @@ func TestScenario(t *testing.T) {
 	}
 	time.Sleep(time.Second * 2)
 	ams := []*AccountManager{
-		andNewAccountManager(t, serverPeer),
-		andNewAccountManager(t, serverPeer),
-		andNewAccountManager(t, serverPeer),
-		andNewAccountManager(t, serverPeer),
-		andNewAccountManager(t, serverPeer),
+		NewAccountManager(t, serverPeer),
+		NewAccountManager(t, serverPeer),
+		NewAccountManager(t, serverPeer),
+		NewAccountManager(t, serverPeer),
+		NewAccountManager(t, serverPeer),
 	}
 	w := &sync.WaitGroup{}
 	for i, ac := range acs {
