@@ -58,8 +58,9 @@ type AccountBuilder interface {
 	From(Account) AccountBuilder
 	AccountId(string) AccountBuilder
 	AccountName(string) AccountBuilder
+	Balance(int64) AccountBuilder
 	PublicKeys([]PublicKey) AccountBuilder
-	Quroum(int32) AccountBuilder
+	Quorum(int32) AccountBuilder
 	DelegatePeerId(string) AccountBuilder
 	Build() Account
 }

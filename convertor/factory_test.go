@@ -167,40 +167,85 @@ func TestNewAccount(t *testing.T) {
 		accountId   string
 		accountName string
 		pubkeys     []model.PublicKey
+		quorum      int32
 		amount      int64
+		peerId      string
 	}{
 		{
 			"case 1",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 2",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 3",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte(), RandomByte(), RandomByte(), RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 4",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
+		},
+		{
+			"case 5",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{},
+			rand.Int31(),
+			rand.Int63(),
+			RandomStr(),
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.amount)
+			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.quorum, c.amount, c.peerId)
 			assert.Equal(t, c.accountId, ac.GetAccountId())
 			assert.Equal(t, c.accountName, ac.GetAccountName())
 			assert.Equal(t, c.pubkeys, ac.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac.GetQuorum())
 			assert.Equal(t, c.amount, ac.GetBalance())
+			assert.Equal(t, c.peerId, ac.GetDelegatePeerId())
+
+			ac2 := NewTestFactory().NewAccountBuilder().From(ac).Build()
+			assert.Equal(t, c.accountId, ac2.GetAccountId())
+			assert.Equal(t, c.accountName, ac2.GetAccountName())
+			assert.Equal(t, c.pubkeys, ac2.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac2.GetQuorum())
+			assert.Equal(t, c.amount, ac2.GetBalance())
+			assert.Equal(t, c.peerId, ac2.GetDelegatePeerId())
+
+			ac3 := NewTestFactory().NewAccountBuilder().
+				AccountId(c.accountId).
+				AccountName(c.accountName).
+				Balance(c.amount).
+				PublicKeys(c.pubkeys).
+				Quorum(c.quorum).
+				DelegatePeerId(c.peerId).
+				Build()
+
+			assert.Equal(t, c.accountId, ac3.GetAccountId())
+			assert.Equal(t, c.accountName, ac3.GetAccountName())
+			assert.Equal(t, c.pubkeys, ac3.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac3.GetQuorum())
+			assert.Equal(t, c.amount, ac3.GetBalance())
+			assert.Equal(t, c.peerId, ac3.GetDelegatePeerId())
 		})
 	}
 }
@@ -208,32 +253,37 @@ func TestNewAccount(t *testing.T) {
 func TestNewPeer(t *testing.T) {
 	for _, c := range []struct {
 		name    string
+		id      string
 		address string
 		pubkey  model.PublicKey
 	}{
 		{
 			"case 1",
+			"peer@com.pr/peer",
 			"111.111.111.111",
 			RandomByte(),
 		},
 		{
 			"case 2",
+			"peer@com.pr/peer",
 			RandomStr(),
 			RandomByte(),
 		},
 		{
 			"case 3",
+			"peer@com.pr/peer",
 			"localhost",
 			nil,
 		},
 		{
 			"case 4",
+			"peer@com.pr/peer",
 			"",
 			nil,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			peer := NewTestFactory().NewPeer(c.address, c.pubkey)
+			peer := NewTestFactory().NewPeer(c.id, c.address, c.pubkey)
 			assert.Equal(t, c.address, peer.GetAddress())
 			assert.Equal(t, c.pubkey, peer.GetPublicKey())
 		})
@@ -257,7 +307,7 @@ func TestModelFactory_NewQueryBuilder(t *testing.T) {
 
 func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
-		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int63())
+		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
 		builder := NewTestFactory().NewQueryResponseBuilder()
 		res := builder.Account(expAc).Build()
 		actAc := res.GetPayload().GetAccount()
@@ -269,7 +319,7 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 
 	t.Run("case 2 peer query", func(t *testing.T) {
 		pub, _ := RandomCryptor().NewKeyPairs()
-		expPeer := NewTestFactory().NewPeer("address:50051", pub)
+		expPeer := NewTestFactory().NewPeer(RandomStr(), "address:50051", pub)
 		res := NewTestFactory().NewQueryResponseBuilder().
 			Peer(expPeer).
 			Build()

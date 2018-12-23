@@ -57,6 +57,13 @@ func (f *ObjectFactory) NewAccount(accountId string, accountName string, publicK
 	}
 }
 
+func (f *ObjectFactory) NewAccountBuilder() model.AccountBuilder {
+	return &AccountBuilder{
+		cryptor: f.cryptor,
+		Account: &proskenion.Account{},
+	}
+}
+
 func (f *ObjectFactory) NewPeer(peerId string, address string, pubkey model.PublicKey) model.Peer {
 	return &Peer{
 		f.cryptor,
@@ -206,8 +213,58 @@ func (b *StorageBuilder) Build() model.Storage {
 	}
 }
 
-type AccountBulder struct {
-	// TODO
+type AccountBuilder struct {
+	cryptor core.Cryptor
+	*proskenion.Account
+}
+
+func (b *AccountBuilder) From(a model.Account) model.AccountBuilder {
+	b.Account = &proskenion.Account{
+		AccountId:      a.GetAccountId(),
+		AccountName:    a.GetAccountName(),
+		PublicKeys:     model.BytesListFromPublicKeys(a.GetPublicKeys()),
+		Quorum:         a.GetQuorum(),
+		Balance:        a.GetBalance(),
+		DelegatePeerId: a.GetDelegatePeerId(),
+	}
+	return b
+}
+
+func (b *AccountBuilder) AccountId(id string) model.AccountBuilder {
+	b.Account.AccountId = id
+	return b
+}
+
+func (b *AccountBuilder) AccountName(name string) model.AccountBuilder {
+	b.Account.AccountName = name
+	return b
+}
+
+func (b *AccountBuilder) Balance(balance int64) model.AccountBuilder {
+	b.Account.Balance = balance
+	return b
+}
+
+func (b *AccountBuilder) PublicKeys(keys []model.PublicKey) model.AccountBuilder {
+	b.Account.PublicKeys = model.BytesListFromPublicKeys(keys)
+	return b
+}
+
+func (b *AccountBuilder) Quorum(quorum int32) model.AccountBuilder {
+	b.Account.Quorum = quorum
+	return b
+}
+
+func (b *AccountBuilder) DelegatePeerId(dpeerId string) model.AccountBuilder {
+	b.Account.DelegatePeerId = dpeerId
+	return b
+}
+
+func (b *AccountBuilder) Build() model.Account {
+	return &Account{
+		cryptor: b.cryptor,
+		Account: b.Account,
+	}
 }
 
 type ModelFactory struct {

@@ -80,12 +80,13 @@ func RandomTxs() []model.Transaction {
 }
 
 func RandomAccount() model.Account {
-	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int63())
+	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
+
 }
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
-	return NewTestFactory().NewPeer(RandomStr(), pub)
+	return NewTestFactory().NewPeer(RandomStr(), RandomStr(), pub)
 }
 
 func RandomBlock() model.Block {

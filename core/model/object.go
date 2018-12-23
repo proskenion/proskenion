@@ -30,6 +30,7 @@ type Account interface {
 	GetPublicKeys() []PublicKey
 	GetBalance() int64
 	GetQuorum() int32
+	GetDelegatePeerId() string
 	Modelor
 }
 

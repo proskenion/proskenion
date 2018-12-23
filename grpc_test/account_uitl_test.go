@@ -16,7 +16,7 @@ type AccountManager struct {
 	fc         model.ModelFactory
 }
 
-func NewAccountMnager(t *testing.T, server model.Peer) *AccountManager {
+func andNewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 	fc := NewTestFactory()
 	c, err := client.NewAPIGateClient(server, fc)
 	require.NoError(t, err)

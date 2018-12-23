@@ -34,18 +34,14 @@ func (c *CommandExecutor) TransferBalance(wsv model.ObjectFinder, cmd model.Comm
 		return errors.Wrap(core.ErrCommandExecutorTransferBalanceNotEnoughSrcAccountBalance,
 			fmt.Errorf("srcAccount Amount: %d, transfer Acmount: %d", srcAccount.GetBalance(), transfer.GetBalance()).Error())
 	}
-	newSrcAccount := c.factory.NewAccount(
-		srcAccount.GetAccountId(),
-		srcAccount.GetAccountName(),
-		srcAccount.GetPublicKeys(),
-		srcAccount.GetBalance()-transfer.GetBalance(),
-	)
-	newDestAccount := c.factory.NewAccount(
-		destAccount.GetAccountId(),
-		destAccount.GetAccountName(),
-		destAccount.GetPublicKeys(),
-		destAccount.GetBalance()+transfer.GetBalance(),
-	)
+	newSrcAccount := c.factory.NewAccountBuilder().
+		From(srcAccount).
+		Balance(srcAccount.GetBalance() - transfer.GetBalance()).
+		Build()
+	newDestAccount := c.factory.NewAccountBuilder().
+		From(destAccount).
+		Balance(destAccount.GetBalance() + transfer.GetBalance()).
+		Build()
 	if err := wsv.Append(model.MustAddress(newSrcAccount.GetAccountId()), newSrcAccount); err != nil {
 		return err
 	}
@@ -56,7 +52,12 @@ func (c *CommandExecutor) TransferBalance(wsv model.ObjectFinder, cmd model.Comm
 }
 
 func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
-	newAccount := c.factory.NewAccount(cmd.GetTargetId(), cmd.GetTargetId(), make([]model.PublicKey, 0), 0)
+	newAccount := c.factory.NewAccountBuilder().
+		AccountId(cmd.GetTargetId()).
+		AccountName(cmd.GetTargetId()).
+		PublicKeys(make([]model.PublicKey, 0)).
+		Build()
+
 	ac := c.factory.NewEmptyAccount()
 	if err := wsv.Query(model.MustAddress(cmd.GetTargetId()), ac); err == nil {
 		if ac.GetAccountId() == cmd.GetTargetId() {
@@ -79,12 +80,10 @@ func (c *CommandExecutor) AddBalance(wsv model.ObjectFinder, cmd model.Command) 
 	if ac.GetAccountId() != cmd.GetTargetId() {
 		return core.ErrCommandExecutorAddBalanceNotExistAccount
 	}
-	newAc := c.factory.NewAccount(
-		ac.GetAccountId(),
-		ac.GetAccountName(),
-		ac.GetPublicKeys(),
-		ac.GetBalance()+aa.GetBalance(),
-	)
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		Balance(ac.GetBalance() + aa.GetBalance()).
+		Build()
 	if err := wsv.Append(model.MustAddress(newAc.GetAccountId()), newAc); err != nil {
 		return err
 	}
@@ -113,12 +112,10 @@ func (c *CommandExecutor) AddPublicKeys(wsv model.ObjectFinder, cmd model.Comman
 		return errors.Wrapf(core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
 			"duplicate key : %x", ap.GetPublicKeys())
 	}
-	newAc := c.factory.NewAccount(
-		ac.GetAccountId(),
-		ac.GetAccountName(),
-		append(ac.GetPublicKeys(), ap.GetPublicKeys()[0]),
-		ac.GetBalance(),
-	)
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		PublicKeys(append(ac.GetPublicKeys(), ap.GetPublicKeys()[0])).
+		Build()
 	if err := wsv.Append(model.MustAddress(newAc.GetAccountId()), newAc); err != nil {
 		return err
 	}
