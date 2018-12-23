@@ -75,6 +75,21 @@ func (p *QueryPaylaod) GetRequestCode() model.ObjectCode {
 	return model.ObjectCode(p.RequstCode)
 }
 
+func (p *QueryPaylaod) GetWhere() []byte {
+	if p.Query_Payload == nil {
+		return nil
+	}
+	ret, _ := proto.Marshal(p.Where)
+	return ret
+}
+
+func (p *QueryPaylaod) GetOrderBy() model.OrderBy {
+	if p.Query_Payload == nil {
+		return &OrderBy{&proskenion.Query_OrderBy{}}
+	}
+	return &OrderBy{p.OrderBy}
+}
+
 func (p *QueryPaylaod) Marshal() ([]byte, error) {
 	return proto.Marshal(p.Query_Payload)
 }
@@ -85,6 +100,14 @@ func (q *QueryPaylaod) Unmarshal(pb []byte) error {
 
 func (p *QueryPaylaod) Hash() model.Hash {
 	return p.cryptor.Hash(p)
+}
+
+type OrderBy struct {
+	*proskenion.Query_OrderBy
+}
+
+func (o *OrderBy) GetOrder() model.OrderCode {
+	return model.OrderCode(o.Order)
 }
 
 type QueryResponse struct {

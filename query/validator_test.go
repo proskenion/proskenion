@@ -42,7 +42,7 @@ func TestNewQueryValidator(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			query := NewTestFactory().NewQueryBuilder().
-				TargetId(c.targetId).
+				FromId(c.targetId).
 				AuthorizerId(c.authorizerId).
 				CreatedTime(RandomNow()).
 				RequestCode(c.objectCode).

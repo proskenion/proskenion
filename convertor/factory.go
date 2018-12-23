@@ -1,6 +1,7 @@
 package convertor
 
 import (
+	"github.com/golang/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
@@ -602,8 +603,33 @@ func (q *QueryBuilder) AuthorizerId(authorizerId string) model.QueryBuilder {
 	return q
 }
 
-func (q *QueryBuilder) TargetId(targetId string) model.QueryBuilder {
-	q.Query.Payload.TargetId = targetId
+func (q *QueryBuilder) Select(selectId string) model.QueryBuilder {
+	q.Query.Payload.Select = selectId
+	return q
+}
+
+func (q *QueryBuilder) FromId(fromId string) model.QueryBuilder {
+	q.Query.Payload.FromId = fromId
+	return q
+}
+
+func (q *QueryBuilder) Where(where []byte) model.QueryBuilder {
+	cond := &proskenion.ConditionalFormula{}
+	proto.Unmarshal(where, cond)
+	q.Payload.Where = cond
+	return q
+}
+
+func (q *QueryBuilder) OrderBy(key string, order model.OrderCode) model.QueryBuilder {
+	q.Payload.OrderBy = &proskenion.Query_OrderBy{
+		Key:   key,
+		Order: proskenion.Query_Order(order),
+	}
+	return q
+}
+
+func (q *QueryBuilder) Limit(limit int32) model.QueryBuilder {
+	q.Payload.Limit = limit
 	return q
 }
 

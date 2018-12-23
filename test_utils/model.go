@@ -112,7 +112,7 @@ func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []mod
 func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
 	q := NewTestFactory().NewQueryBuilder().
 		AuthorizerId(authorizer.AccountId).
-		TargetId(target).
+		FromId(target).
 		RequestCode(model.AccountObjectCode).
 		Build()
 	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))

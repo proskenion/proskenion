@@ -495,6 +495,12 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 		mustFlags := 0
 		for key, value := range v {
 			switch key {
+			case "authorizer":
+				if s, ok := value.(string); ok {
+					ret.AuthorizerId = s
+				} else {
+					return nil, ProslParseCastError("", value)
+				}
 			case "select":
 				if s, ok := value.(string); ok {
 					ret.Select = s

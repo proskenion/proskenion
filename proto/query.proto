@@ -2,18 +2,30 @@ syntax = "proto3";
 package proskenion;
 
 import "objects.proto";
+import "prosl.proto";
 
 message Query {
+    enum Order {
+        DESC = 0;
+        ASC = 1;
+    }
+    message OrderBy {
+        string key = 1;
+        Order order = 2;
+    }
     message Payload {
-        ObjectCode requstCode = 1;
-        string authorizerId = 2;
-        string targetId = 3;
-        int64 createdTime = 4;
+        string authorizerId = 1;
+        string select = 2;
+        ObjectCode requstCode = 3;
+        string fromId = 4;
+        ConditionalFormula where = 5;
+        OrderBy orderBy = 6;
+        int32 limit = 7;
+        int64 createdTime = 8;
     }
     Payload payload = 1;
     Signature signature = 2;
 }
-
 
 message QueryResponse {
     message Payload {

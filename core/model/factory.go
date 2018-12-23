@@ -96,7 +96,11 @@ type TxBuilder interface {
 
 type QueryBuilder interface {
 	AuthorizerId(string) QueryBuilder
-	TargetId(string) QueryBuilder
+	Select(string) QueryBuilder
+	FromId(string) QueryBuilder
+	Where([]byte) QueryBuilder
+	OrderBy(key string, order OrderCode) QueryBuilder
+	Limit(int32) QueryBuilder
 	CreatedTime(int64) QueryBuilder
 	RequestCode(code ObjectCode) QueryBuilder
 	Build() Query

@@ -39,17 +39,17 @@ func (q *QueryValidator) Validate(query model.Query) error {
 
 // TODO これ Verify
 func (q *QueryValidator) accountObjectValidate(qp model.QueryPayload) error {
-	if ok := GetRegexp().VerifyAccountId.MatchString(qp.GetTargetId()); !ok {
+	if ok := GetRegexp().VerifyAccountId.MatchString(qp.GetFromId()); !ok {
 		return errors.Wrapf(ErrQueryValidateAccountTargetIdNotAccountId,
-			"targetId : %s, must be : %s", qp.GetTargetId(), GetRegexp().VerifyAccountId.String())
+			"targetId : %s, must be : %s", qp.GetFromId(), GetRegexp().VerifyAccountId.String())
 	}
 	return nil
 }
 
 func (q *QueryValidator) peerObjectValidate(qp model.QueryPayload) error {
-	if ok := GetRegexp().VerifyPeerAddress.MatchString(qp.GetTargetId()); !ok {
+	if ok := GetRegexp().VerifyPeerAddress.MatchString(qp.GetFromId()); !ok {
 		return errors.Wrapf(ErrQueryValidatePeerTargetIdNotPeerAddress,
-			"targetid : %s, must be : %s", qp.GetTargetId(), GetRegexp().VerifyPeerAddress.String())
+			"targetid : %s, must be : %s", qp.GetFromId(), GetRegexp().VerifyPeerAddress.String())
 	}
 	return nil
 }

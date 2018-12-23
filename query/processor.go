@@ -72,7 +72,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 
 func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
 	ac := q.fc.NewEmptyAccount()
-	err := wsv.Query(model.MustAddress(qp.GetTargetId()), ac)
+	err := wsv.Query(model.MustAddress(qp.GetFromId()), ac)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV)
 
 func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
 	peer := q.fc.NewEmptyPeer()
-	err := wsv.Query(model.MustAddress(qp.GetTargetId()), peer)
+	err := wsv.Query(model.MustAddress(qp.GetFromId()), peer)
 	if err != nil {
 		return nil, err
 	}

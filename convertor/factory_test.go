@@ -1,7 +1,9 @@
 package convertor_test
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/proto"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -369,14 +371,32 @@ func TestNewPeer(t *testing.T) {
 func TestModelFactory_NewQueryBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
 		builder := NewTestFactory().NewQueryBuilder()
+		where := &proskenion.ConditionalFormula{
+			Op: &proskenion.ConditionalFormula_Le{
+				Le: &proskenion.LeFormula{
+					Lop: &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{VariableOp: &proskenion.VariableOperator{VariableName: "a"}}},
+					Rop: &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{VariableOp: &proskenion.VariableOperator{VariableName: "b"}}},
+				},
+			},
+		}
+		whereByte, _ := proto.Marshal(where)
 		query := builder.CreatedTime(1).
-			TargetId("a").
+			FromId("a").
 			AuthorizerId("b").
+			Select("*").
+			OrderBy("key", model.DESC).
+			Where(whereByte).
+			Limit(10).
 			RequestCode(model.AccountObjectCode).
 			Build()
 		assert.Equal(t, int64(1), query.GetPayload().GetCreatedTime())
-		assert.Equal(t, "a", query.GetPayload().GetTargetId())
+		assert.Equal(t, "a", query.GetPayload().GetFromId())
 		assert.Equal(t, "b", query.GetPayload().GetAuthorizerId())
+		assert.Equal(t, "*", query.GetPayload().GetSelect())
+		assert.Equal(t, "key", query.GetPayload().GetOrderBy().GetKey())
+		assert.Equal(t, model.OrderCode(model.DESC), query.GetPayload().GetOrderBy().GetOrder())
+		assert.Equal(t, whereByte, query.GetPayload().GetWhere())
+		assert.Equal(t, int32(10), query.GetPayload().GetLimit())
 		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), query.GetPayload().GetRequestCode())
 	})
 }

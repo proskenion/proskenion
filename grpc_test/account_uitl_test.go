@@ -46,7 +46,7 @@ func (am *AccountManager) CreateAccount(t *testing.T, ac *AccountWithPri) {
 func (am *AccountManager) QueryAccountPassed(t *testing.T, ac *AccountWithPri) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(ac.AccountId).
-		TargetId(ac.AccountId).
+		FromId(ac.AccountId).
 		CreatedTime(RandomNow()).
 		RequestCode(model.AccountObjectCode).
 		Build()
