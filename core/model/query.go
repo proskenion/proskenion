@@ -6,7 +6,6 @@ type Query interface {
 	Modelor
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
-	Validate() error
 }
 
 type OrderCode int

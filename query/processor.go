@@ -1,7 +1,6 @@
 package query
 
 import (
-	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -16,15 +15,6 @@ type QueryProcessor struct {
 
 func NewQueryProcessor(rp core.Repository, fc model.ModelFactory, conf *config.Config) core.QueryProcessor {
 	return &QueryProcessor{rp, fc, conf}
-}
-
-func containsPublicKey(keys []model.PublicKey, pub model.PublicKey) bool {
-	for _, key := range keys {
-		if bytes.Equal(key, pub) {
-			return true
-		}
-	}
-	return false
 }
 
 func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {

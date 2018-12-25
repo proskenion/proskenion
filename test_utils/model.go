@@ -17,7 +17,7 @@ func NewTestFactory() model.ModelFactory {
 		crypto.NewEd25519Sha256Cryptor(),
 		command.NewCommandExecutor(),
 		command.NewCommandValidator(),
-		query.NewQueryValidator(),
+		query.NewQueryVerifier(),
 	)
 }
 

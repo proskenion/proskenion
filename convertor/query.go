@@ -11,7 +11,7 @@ import (
 type Query struct {
 	*proskenion.Query
 	cryptor   core.Cryptor
-	validator core.QueryValidator
+	verifier  core.QueryVerifier
 }
 
 func (q *Query) GetPayload() model.QueryPayload {
@@ -56,11 +56,10 @@ func (q *Query) Sign(pubkey model.PublicKey, privkey model.PrivateKey) error {
 }
 
 func (q *Query) Verify() error {
-	return q.cryptor.Verify(q.GetSignature().GetPublicKey(), q.GetPayload(), q.GetSignature().GetSignature())
-}
-
-func (q *Query) Validate() error {
-	return q.validator.Validate(q)
+	if err := q.cryptor.Verify(q.GetSignature().GetPublicKey(), q.GetPayload(), q.GetSignature().GetSignature()); err != nil {
+		return err
+	}
+	return q.verifier.Verify(q)
 }
 
 type QueryPaylaod struct {

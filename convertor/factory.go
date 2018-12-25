@@ -273,14 +273,14 @@ type ModelFactory struct {
 	cryptor          core.Cryptor
 	executor         core.CommandExecutor
 	commandValidator core.CommandValidator
-	queryValidator   core.QueryValidator
+	queryVerifier    core.QueryVerifier
 }
 
 func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
 	cmdValidator core.CommandValidator,
-	queryValidator core.QueryValidator) model.ModelFactory {
-	factory := &ModelFactory{NewObjectFactory(cryptor), cryptor, executor, cmdValidator, queryValidator}
+	queryVerifier core.QueryVerifier) model.ModelFactory {
+	factory := &ModelFactory{NewObjectFactory(cryptor), cryptor, executor, cmdValidator, queryVerifier}
 	executor.SetFactory(factory)
 	cmdValidator.SetFactory(factory)
 	return factory
@@ -337,7 +337,7 @@ func (f *ModelFactory) NewQueryBuilder() model.QueryBuilder {
 			Signature: &proskenion.Signature{},
 		},
 		f.cryptor,
-		f.queryValidator,
+		f.queryVerifier,
 	}
 }
 
@@ -594,8 +594,8 @@ func (t *TxBuilder) Build() model.Transaction {
 
 type QueryBuilder struct {
 	*proskenion.Query
-	cryptor   core.Cryptor
-	validator core.QueryValidator
+	cryptor  core.Cryptor
+	verifier core.QueryVerifier
 }
 
 func (q *QueryBuilder) AuthorizerId(authorizerId string) model.QueryBuilder {
@@ -644,7 +644,7 @@ func (q *QueryBuilder) RequestCode(code model.ObjectCode) model.QueryBuilder {
 }
 
 func (q *QueryBuilder) Build() model.Query {
-	return &Query{q.Query, q.cryptor, q.validator}
+	return &Query{q.Query, q.cryptor, q.verifier}
 }
 
 type QueryResponseBuilder struct {
