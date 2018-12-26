@@ -3,7 +3,6 @@ package proskenion;
 
 
 import "objects.proto";
-import "storage.proto";
 
 /**
  * Command

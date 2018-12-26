@@ -12,6 +12,14 @@ type Storage struct {
 	*proskenion.Storage
 }
 
+func ProslObjectMapsFromObjectMaps(objects map[string]model.Object) map[string]*proskenion.Object {
+	ret := make(map[string]*proskenion.Object)
+	for key, value := range objects {
+		ret[key] = value.(*Object).Object
+	}
+	return ret
+}
+
 func (s *Storage) GetObject() map[string]model.Object {
 	if s.Storage == nil {
 		return nil

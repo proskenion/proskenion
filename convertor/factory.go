@@ -344,7 +344,7 @@ func (f *ModelFactory) NewQueryBuilder() model.QueryBuilder {
 func (f *ModelFactory) NewQueryResponseBuilder() model.QueryResponseBuilder {
 	return &QueryResponseBuilder{
 		&proskenion.QueryResponse{
-			Payload:   &proskenion.QueryResponse_Payload{},
+			Object:    &proskenion.Object{},
 			Signature: &proskenion.Signature{},
 		},
 		f.cryptor,
@@ -653,26 +653,33 @@ type QueryResponseBuilder struct {
 }
 
 func (q *QueryResponseBuilder) Account(ac model.Account) model.QueryResponseBuilder {
-	q.QueryResponse.Payload.Object = &proskenion.QueryResponse_Payload_Account{
-		Account: &proskenion.Account{
+	q.QueryResponse.Object = &proskenion.Object{
+		Type: proskenion.ObjectCode_AccountObjectCode,
+		Object: &proskenion.Object_Account{Account: &proskenion.Account{
 			AccountId:   ac.GetAccountId(),
 			AccountName: ac.GetAccountName(),
 			PublicKeys:  model.BytesListFromPublicKeys(ac.GetPublicKeys()),
 			Balance:     ac.GetBalance(),
-		},
-	}
-	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_AccountObjectCode
+		}}}
 	return q
 }
 
 func (q *QueryResponseBuilder) Peer(p model.Peer) model.QueryResponseBuilder {
-	q.QueryResponse.Payload.Object = &proskenion.QueryResponse_Payload_Peer{
-		Peer: &proskenion.Peer{
+	q.QueryResponse.Object = &proskenion.Object{
+		Type: proskenion.ObjectCode_PeerObjectCode,
+		Object: &proskenion.Object_Peer{Peer: &proskenion.Peer{
 			Address:   p.GetAddress(),
 			PublicKey: p.GetPublicKey(),
-		},
-	}
-	q.QueryResponse.Payload.ResponseCode = proskenion.ObjectCode_PeerObjectCode
+		}}}
+	return q
+}
+
+func (q *QueryResponseBuilder) Storage(s model.Storage) model.QueryResponseBuilder {
+	q.QueryResponse.Object = &proskenion.Object{
+		Type: proskenion.ObjectCode_StorageObjectCode,
+		Object: &proskenion.Object_Storage{Storage: &proskenion.Storage{
+			Object: ProslObjectMapsFromObjectMaps(s.GetObject()),
+		}}}
 	return q
 }
 

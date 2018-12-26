@@ -31,19 +31,6 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 		return nil, err
 	}
 
-	// 署名チェック
-	ac := q.fc.NewEmptyAccount()
-	err = wsv.Query(model.MustAddress(query.GetPayload().GetAuthorizerId()), ac)
-	if err != nil {
-		return nil, errors.Wrapf(core.ErrQueryProcessorNotExistAuthoirizer,
-			"authorizer : %s", query.GetPayload().GetAuthorizerId())
-	}
-	if !containsPublicKey(ac.GetPublicKeys(), query.GetSignature().GetPublicKey()) {
-		return nil, errors.Wrapf(core.ErrQueryProcessorNotSignedAuthorizer,
-			"authorizer : %s, expect key : %x",
-			query.GetPayload().GetAuthorizerId(), query.GetSignature().GetPublicKey())
-	}
-
 	var res model.QueryResponse
 	code := query.GetPayload().GetRequestCode()
 	switch code {
@@ -51,6 +38,8 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 		res, err = q.accountObjectQuery(query.GetPayload(), wsv)
 	case model.PeerObjectCode:
 		res, err = q.peerObjectQuery(query.GetPayload(), wsv)
+	case model.StorageObjectCode:
+		res, err = q.storageObjectQuery(query.GetPayload(), wsv)
 	default:
 		err = core.ErrQueryProcessorQueryObjectCodeNotImplemented
 	}
@@ -90,6 +79,17 @@ func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (m
 		return nil, err
 	}
 	return qr, nil
+}
+
+func (q *QueryProcessor) storageObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
+	storage := q.fc.NewEmptyStorage()
+	err := wsv.Query(model.MustAddress(qp.GetFromId()), storage)
+	if err != nil {
+		return nil, err
+	}
+
+	qr := panic(panic(q.fc.NewQueryResponseBuilder().
+		Storage(storage))
 }
 
 func (q *QueryProcessor) signedResponse(res model.QueryResponse) error {

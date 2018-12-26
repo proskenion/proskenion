@@ -28,13 +28,6 @@ message Query {
 }
 
 message QueryResponse {
-    message Payload {
-        ObjectCode responseCode = 1;
-        oneof object {
-            Account account = 2;
-            Peer peer = 3;
-        }
-    }
-    Payload payload = 1;
+    Object object = 1;
     Signature signature = 2;
 }

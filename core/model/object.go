@@ -22,6 +22,7 @@ const (
 	PeerObjectCode
 	ListObjectCode
 	DictObjectCode
+	StorageObjectCode
 )
 
 type Account interface {
