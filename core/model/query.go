@@ -43,16 +43,9 @@ type OrderBy interface {
 }
 
 type QueryResponse interface {
-	GetPayload() QueryResponsePayload
+	GetObject() Object
 	GetSignature() Signature
 	Modelor
 	Sign(PublicKey, PrivateKey) error
 	Verify() error
-}
-
-type QueryResponsePayload interface {
-	ResponseCode() ObjectCode
-	GetAccount() Account
-	GetPeer() Peer
-	Modelor
 }

@@ -20,6 +20,14 @@ func ProslObjectMapsFromObjectMaps(objects map[string]model.Object) map[string]*
 	return ret
 }
 
+func ProslObjectListFromObjectList(objects []model.Object) []*proskenion.Object {
+	ret := make([]*proskenion.Object, 0)
+	for _, value := range objects {
+		ret = append(ret, value.(*Object).Object)
+	}
+	return ret
+}
+
 func (s *Storage) GetObject() map[string]model.Object {
 	if s.Storage == nil {
 		return nil

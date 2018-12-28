@@ -16,6 +16,7 @@ type ObjectFactory interface {
 
 	NewStorageBuilder() StorageBuilder
 	NewAccountBuilder() AccountBuilder
+	NewObjectBuilder() ObjectBuilder
 
 	NewEmptySignature() Signature
 	NewEmptyAccount() Account
@@ -36,6 +37,23 @@ type ModelFactory interface {
 	NewEmptyTx() Transaction
 	NewEmptyQuery() Query
 	NewEmptyQueryResponse() QueryResponse
+}
+
+type ObjectBuilder interface {
+	Int32(value int32) ObjectBuilder
+	Int64(value int64) ObjectBuilder
+	Uint32(value uint32) ObjectBuilder
+	Uint64(value uint64) ObjectBuilder
+	Str(value string) ObjectBuilder
+	Data(value []byte) ObjectBuilder
+	Address(value string) ObjectBuilder
+	Sig(value Signature) ObjectBuilder
+	Account(value Account) ObjectBuilder
+	Peer(value Peer) ObjectBuilder
+	List(value []Object) ObjectBuilder
+	Dict(value map[string]Object) ObjectBuilder
+	Storage(value Storage) ObjectBuilder
+	Build() Object
 }
 
 type StorageBuilder interface {
@@ -109,5 +127,7 @@ type QueryBuilder interface {
 type QueryResponseBuilder interface {
 	Account(Account) QueryResponseBuilder
 	Peer(Peer) QueryResponseBuilder
+	Storage(Storage) QueryResponseBuilder
+	List([]Object) QueryResponseBuilder
 	Build() QueryResponse
 }

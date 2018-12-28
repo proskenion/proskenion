@@ -10,8 +10,8 @@ import (
 
 type Query struct {
 	*proskenion.Query
-	cryptor   core.Cryptor
-	verifier  core.QueryVerifier
+	cryptor  core.Cryptor
+	verifier core.QueryVerifier
 }
 
 func (q *Query) GetPayload() model.QueryPayload {
@@ -114,11 +114,11 @@ type QueryResponse struct {
 	cryptor core.Cryptor
 }
 
-func (q *QueryResponse) GetPayload() model.QueryResponsePayload {
-	if q.QueryResponse == nil {
-		return &QueryResponsePayload{}
+func (q *QueryResponse) GetObject() model.Object {
+	if q.Object == nil {
+		return &Object{}
 	}
-	return &QueryResponsePayload{q.QueryResponse.GetPayload(), q.cryptor}
+	return &Object{q.cryptor, q.QueryResponse.GetObject()}
 }
 
 func (q *QueryResponse) GetSignature() model.Signature {
@@ -141,7 +141,7 @@ func (q *QueryResponse) Hash() model.Hash {
 }
 
 func (q *QueryResponse) Sign(pubkey model.PublicKey, privkey model.PrivateKey) error {
-	signature, err := q.cryptor.Sign(q.GetPayload(), privkey)
+	signature, err := q.cryptor.Sign(q.GetObject(), privkey)
 	if err != nil {
 		return errors.Wrap(core.ErrCryptorSign, err.Error())
 	}
@@ -157,42 +157,5 @@ func (q *QueryResponse) Sign(pubkey model.PublicKey, privkey model.PrivateKey) e
 
 func (q *QueryResponse) Verify() error {
 	return q.cryptor.Verify(q.GetSignature().GetPublicKey(),
-		q.GetPayload(), q.GetSignature().GetSignature())
-}
-
-type QueryResponsePayload struct {
-	*proskenion.QueryResponse_Payload
-	cryptor core.Cryptor
-}
-
-func (p *QueryResponsePayload) ResponseCode() model.ObjectCode {
-	return model.ObjectCode(p.ResponseCode())
-}
-
-func (p *QueryResponsePayload) GetAccount() model.Account {
-	if p.QueryResponse_Payload == nil ||
-		p.QueryResponse_Payload.GetAccount() == nil {
-		return &Account{}
-	}
-	return &Account{p.cryptor, p.QueryResponse_Payload.GetAccount()}
-}
-
-func (p *QueryResponsePayload) GetPeer() model.Peer {
-	if p.QueryResponse_Payload == nil ||
-		p.QueryResponse_Payload.GetPeer() == nil {
-		return &Peer{}
-	}
-	return &Peer{p.cryptor, p.QueryResponse_Payload.GetPeer()}
-}
-
-func (p *QueryResponsePayload) Marshal() ([]byte, error) {
-	return proto.Marshal(p.QueryResponse_Payload)
-}
-
-func (q *QueryResponsePayload) Unmarshal(pb []byte) error {
-	return proto.Unmarshal(pb, q.QueryResponse_Payload)
-}
-
-func (p *QueryResponsePayload) Hash() model.Hash {
-	return p.cryptor.Hash(p)
+		q.GetObject(), q.GetSignature().GetSignature())
 }

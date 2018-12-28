@@ -40,6 +40,8 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 		res, err = q.peerObjectQuery(query.GetPayload(), wsv)
 	case model.StorageObjectCode:
 		res, err = q.storageObjectQuery(query.GetPayload(), wsv)
+	case model.ListObjectCode:
+		res, err = q.listObjectQuery(query.GetPayload(), wsv)
 	default:
 		err = core.ErrQueryProcessorQueryObjectCodeNotImplemented
 	}
@@ -88,8 +90,89 @@ func (q *QueryProcessor) storageObjectQuery(qp model.QueryPayload, wsv core.WSV)
 		return nil, err
 	}
 
-	qr := panic(panic(q.fc.NewQueryResponseBuilder().
-		Storage(storage))
+	qr := q.fc.NewQueryResponseBuilder().
+		Storage(storage).
+		Build()
+	if err := q.signedResponse(qr); err != nil {
+		return nil, err
+	}
+	return qr, nil
+}
+
+type AccountUnmarshalerFactory struct {
+	fc model.ModelFactory
+}
+
+func (f *AccountUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
+	return f.fc.NewEmptyAccount()
+}
+
+func NewAccountUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
+	return &AccountUnmarshalerFactory{fc}
+}
+
+type PeerUnmarshalerFactory struct {
+	fc model.ModelFactory
+}
+
+func (f *PeerUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
+	return f.fc.NewEmptyPeer()
+}
+
+func NewPeerUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
+	return &PeerUnmarshalerFactory{fc}
+}
+
+type StorageUnmarshalerFactory struct {
+	fc model.ModelFactory
+}
+
+func (f *StorageUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
+	return f.fc.NewEmptyStorage()
+}
+
+func NewStorageUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
+	return &StorageUnmarshalerFactory{fc}
+}
+
+func (q *QueryProcessor) listObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.QueryResponse, error) {
+	address := model.MustAddress(qp.GetFromId())
+
+	list := make([]model.Object, 0)
+	switch address.Storage() {
+	case core.AccountStorageName:
+		res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewAccountUnmarshalerFactory(q.fc))
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range res {
+			list = append(list, q.fc.NewObjectBuilder().Account(r.(model.Account)).Build())
+		}
+	case core.PeerStorageName:
+		res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewPeerUnmarshalerFactory(q.fc))
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range res {
+			list = append(list, q.fc.NewObjectBuilder().Peer(r.(model.Peer)).Build())
+		}
+	default:
+		res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewStorageUnmarshalerFactory(q.fc))
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range res {
+			list = append(list, q.fc.NewObjectBuilder().Storage(r.(model.Storage)).Build())
+		}
+	}
+
+	qr := q.fc.NewQueryResponseBuilder().
+		List(list).
+		Build()
+	if err := q.signedResponse(qr); err != nil {
+		return nil, err
+	}
+	return qr, nil
 }
 
 func (q *QueryProcessor) signedResponse(res model.QueryResponse) error {

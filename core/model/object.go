@@ -55,6 +55,7 @@ type Object interface {
 	GetPeer() Peer
 	GetList() []Object
 	GetDict() map[string]Object
+	GetStorage() Storage
 	Modelor
 }
 
