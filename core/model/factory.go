@@ -129,5 +129,6 @@ type QueryResponseBuilder interface {
 	Peer(Peer) QueryResponseBuilder
 	Storage(Storage) QueryResponseBuilder
 	List([]Object) QueryResponseBuilder
+	Object(Object) QueryResponseBuilder
 	Build() QueryResponse
 }

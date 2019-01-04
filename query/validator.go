@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
-	"github.com/proskenion/proskenion/core"
+	core "github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
@@ -43,7 +43,8 @@ func (q *QueryValidator) Validate(query model.Query) error {
 
 	// 署名チェック
 	ac := q.fc.NewEmptyAccount()
-	err = wsv.Query(model.MustAddress(query.GetPayload().GetAuthorizerId()), ac)
+	authorizer := model.MustAddress(model.MustAddress(query.GetPayload().GetAuthorizerId()).AccountId())
+	err = wsv.Query(authorizer, ac)
 	if err != nil {
 		return errors.Wrapf(core.ErrQueryProcessorNotExistAuthoirizer,
 			"authorizer : %s", query.GetPayload().GetAuthorizerId())

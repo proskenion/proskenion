@@ -16,8 +16,15 @@ func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri)
 	txList := repository.NewTxList(RandomCryptor())
 	require.NoError(t, txList.Push(
 		NewTestFactory().NewTxBuilder().
-			CreateAccount("root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).
-			CreateAccount("root", "target@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).
+			CreateAccount("root@/root", "target0@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "target1@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "target2@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "target3@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "target4@com", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "targeta@pr", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "targetb@pr", []model.PublicKey{}, 0).
+			CreateAccount("root@/root", "targetc@pr", []model.PublicKey{}, 0).
 			CreatedTime(0).
 			Build()))
 	require.NoError(t, rp.GenesisCommit(txList))
@@ -29,27 +36,49 @@ func TestQueryProcessor_Query(t *testing.T) {
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 
 	// GenesisCommit
-	authorizer := NewAccountWithPri("authorizer@com")
+	authorizer := NewAccountWithPri("authorizer@com/account")
 	genesisCommit(t, rp, authorizer)
 
 	qp := NewQueryProcessor(rp, fc, NewTestConfig())
 
-	query := GetAccountQuery(t, authorizer, "target@com")
+	query := GetAccountQuery(t, authorizer, "target0@com/account")
 	res, err := qp.Query(query)
 	require.NoError(t, err)
-	ac := res.GetPayload().GetAccount()
-	assert.Equal(t, "target@com", ac.GetAccountId())
+	ac := res.GetObject().GetAccount()
+	assert.Equal(t, "target0@com", ac.GetAccountId())
 
-	q2 := GetAccountQuery(t, authorizer, "target1@com")
+	q2 := GetAccountQuery(t, authorizer, "targetx@com/account")
 	_, err = qp.Query(q2)
 	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotFound.Error())
 
-	tmpub, tmpri := RandomKeyPairs()
-	q3 := GetAccountQuery(t, &AccountWithPri{authorizer.AccountId, tmpub, tmpri}, "target@com")
-	_, err = qp.Query(q3)
-	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotSignedAuthorizer.Error())
+	q3 := GetAccountListQuery(t, authorizer, "com/account", "id", model.ASC, 100)
+	res, err = qp.Query(q3)
+	expctedIds := []string{
+		"authorizer@com",
+		"target0@com",
+		"target1@com",
+		"target2@com",
+		"target3@com",
+		"target4@com",
+	}
+	for i, l := range res.GetObject().GetList() {
+		assert.Equal(t, expctedIds[i], l.GetAccount().GetAccountId())
+	}
 
-	q4 := GetAccountQuery(t, &AccountWithPri{"authorizer1@com", tmpub, tmpri}, "target@com")
-	_, err = qp.Query(q4)
-	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotExistAuthoirizer.Error())
+	q4 := GetAccountListQuery(t, authorizer, "com/account", "id", model.DESC, 100)
+	res, err = qp.Query(q4)
+	for i, l := range res.GetObject().GetList() {
+		assert.Equal(t, expctedIds[len(expctedIds)-i-1], l.GetAccount().GetAccountId())
+	}
+
+	q5 := GetAccountListQuery(t, authorizer, "pr/account", "id", model.ASC, 100)
+	res, err = qp.Query(q5)
+	expctedIds2 := []string{
+		"targeta@pr",
+		"targetb@pr",
+		"targetc@pr",
+	}
+	for i, l := range res.GetObject().GetList() {
+		assert.Equal(t, expctedIds2[i], l.GetAccount().GetAccountId())
+	}
 }

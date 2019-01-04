@@ -804,6 +804,11 @@ func (q *QueryResponseBuilder) List(os []model.Object) model.QueryResponseBuilde
 	return q
 }
 
+func (q *QueryResponseBuilder) Object(o model.Object) model.QueryResponseBuilder {
+	q.QueryResponse.Object = o.(*Object).Object
+	return q
+}
+
 func (q *QueryResponseBuilder) Build() model.QueryResponse {
 	return &QueryResponse{q.QueryResponse, q.cryptor}
 }

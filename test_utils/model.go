@@ -119,6 +119,19 @@ func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) mo
 	return q
 }
 
+func GetAccountListQuery(t *testing.T, authorizer *AccountWithPri, from string, key string, order model.OrderCode, limit int32) model.Query {
+	q := NewTestFactory().NewQueryBuilder().
+		AuthorizerId(authorizer.AccountId).
+		FromId(from).
+		Select("*").
+		RequestCode(model.ListObjectCode).
+		OrderBy(key, order).
+		Limit(limit).
+		Build()
+	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return q
+}
+
 func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
 		CreateAccount(authorizer.AccountId, target, []model.PublicKey{}, 0).
