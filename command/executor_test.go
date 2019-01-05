@@ -13,6 +13,8 @@ import (
 	"testing"
 )
 
+const authorizerId = "authorizer@com"
+
 func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecutor, core.DBATx, core.WSV) {
 	fc := NewTestFactory()
 	cryptor := RandomCryptor()
@@ -26,12 +28,12 @@ func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecu
 
 func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	tx := fc.NewTxBuilder().
-		CreateAccount("authorizer", "authorizer", []model.PublicKey{}, 0).
-		CreateAccount("authorizer", "account1", []model.PublicKey{}, 0).
-		CreateAccount("authorizer", "account2", []model.PublicKey{}, 0).
-		CreateAccount("authorizer", "account3", []model.PublicKey{}, 0).
-		CreateAccount("authorizer", "account4", []model.PublicKey{}, 0).
-		CreateAccount("authorizer", "account5", []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, authorizerId, []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, "account1@com", []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, "account2@com", []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, "account3@com", []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, "account4@com", []model.PublicKey{}, 0).
+		CreateAccount(authorizerId, "account5@com", []model.PublicKey{}, 0).
 		Build()
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		require.NoError(t, cmd.Execute(wsv))
@@ -40,9 +42,9 @@ func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 
 func prePareAddBalance(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	tx := fc.NewTxBuilder().
-		AddBalance("authorizer", 1000).
-		AddBalance("account1", 100).
-		AddBalance("account2", 100).
+		AddBalance(authorizerId, 1000).
+		AddBalance("account1@com", 100).
+		AddBalance("account2@com", 100).
 		Build()
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		require.NoError(t, cmd.Execute(wsv))
@@ -60,20 +62,20 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 	}{
 		{
 			"case 1 : no error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			nil,
 		},
 		{
 			"case 2 : duplicate error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
 		},
 		{
 			"case 3 : no error",
-			"authorizer",
-			"account1",
+			authorizerId,
+			"account1@com",
 			nil,
 		},
 	} {
@@ -93,7 +95,7 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(model.MustAddress(c.exTargetId), ac)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.exTargetId).AccountId()), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
 				assert.Equal(t, int64(0), ac.GetBalance())
@@ -118,32 +120,32 @@ func TestCommandExecutor_AddBalance(t *testing.T) {
 	}{
 		{
 			"case 1 : no error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			10,
 			10,
 			nil,
 		},
 		{
 			"case 2 : over plus no error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			10,
 			20,
 			nil,
 		},
 		{
 			"case 3 : no error",
-			"account1",
-			"account1",
+			"account1@com",
+			"account1@com",
 			10,
 			10,
 			nil,
 		},
 		{
 			"case 4 : no account add asset error",
-			"authorizer",
-			"unk",
+			authorizerId,
+			"unk@unk",
 			10,
 			10,
 			core.ErrCommandExecutorAddBalanceNotExistAccount,
@@ -167,7 +169,7 @@ func TestCommandExecutor_AddBalance(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(model.MustAddress(c.exTargetId), ac)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.exTargetId).AccountId()), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, ac.GetAccountId())
 				assert.Equal(t, c.exBalance, ac.GetBalance())
@@ -195,9 +197,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 	}{
 		{
 			"case 1 : no error",
-			"authorizer",
-			"authorizer",
-			"account1",
+			authorizerId,
+			authorizerId,
+			"account1@com",
 			100,
 			900,
 			200,
@@ -205,9 +207,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 		},
 		{
 			"case 1 : no error",
-			"authorizer",
-			"account1",
-			"account3",
+			authorizerId,
+			"account1@com",
+			"account3@com",
 			100,
 			100,
 			100,
@@ -215,9 +217,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 		},
 		{
 			"case 2 : no src account",
-			"authorizer",
-			"unk",
-			"account3",
+			authorizerId,
+			"unk@unk",
+			"account3@com",
 			100,
 			100,
 			100,
@@ -225,9 +227,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 		},
 		{
 			"case 3 : no dest account",
-			"authorizer",
-			"authorizer",
-			"unk",
+			authorizerId,
+			authorizerId,
+			"unk@unk",
 			100,
 			100,
 			100,
@@ -235,9 +237,9 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 		},
 		{
 			"case 4 : not enough src account ammount",
-			"authorizer",
-			"account4",
-			"account3",
+			authorizerId,
+			"account4@com",
+			"account3@com",
 			100,
 			100,
 			100,
@@ -263,14 +265,14 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 				assert.NoError(t, err)
 
 				srcAc := fc.NewEmptyAccount()
-				err = wsv.Query(model.MustAddress(c.exTargetId), srcAc)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.exTargetId).AccountId()), srcAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exTargetId, srcAc.GetAccountId())
 				assert.Equal(t, c.exSrcBalance, srcAc.GetBalance())
 				assert.Equal(t, make([]model.PublicKey, 0), srcAc.GetPublicKeys())
 
 				destAc := fc.NewEmptyAccount()
-				err = wsv.Query(model.MustAddress(c.exDestAccountId), destAc)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.exDestAccountId).AccountId()), destAc)
 				require.NoError(t, err)
 				assert.Equal(t, c.exDestAccountId, destAc.GetAccountId())
 				assert.Equal(t, c.exDestBalance, destAc.GetBalance())
@@ -302,48 +304,48 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 	}{
 		{
 			"case 1 : no error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			keys[0],
 			[]model.PublicKey{keys[0]},
 			nil,
 		},
 		{
 			"case 2 : no error",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			keys[1],
 			[]model.PublicKey{keys[0], keys[1]},
 			nil,
 		},
 		{
 			"case 3 : no error",
-			"authorizer",
-			"account1",
+			authorizerId,
+			"account1@com",
 			keys[2],
 			[]model.PublicKey{keys[2]},
 			nil,
 		},
 		{
 			"case 3 : no error",
-			"authorizer",
-			"account1",
+			authorizerId,
+			"account1@com",
 			keys[0],
 			[]model.PublicKey{keys[2], keys[0]},
 			nil,
 		},
 		{
 			"case 4 : no target account",
-			"authorizer",
-			"unk",
+			authorizerId,
+			"unk@unk",
 			keys[2],
 			nil,
 			core.ErrCommandExecutorAddPublicKeyNotExistAccount,
 		},
 		{
 			"case 5 : duplicate pubkey",
-			"authorizer",
-			"authorizer",
+			authorizerId,
+			authorizerId,
 			keys[1],
 			nil,
 			core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
@@ -367,7 +369,7 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 				assert.NoError(t, err)
 
 				ac := fc.NewEmptyAccount()
-				err = wsv.Query(model.MustAddress(c.targetId), ac)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.targetId).AccountId()), ac)
 				require.NoError(t, err)
 				assert.Equal(t, c.targetId, ac.GetAccountId())
 				assert.ElementsMatch(t, c.exKeys, ac.GetPublicKeys())

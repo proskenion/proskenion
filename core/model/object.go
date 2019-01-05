@@ -136,6 +136,7 @@ type Address interface {
 	Id() string
 	AccountId() string
 	PeerId() string
+	StorageId() string
 }
 
 type AddressConv struct {
@@ -222,4 +223,8 @@ func (a *AddressConv) AccountId() string {
 
 func (a *AddressConv) PeerId() string {
 	return a.account + "@" + a.domain + "/peer"
+}
+
+func (a *AddressConv) StorageId() string {
+	return a.domain + "/" + a.storage
 }

@@ -35,6 +35,34 @@ func (c *CommandValidator) AddPublicKeys(wsv model.ObjectFinder, cmd model.Comma
 	return nil
 }
 
+func (c *CommandValidator) DefineStorage(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) CreateStorage(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) UpdateObject(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) AddObject(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) TransferObject(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) AddPeer(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) Consign(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
 func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) bool {
 	for _, sig := range sigs {
 		if bytes.Equal(sig.GetPublicKey(), key) {
@@ -56,10 +84,7 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 	}
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		ac := c.fc.NewEmptyAccount()
-		authorizerId, err := model.NewAddress(cmd.GetAuthorizerId())
-		if err != nil {
-			return err // TODO ErrAddressParse
-		}
+		authorizerId := model.MustAddress(model.MustAddress(cmd.GetAuthorizerId()).AccountId())
 		err = wsv.Query(authorizerId, ac)
 		if err != nil {
 			return errors.Wrapf(core.ErrTxValidateNotFoundAuthorizer,

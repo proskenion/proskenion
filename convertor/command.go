@@ -24,6 +24,18 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.CreateAccount(wsv, c)
 	case *proskenion.Command_AddPublicKeys:
 		return c.executor.AddPublicKeys(wsv, c)
+	case *proskenion.Command_DefineStorage:
+		return c.executor.DefineStorage(wsv, c)
+	case *proskenion.Command_CreateStorage:
+		return c.executor.CreateStorage(wsv, c)
+	case *proskenion.Command_UpdateObject:
+		return c.executor.AddObject(wsv, c)
+	case *proskenion.Command_TransferObject:
+		return c.executor.TransferObject(wsv, c)
+	case *proskenion.Command_AddPeer:
+		return c.executor.AddPeer(wsv, c)
+	case *proskenion.Command_Consign:
+		return c.executor.Consign(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -39,6 +51,18 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.CreateAccount(wsv, c)
 	case *proskenion.Command_AddPublicKeys:
 		return c.validator.AddPublicKeys(wsv, c)
+	case *proskenion.Command_DefineStorage:
+		return c.validator.DefineStorage(wsv, c)
+	case *proskenion.Command_CreateStorage:
+		return c.validator.CreateStorage(wsv, c)
+	case *proskenion.Command_UpdateObject:
+		return c.validator.AddObject(wsv, c)
+	case *proskenion.Command_TransferObject:
+		return c.validator.TransferObject(wsv, c)
+	case *proskenion.Command_AddPeer:
+		return c.validator.AddPeer(wsv, c)
+	case *proskenion.Command_Consign:
+		return c.validator.Consign(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}

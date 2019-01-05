@@ -221,6 +221,11 @@ type StorageBuilder struct {
 	*proskenion.Storage
 }
 
+func (b *StorageBuilder) From(s model.Storage) model.StorageBuilder {
+	b.Storage = s.(*Storage).Storage
+	return b
+}
+
 func (b *StorageBuilder) Int32(key string, value int32) model.StorageBuilder {
 	b.Object[key] = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Int32ObjectCode,
@@ -318,6 +323,11 @@ func (b *StorageBuilder) Dict(key string, value map[string]model.Object) model.S
 		Type:   proskenion.ObjectCode_DictObjectCode,
 		Object: &proskenion.Object_Dict{Dict: &proskenion.ObjectDict{Dict: dict}},
 	}
+	return b
+}
+
+func (b *StorageBuilder) Set(key string, value model.Object) model.StorageBuilder {
+	b.Object[key] = value.(*Object).Object
 	return b
 }
 

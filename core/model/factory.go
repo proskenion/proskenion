@@ -57,6 +57,7 @@ type ObjectBuilder interface {
 }
 
 type StorageBuilder interface {
+	From(Storage) StorageBuilder
 	Int32(key string, value int32) StorageBuilder
 	Int64(key string, value int64) StorageBuilder
 	Uint32(key string, value uint32) StorageBuilder
@@ -69,6 +70,7 @@ type StorageBuilder interface {
 	Peer(key string, value Peer) StorageBuilder
 	List(key string, value []Object) StorageBuilder
 	Dict(key string, value map[string]Object) StorageBuilder
+	Set(key string, value Object) StorageBuilder
 	Build() Storage
 }
 
