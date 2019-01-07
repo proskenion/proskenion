@@ -1,7 +1,7 @@
 package convertor
 
 import (
-	"github.com/golang/protobuf/proto"
+	"github.com/satellitex/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"

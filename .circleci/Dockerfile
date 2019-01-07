@@ -27,7 +27,7 @@ ENV GOPATH=/go \
     PATH=/go/bin/:$PATH
 RUN go get -u -v -ldflags '-w -s' \
         github.com/Masterminds/glide \
-        github.com/golang/protobuf/protoc-gen-go \
+        github.com/satellitex/protobuf/protoc-gen-go \
         github.com/gogo/protobuf/protoc-gen-gofast \
         github.com/gogo/protobuf/protoc-gen-gogo \
         github.com/gogo/protobuf/protoc-gen-gogofast \

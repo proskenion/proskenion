@@ -1,5 +1,5 @@
-hash: 85d8ccb964276d9e9b597af2f7772168e45f18636b1751a500b615e66788e8bc
-updated: 2018-12-17T00:48:34.649298+09:00
+hash: 0491a5f45888f12465c083c8b59f6da4c3391cd7d79027284cf1842549c2ee1b
+updated: 2019-01-07T19:03:33.57361+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
@@ -8,18 +8,16 @@ imports:
 - name: github.com/go-stack/stack
   version: 2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a
 - name: github.com/gogo/protobuf
-  version: 4cbf7e384e768b4e01799441fdf2a706a5635ae7
+  version: 8e4a75f11384d0fb2188d872d456407e41f33fc0
   subpackages:
   - proto
 - name: github.com/golang/protobuf
   version: 1325a051a2753cd67556b182843b1b693d0854cd
   subpackages:
   - proto
-  - protobuf-gen-go
   - ptypes
   - ptypes/any
   - ptypes/duration
-  - ptypes/empty
   - ptypes/timestamp
 - name: github.com/grpc-ecosystem/go-grpc-middleware
   version: e9c5d9645c437ab1b204cff969a2c0fb16cd4276
@@ -43,7 +41,7 @@ imports:
 - name: github.com/lann/ps
   version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
 - name: github.com/Masterminds/squirrel
-  version: a8c1880ebb4dd72ef19a1a337f75e9f6d0b7d89f
+  version: b56af2301db7bc17c0b561554a71e97b492dd172
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty
@@ -56,6 +54,12 @@ imports:
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
+- name: github.com/satellitex/protobuf
+  version: 1e31a998f3ac43677b58969308fbeb8dd451bfaa
+  subpackages:
+  - proto
+  - protobuf-gen-go
+  - ptypes/empty
 - name: github.com/stretchr/testify
   version: f35b8ab0b5a2cef36673838d662e249dd9c94686
   subpackages:

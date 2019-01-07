@@ -1,7 +1,6 @@
 package command_test
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -11,7 +10,6 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"reflect"
 	"testing"
 )
 
@@ -430,18 +428,10 @@ func TestCommandExecutor_DefineStorage(t *testing.T) {
 				assert.EqualError(t, errors.Cause(err), c.err.Error())
 			} else {
 				assert.NoError(t, err)
-
-				fmt.Println(c.storage.Hash())
 				st := fc.NewEmptyStorage()
 				err = wsv.Query(model.MustAddress(c.storageId), st)
 				require.NoError(t, err)
-				fmt.Println(st.Hash())
-				err = wsv.Query(model.MustAddress(c.storageId), st)
-				require.NoError(t, err)
-				fmt.Println(st.Hash())
-				err = wsv.Query(model.MustAddress(c.storageId), st)
-				require.NoError(t, err)
-				fmt.Println(st.Hash())
+				assert.Equal(t, c.storage.Hash(), st.Hash())
 			}
 		})
 	}
@@ -503,7 +493,7 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 				st := fc.NewEmptyStorage()
 				err = wsv.Query(model.MustAddress(c.storageId), st)
 				require.NoError(t, err)
-				assert.True(t, reflect.DeepEqual(c.storage.GetObject(), st.GetObject()))
+				assert.Equal(t, c.storage.Hash(), st.Hash())
 			}
 		})
 	}

@@ -9,7 +9,7 @@ import (
 type ObjectCode int
 
 const (
-	AnythingObjectCode = iota
+	AnythingObjectCode ObjectCode = iota
 	BoolObjectCode
 	Int32ObjectCode
 	Int64ObjectCode
