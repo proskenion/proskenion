@@ -1,6 +1,7 @@
 package command_test
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -10,6 +11,7 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"reflect"
 	"testing"
 )
 
@@ -378,3 +380,141 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 	}
 	require.NoError(t, dtx.Commit())
 }
+
+func TestCommandExecutor_DefineStorage(t *testing.T) {
+	fc, ex, dtx, wsv := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, wsv)
+
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		storageId    string
+		storage      model.Storage
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"/wallet",
+			fc.NewStorageBuilder().
+				Str("name", "default").
+				Address("id", "authorizer@com").
+				Build(),
+			nil,
+		},
+		{
+			"case 2 : no error",
+			authorizerId,
+			"/plane",
+			fc.NewStorageBuilder().
+				Str("address", "0-index").
+				Address("owner", "none").
+				Int64("value", 0).
+				Build(),
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := &convertor.Command{
+				Command: &proskenion.Command{
+					Command: &proskenion.Command_DefineStorage{
+						DefineStorage: &proskenion.DefineStorage{
+							Storage: c.storage.(*convertor.Storage).Storage,
+						},
+					},
+					TargetId:     c.storageId,
+					AuthorizerId: c.authorizerId,
+				}}
+			err := ex.DefineStorage(wsv, cmd)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				fmt.Println(c.storage.Hash())
+				st := fc.NewEmptyStorage()
+				err = wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				fmt.Println(st.Hash())
+				err = wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				fmt.Println(st.Hash())
+				err = wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				fmt.Println(st.Hash())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
+func TestCommandExecutor_CreateStorage(t *testing.T) {
+	fc, ex, dtx, wsv := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, wsv)
+
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		storageId    string
+		storage      model.Storage
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"account1@com/wallet",
+			fc.NewStorageBuilder().
+				Str("name", "account1").
+				Address("id", "account1@com").
+				Build(),
+			nil,
+		},
+		{
+			"case 2 : no error",
+			authorizerId,
+			"account1@com/plane",
+			fc.NewStorageBuilder().
+				Str("address", "1-1-1").
+				Address("owner", "account1@com").
+				Int64("value", 11111).
+				Build(),
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			id := model.MustAddress(c.storageId)
+			tx := fc.NewTxBuilder().DefineStorage(c.authorizerId, "/"+id.Storage(), c.storage).Build()
+			tx.GetPayload().GetCommands()[0].Execute(wsv)
+
+			cmd := &convertor.Command{
+				Command: &proskenion.Command{
+					Command: &proskenion.Command_CreateStorage{
+						CreateStorage: &proskenion.CreateStorage{},
+					},
+					TargetId:     c.storageId,
+					AuthorizerId: c.authorizerId,
+				}}
+			err := ex.CreateStorage(wsv, cmd)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				st := fc.NewEmptyStorage()
+				err = wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				assert.True(t, reflect.DeepEqual(c.storage.GetObject(), st.GetObject()))
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
+/*
+CreateStorage(ObjectFinder, Command) error
+UpdateObject(ObjectFinder, Command) error
+AddObject(ObjectFinder, Command) error
+TransferObject(ObjectFinder, Command) error
+AddPeer(ObjectFinder, Command) error
+Consign(ObjectFinder, Command) error
+*/
