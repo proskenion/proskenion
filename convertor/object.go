@@ -149,5 +149,8 @@ func (o *Object) Unmarshal(pb []byte) error {
 }
 
 func (o *Object) Hash() model.Hash {
+	if o.Object == nil {
+		return nil
+	}
 	return o.cryptor.Hash(o)
 }

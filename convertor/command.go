@@ -29,6 +29,8 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 	case *proskenion.Command_CreateStorage:
 		return c.executor.CreateStorage(wsv, c)
 	case *proskenion.Command_UpdateObject:
+		return c.executor.UpdateObject(wsv, c)
+	case *proskenion.Command_AddObject:
 		return c.executor.AddObject(wsv, c)
 	case *proskenion.Command_TransferObject:
 		return c.executor.TransferObject(wsv, c)

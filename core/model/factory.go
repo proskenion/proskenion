@@ -109,7 +109,7 @@ type TxBuilder interface {
 	UpdateObject(authorizerId string, walletId string, key string, object Object) TxBuilder
 	AddObject(authorizerId string, walletId string, key string, object Object) TxBuilder
 	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder
-	AddPeer(authorizerId string, accountId string, address string, pubkey PublicKey) TxBuilder
+	AddPeer(authorizerId string, peerId string, address string, pubkey PublicKey) TxBuilder
 	Consign(authorizerId string, accountId string, peerId string) TxBuilder
 	Build() Transaction
 }

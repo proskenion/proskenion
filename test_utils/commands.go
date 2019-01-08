@@ -46,3 +46,12 @@ func NewAccountWithPri(name string) *AccountWithPri {
 		pri,
 	}
 }
+
+func RandomLandStorage(address string, id string, value int64, list []model.Object) model.Storage {
+	return NewTestFactory().NewStorageBuilder().
+		Str("address", address).
+		Address("owner", id).
+		Int64("value", value).
+		List("list", list).
+		Build()
+}
