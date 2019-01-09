@@ -48,13 +48,14 @@ func main() {
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor()
 	cmdValidator := command.NewCommandValidator()
-	qValidator := query.NewQueryValidator()
-	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qValidator)
-
+	qVerifyier := query.NewQueryVerifier()
+	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifyier)
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
+
 	queue := repository.NewProposalTxQueueOnMemory(conf)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
+	qv := query.NewQueryValidator(rp, fc, conf)
 
 	commitChan := make(chan interface{})
 	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
@@ -82,7 +83,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	api := gate.NewAPIGate(queue, qp, logger)
+	api := gate.NewAPIGate(queue, qp, qv, logger)
 	s := grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),

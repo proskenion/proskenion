@@ -22,11 +22,13 @@ import (
 
 func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIGateServer) {
 	fc := NewTestFactory()
+	conf := NewTestConfig()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
-	api := gate.NewAPIGate(queue, qp, logger)
+	qv := query.NewQueryValidator(rp, fc, conf)
+	api := gate.NewAPIGate(queue, qp, qv, logger)
 
 	server := NewAPIGateServer(fc, api, logger)
 
@@ -43,7 +45,7 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, p
 
 func statusCheck(t *testing.T, err error, code codes.Code) {
 	require.Error(t, err)
-	assert.Equalf(t, status.Code(err), code, err.Error())
+	assert.Equalf(t, status.Code(err), code, "expected: %s, atctual: %s, error: %s", status.Code(err).String(), code.String(), err.Error())
 }
 
 func TestAPIGateServer_Write(t *testing.T) {
@@ -125,11 +127,11 @@ func TestAPIGateServer_Query(t *testing.T) {
 			[]model.PublicKey{},
 			codes.NotFound,
 		},
-		{ //TODO this is invalidArguments
+		{
 			"case 7 invalid",
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			codes.Internal,
+			codes.InvalidArgument,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
@@ -141,9 +143,9 @@ func TestAPIGateServer_Query(t *testing.T) {
 				resq := NewTestFactory().NewEmptyQueryResponse()
 				resq.(*convertor.QueryResponse).QueryResponse = res
 
-				assert.Equal(t, c.query.GetPayload().GetTargetId(), resq.GetPayload().GetAccount().GetAccountId())
-				assert.Equal(t, c.pubkeys, resq.GetPayload().GetAccount().GetPublicKeys())
-				assert.Equal(t, int64(0), resq.GetPayload().GetAccount().GetBalance())
+				assert.Equal(t, model.MustAddress(c.query.GetPayload().GetFromId()).Account(), resq.GetObject().GetAccount().GetAccountName())
+				assert.Equal(t, c.pubkeys, resq.GetObject().GetAccount().GetPublicKeys())
+				assert.Equal(t, int64(0), resq.GetObject().GetAccount().GetBalance())
 			}
 		})
 	}

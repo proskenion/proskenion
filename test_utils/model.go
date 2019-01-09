@@ -25,6 +25,10 @@ func RandomStr() string {
 	return strconv.FormatUint(rand.Uint64(), 36)
 }
 
+func RandomAccountId() string {
+	return RandomStr() + "@" + RandomStr()
+}
+
 func RandomByte() []byte {
 	b, _ := RandomKeyPairs()
 	return b
@@ -38,7 +42,7 @@ func RandomInvalidSig() model.Signature {
 func RandomTx() model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
 		CreatedTime(rand.Int63()).
-		CreateAccount(RandomStr(), RandomStr(), []model.PublicKey{}, 1).
+		CreateAccount(RandomAccountId(), RandomAccountId(), []model.PublicKey{}, 1).
 		Build()
 	return tx
 }
@@ -112,7 +116,7 @@ func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []mod
 func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
 	q := NewTestFactory().NewQueryBuilder().
 		AuthorizerId(authorizer.AccountId).
-		FromId(target).
+		FromId(model.MustAddress(target).AccountId()).
 		RequestCode(model.AccountObjectCode).
 		Build()
 	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))

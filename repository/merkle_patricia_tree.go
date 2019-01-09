@@ -3,7 +3,6 @@ package repository
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -560,12 +559,10 @@ func (t *MerklePatriciaNodeIterator) Get(hash model.Hash) (core.MerklePatriciaNo
 }
 
 func (t *MerklePatriciaNodeIterator) SubLeafs() ([]core.MerklePatriciaNodeIterator, error) {
-	fmt.Println(t.Key())
 	if t.node.Leaf() {
 		return []core.MerklePatriciaNodeIterator{t}, nil
 	} else {
 		rets := make([]core.MerklePatriciaNodeIterator, 0, len(t.Childs()))
-		fmt.Println(len(t.Childs()))
 		if len(t.DataHash()) != 0 {
 			it, err := t.getLeaf()
 			if err != nil {
@@ -575,8 +572,6 @@ func (t *MerklePatriciaNodeIterator) SubLeafs() ([]core.MerklePatriciaNodeIterat
 			rets = append(rets, its...)
 		}
 		for key, _ := range t.Childs() {
-			fmt.Printf(" :%d", key)
-
 			it, err := t.getChild(key)
 			if err != nil {
 				return nil, err

@@ -170,10 +170,7 @@ func NewAddress(id string) (Address, error) {
 }
 
 func MustAddress(id string) Address {
-	ret, err := NewAddress(id)
-	if err != nil {
-		panic(err)
-	}
+	ret, _ := NewAddress(id)
 	return ret
 }
 

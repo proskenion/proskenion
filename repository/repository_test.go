@@ -19,7 +19,7 @@ func TestRepository_Commit(t *testing.T) {
 	txList := RandomTxList()
 	txList.Push(
 		fc.NewTxBuilder().
-			CreateAccount("root", "authorizer@com", []model.PublicKey{}, 0).
+			CreateAccount("authorizer@com", "authorizer@com", []model.PublicKey{}, 0).
 			Build())
 	require.NoError(t, rp.GenesisCommit(txList))
 

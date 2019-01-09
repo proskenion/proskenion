@@ -46,17 +46,17 @@ func (am *AccountManager) CreateAccount(t *testing.T, ac *AccountWithPri) {
 func (am *AccountManager) QueryAccountPassed(t *testing.T, ac *AccountWithPri) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(ac.AccountId).
-		FromId(ac.AccountId).
+		FromId(model.MustAddress(ac.AccountId).AccountId()).
 		CreatedTime(RandomNow()).
 		RequestCode(model.AccountObjectCode).
 		Build()
-	require.NoError(t, query.Sign(ac.Pubkey, ac.Prikey))
+	assert.NoError(t, query.Sign(ac.Pubkey, ac.Prikey))
 
 	res, err := am.client.Read(query)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	assert.NoError(t, res.Verify())
-	retAc := res.GetPayload().GetAccount()
+	retAc := res.GetObject().GetAccount()
 	assert.Equal(t, retAc.GetAccountId(), ac.AccountId)
 	assert.Equal(t, len(retAc.GetPublicKeys()), 1)
 	assert.Contains(t, retAc.GetPublicKeys(), ac.Pubkey)
