@@ -40,6 +40,7 @@ type ModelFactory interface {
 }
 
 type ObjectBuilder interface {
+	Bool(value bool) ObjectBuilder
 	Int32(value int32) ObjectBuilder
 	Int64(value int64) ObjectBuilder
 	Uint32(value uint32) ObjectBuilder

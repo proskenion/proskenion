@@ -1,10 +1,10 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type ObjectFactory struct {
@@ -104,6 +104,14 @@ func (f *ObjectFactory) NewEmptyObject() model.Object {
 type ObjectBuilder struct {
 	cryptor core.Cryptor
 	*proskenion.Object
+}
+
+func (f *ObjectBuilder) Bool(value bool) model.ObjectBuilder {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_BoolObjectCode,
+		Object: &proskenion.Object_Boolean{Boolean: value},
+	}
+	return f
 }
 
 func (f *ObjectBuilder) Int32(value int32) model.ObjectBuilder {

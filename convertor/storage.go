@@ -1,10 +1,10 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Storage struct {

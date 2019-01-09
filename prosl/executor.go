@@ -2,6 +2,7 @@ package prosl
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 )
@@ -14,15 +15,41 @@ var (
 	ErrProslExecuteInternalErr             = fmt.Errorf("Failed Prosl Execute Internal")
 	ErrProslExecuteUnknownObjectCode       = fmt.Errorf("Failed Prosl Execute Unklnown object code")
 	ErrProslExecuteQueryOperatorArgument   = fmt.Errorf("Failed Prosl not enough query operator arguments")
+
+	ErrProslExecuteSentenceErr = fmt.Errorf("Faile Prosl Execute Sentence error")
+)
+
+type OperatorState int
+
+const (
+	AnotherOperator_State OperatorState = iota
+	IfOperatorTrue_State
+	IfOperatorFalse_State
+	ElifOperatorTrue_State
+	ElifOperatorFalse_State
+	ReturnOperator_State
 )
 
 type ProslStateValue struct {
-	Variables  []map[string]model.Object
-	Value      model.Object
-	Iflag      bool
-	Eliflag    bool
-	Elseflag   bool
-	Returnflag bool
+	Variables    map[string]model.Object
+	ReturnObject model.Object
+	St           OperatorState
+}
+
+func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
+	return &ProslStateValue{
+		Variables:    state.Variables,
+		ReturnObject: nil,
+		St:           st,
+	}
+}
+
+func ReturnValueProslStateValue(state *ProslStateValue, value model.Object) *ProslStateValue {
+	return &ProslStateValue{
+		Variables:    state.Variables,
+		ReturnObject: value,
+		St:           AnotherOperator_State,
+	}
 }
 
 func ExecuteProsl(prosl *proskenion.Prosl, state *ProslStateValue) (*ProslStateValue, error) {
@@ -65,22 +92,70 @@ func ExecuteProslOpFormula(op *proskenion.ProslOperator, state *ProslStateValue)
 }
 
 func ExecuteProslSetOperator(op *proskenion.SetOperator, state *ProslStateValue) (*ProslStateValue, error) {
-	return nil, nil
+	var err error
+	state, err = ExecuteProslValueOperator(op.GetValue(), state)
+	if err != nil {
+		return nil, err
+	}
+	state.Variables[op.GetVariableName()] = state.ReturnObject
+	return ReturnOpProslStateValue(state, AnotherOperator_State), nil
 }
 
 func ExecuteProslIfOperator(op *proskenion.IfOperator, state *ProslStateValue) (*ProslStateValue, error) {
-	return nil, nil
+	var err error
+	state, err = ExecuteProslConditionalFormula(op.GetOp(), state)
+	if err != nil {
+		return nil, err
+	}
+	if state.ReturnObject.GetBoolean() {
+		state, err = ExecuteProsl(op.GetProsl(), state)
+		if err != nil {
+			return nil, err
+		}
+		return ReturnOpProslStateValue(state, IfOperatorTrue_State), nil
+	}
+	return ReturnOpProslStateValue(state, IfOperatorFalse_State), nil
 }
 
 func ExecuteProslElifOperator(op *proskenion.ElifOperator, state *ProslStateValue) (*ProslStateValue, error) {
-	return nil, nil
+	var err error
+	switch state.St {
+	case IfOperatorFalse_State, ElifOperatorFalse_State:
+		state, err = ExecuteProslConditionalFormula(op.GetOp(), state)
+		if err != nil {
+			return nil, err
+		}
+		if state.ReturnObject.GetBoolean() {
+			state, err = ExecuteProsl(op.GetProsl(), state)
+			if err != nil {
+				return nil, err
+			}
+			return ReturnOpProslStateValue(state, ElifOperatorTrue_State), nil
+		}
+		return ReturnOpProslStateValue(state, ElifOperatorFalse_State), nil
+	case IfOperatorTrue_State, ElifOperatorTrue_State:
+		return state, nil
+	}
+	return nil, errors.Wrapf(ErrProslExecuteSentenceErr, "elif operator must have previous operator that is if or elif operator")
 }
 
 func ExecuteProslElseOperator(op *proskenion.ElseOperator, state *ProslStateValue) (*ProslStateValue, error) {
-	return nil, nil
+	var err error
+	switch state.St {
+	case IfOperatorFalse_State, ElifOperatorFalse_State:
+		state, err = ExecuteProsl(op.GetProsl(), state)
+		if err != nil {
+			return nil, err
+		}
+		return ReturnOpProslStateValue(state, AnotherOperator_State), nil
+	case IfOperatorTrue_State, ElifOperatorTrue_State:
+		return state, nil
+	}
+	return nil, errors.Wrapf(ErrProslExecuteSentenceErr, "else operator must have previous operator that is if or elif operator")
 }
 
 func ExecuteProslErrOperator(op *proskenion.ErrCatchOperator, state *ProslStateValue) (*ProslStateValue, error) {
+	// TODO
 	return nil, nil
 }
 
@@ -100,7 +175,7 @@ func ExecuteProslReturnOperator(op *proskenion.ReturnOperator, state *ProslState
 	return nil, nil
 }
 
-func ExecuteValueOperator(op *proskenion.ValueOperator, state *ProslStateValue) (*ProslStateValue, error) {
+func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	var err error
 	switch op.GetOp().(type) {
 	case *proskenion.ValueOperator_QueryOp:
@@ -204,7 +279,7 @@ func ExecuteProslObjectOperator(op *proskenion.Object, state *ProslStateValue) (
 	return nil, nil
 }
 
-func ExecuteConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) (*ProslStateValue, error) {
+func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	var err error
 	switch op.GetOp().(type) {
 	case *proskenion.ConditionalFormula_Or:

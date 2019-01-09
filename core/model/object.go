@@ -53,6 +53,7 @@ func HasherEqual(a, b Hasher) bool {
 
 type Object interface {
 	GetType() ObjectCode
+	GetBoolean() bool
 	GetI32() int32
 	GetI64() int64
 	GetU32() uint32

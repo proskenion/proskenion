@@ -1,11 +1,11 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Query struct {
