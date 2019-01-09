@@ -16,216 +16,252 @@ var (
 	ErrProslExecuteQueryOperatorArgument   = fmt.Errorf("Failed Prosl not enough query operator arguments")
 )
 
-type ProslReturnValue struct {
-	model.Object
+type ProslStateValue struct {
+	Variables  []map[string]model.Object
+	Value      model.Object
+	Iflag      bool
+	Eliflag    bool
+	Elseflag   bool
+	Returnflag bool
 }
 
-type ProslExecutor struct {
-	Variables []map[string]model.Object   // stack
-	PreOp     []*proskenion.ProslOperator // stack
-	// 順次
-	// 判断
-	// 繰り返し
-}
-
-func (e *ProslExecutor) Prosl(prosl *proskenion.Prosl) (*ProslReturnValue, error) {
+func ExecuteProsl(prosl *proskenion.Prosl, state *ProslStateValue) (*ProslStateValue, error) {
 	ops := prosl.GetOps()
+	var err error
 	for _, op := range ops {
-		_, err := e.ProslOperator(op)
+		state, err = ExecuteProslOpFormula(op, state)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return nil, nil
+	return state, nil
 }
 
-func (e *ProslExecutor) ProslOperator(op *proskenion.ProslOperator) (*ProslReturnValue, error) {
+func ExecuteProslOpFormula(op *proskenion.ProslOperator, state *ProslStateValue) (*ProslStateValue, error) {
+	var err error
 	switch op.GetOp().(type) {
 	case *proskenion.ProslOperator_SetOp:
+		state, err = ExecuteProslSetOperator(op.GetSetOp(), state)
+		state, err = ExecuteProslSetOperator(op.GetSetOp(), state)
 	case *proskenion.ProslOperator_IfOp:
+		state, err = ExecuteProslIfOperator(op.GetIfOp(), state)
 	case *proskenion.ProslOperator_ElifOp:
+		state, err = ExecuteProslElifOperator(op.GetElifOp(), state)
 	case *proskenion.ProslOperator_ElseOp:
+		state, err = ExecuteProslElseOperator(op.GetElseOp(), state)
 	case *proskenion.ProslOperator_ErrOp:
+		state, err = ExecuteProslErrOperator(op.GetErrOp(), state)
 	case *proskenion.ProslOperator_RequireOp:
+		state, err = ExecuteProslRequireOperator(op.GetRequireOp(), state)
 	case *proskenion.ProslOperator_AssertOp:
+		state, err = ExecuteProslAssertOperator(op.GetAssertOp(), state)
 	case *proskenion.ProslOperator_VerifyOp:
+		state, err = ExecuteProslVerifyOperator(op.GetVerifyOp(), state)
 	case *proskenion.ProslOperator_ReturnOp:
+		state, err = ExecuteProslReturnOperator(op.GetReturnOp(), state)
 	default:
 	}
+	return state, err
+}
+
+func ExecuteProslSetOperator(op *proskenion.SetOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslSetOperator(op *proskenion.SetOperator) (*ProslReturnValue, error) {
+func ExecuteProslIfOperator(op *proskenion.IfOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslIfOperator(op *proskenion.IfOperator) (*ProslReturnValue, error) {
+func ExecuteProslElifOperator(op *proskenion.ElifOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProsEliffOperator(op *proskenion.ElifOperator) (*ProslReturnValue, error) {
+func ExecuteProslElseOperator(op *proskenion.ElseOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslElseOperator(op *proskenion.ElseOperator) (*ProslReturnValue, error) {
+func ExecuteProslErrOperator(op *proskenion.ErrCatchOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslErrOperator(op *proskenion.ErrCatchOperator) (*ProslReturnValue, error) {
+func ExecuteProslRequireOperator(op *proskenion.RequireOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslRequireOperator(op *proskenion.RequireOperator) (*ProslReturnValue, error) {
+func ExecuteProslAssertOperator(op *proskenion.AssertOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslAssertOperator(op *proskenion.AssertOperator) (*ProslReturnValue, error) {
+func ExecuteProslVerifyOperator(op *proskenion.VerifyOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslVerifyOperator(op *proskenion.VerifyOperator) (*ProslReturnValue, error) {
+func ExecuteProslReturnOperator(op *proskenion.ReturnOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslReturnOperator(op *proskenion.ReturnOperator) (*ProslReturnValue, error) {
-	return nil, nil
-}
-
-func (e *ProslExecutor) ValueOperator(op *proskenion.ValueOperator) (*ProslReturnValue, error) {
+func ExecuteValueOperator(op *proskenion.ValueOperator, state *ProslStateValue) (*ProslStateValue, error) {
+	var err error
 	switch op.GetOp().(type) {
 	case *proskenion.ValueOperator_QueryOp:
+		state, err = ExecuteProslQueryOperator(op.GetQueryOp(), state)
 	case *proskenion.ValueOperator_TxOp:
+		state, err = ExecuteProslTxOperator(op.GetTxOp(), state)
 	case *proskenion.ValueOperator_CmdOp:
+		state, err = ExecuteProslCmdOperator(op.GetCmdOp(), state)
 	case *proskenion.ValueOperator_PlusOp:
+		state, err = ExecuteProslPlusOperator(op.GetPlusOp(), state)
 	case *proskenion.ValueOperator_MinusOp:
+		state, err = ExecuteProslMinusOperator(op.GetMinusOp(), state)
 	case *proskenion.ValueOperator_MulOp:
+		state, err = ExecuteProslMulOperator(op.GetMulOp(), state)
 	case *proskenion.ValueOperator_DivOp:
+		state, err = ExecuteProslDivOperator(op.GetDivOp(), state)
 	case *proskenion.ValueOperator_ModOp:
+		state, err = ExecuteProslModOperator(op.GetModOp(), state)
 	case *proskenion.ValueOperator_OrOp:
+		state, err = ExecuteProslOrOperator(op.GetOrOp(), state)
 	case *proskenion.ValueOperator_AndOp:
+		state, err = ExecuteProslAndOperator(op.GetAndOp(), state)
 	case *proskenion.ValueOperator_XorOp:
+		state, err = ExecuteProslXorOperator(op.GetXorOp(), state)
 	case *proskenion.ValueOperator_ConcatOp:
+		state, err = ExecuteProslConcatOperator(op.GetConcatOp(), state)
 	case *proskenion.ValueOperator_ValuedOp:
+		state, err = ExecuteProslValuedOperator(op.GetValuedOp(), state)
 	case *proskenion.ValueOperator_IndexedOp:
+		state, err = ExecuteProslIndexedOperator(op.GetIndexedOp(), state)
 	case *proskenion.ValueOperator_VariableOp:
+		state, err = ExecuteProslVariableOperator(op.GetVariableOp(), state)
 	case *proskenion.ValueOperator_Object:
+		state, err = ExecuteProslObjectOperator(op.GetObject(), state)
 	default:
 	}
+	return state, err
+}
+
+func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslQueryOperator(op *proskenion.QueryOperator) (*ProslReturnValue, error) {
+func ExecuteProslTxOperator(op *proskenion.TxOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslTxOperator(op *proskenion.TxOperator) (*ProslReturnValue, error) {
+func ExecuteProslCmdOperator(op *proskenion.CommandOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslCmdOperator(op *proskenion.CommandOperator) (*ProslReturnValue, error) {
+func ExecuteProslPlusOperator(op *proskenion.PlusOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslPlusOperator(op *proskenion.PlusOperator) (*ProslReturnValue, error) {
+func ExecuteProslMinusOperator(op *proskenion.MinusOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslMinusOperator(op *proskenion.MinusOperator) (*ProslReturnValue, error) {
+func ExecuteProslMulOperator(op *proskenion.MultipleOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslMulOperator(op *proskenion.MultipleOperator) (*ProslReturnValue, error) {
+func ExecuteProslDivOperator(op *proskenion.DivisionOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslDivOperator(op *proskenion.DivisionOperator) (*ProslReturnValue, error) {
+func ExecuteProslModOperator(op *proskenion.ModOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslModOperator(op *proskenion.ModOperator) (*ProslReturnValue, error) {
+func ExecuteProslOrOperator(op *proskenion.OrOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslOrOperator(op *proskenion.OrOperator) (*ProslReturnValue, error) {
+func ExecuteProslAndOperator(op *proskenion.AndOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslAndOperator(op *proskenion.AndOperator) (*ProslReturnValue, error) {
+func ExecuteProslXorOperator(op *proskenion.XorOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslXorOperator(op *proskenion.XorOperator) (*ProslReturnValue, error) {
+func ExecuteProslConcatOperator(op *proskenion.ConcatOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslConcatOperator(op *proskenion.ConcatOperator) (*ProslReturnValue, error) {
+func ExecuteProslValuedOperator(op *proskenion.ValuedOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslValuedOperator(op *proskenion.ValuedOperator) (*ProslReturnValue, error) {
+func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslIndexedOperator(op *proskenion.IndexedOperator) (*ProslReturnValue, error) {
+func ExecuteProslVariableOperator(op *proskenion.VariableOperator, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslVariableOperator(op *proskenion.VariableOperator) (*ProslReturnValue, error) {
+func ExecuteProslObjectOperator(op *proskenion.Object, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslObjectOperator(op *proskenion.Object) (*ProslReturnValue, error) {
-	return nil, nil
-}
-
-func (e *ProslExecutor) ConditionalFormula(op *proskenion.ConditionalFormula) (*ProslReturnValue, error) {
+func ExecuteConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) (*ProslStateValue, error) {
+	var err error
 	switch op.GetOp().(type) {
 	case *proskenion.ConditionalFormula_Or:
+		state, err = ExecuteProslOrFormula(op.GetOr(), state)
 	case *proskenion.ConditionalFormula_And:
+		state, err = ExecuteProslAndFormula(op.GetAnd(), state)
 	case *proskenion.ConditionalFormula_Not:
+		state, err = ExecuteProslNotFormula(op.GetNot(), state)
 	case *proskenion.ConditionalFormula_Eq:
+		state, err = ExecuteProslEqFormula(op.GetEq(), state)
 	case *proskenion.ConditionalFormula_Ne:
+		state, err = ExecuteProslNeFormula(op.GetNe(), state)
 	case *proskenion.ConditionalFormula_Gt:
+		state, err = ExecuteProslGtFormula(op.GetGt(), state)
 	case *proskenion.ConditionalFormula_Ge:
+		state, err = ExecuteProslGeFormula(op.GetGe(), state)
 	case *proskenion.ConditionalFormula_Lt:
+		state, err = ExecuteProslLtFormula(op.GetLt(), state)
 	case *proskenion.ConditionalFormula_Le:
+		state, err = ExecuteProslLeFormula(op.GetLe(), state)
 	default:
 	}
+	return state, err
+}
+
+func ExecuteProslOrFormula(op *proskenion.OrFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslOrFormula(op *proskenion.OrFormula) (*ProslReturnValue, error) {
+func ExecuteProslAndFormula(op *proskenion.AndFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslAndFormula(op *proskenion.AndFormula) (*ProslReturnValue, error) {
+func ExecuteProslNotFormula(op *proskenion.NotFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslNotFormula(op *proskenion.NotFormula) (*ProslReturnValue, error) {
+func ExecuteProslEqFormula(op *proskenion.EqFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslEqFormula(op *proskenion.EqFormula) (*ProslReturnValue, error) {
+func ExecuteProslNeFormula(op *proskenion.NeFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslNeFormula(op *proskenion.NeFormula) (*ProslReturnValue, error) {
+func ExecuteProslGtFormula(op *proskenion.GtFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslGtFormula(op *proskenion.GtFormula) (*ProslReturnValue, error) {
+func ExecuteProslGeFormula(op *proskenion.GeFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslGeFormula(op *proskenion.GeFormula) (*ProslReturnValue, error) {
+func ExecuteProslLtFormula(op *proskenion.LtFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
 
-func (e *ProslExecutor) ProslLtFormula(op *proskenion.LtFormula) (*ProslReturnValue, error) {
-	return nil, nil
-}
-
-func (e *ProslExecutor) ProslLeFormula(op *proskenion.LeFormula) (*ProslReturnValue, error) {
+func ExecuteProslLeFormula(op *proskenion.LeFormula, state *ProslStateValue) (*ProslStateValue, error) {
 	return nil, nil
 }
