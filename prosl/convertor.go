@@ -347,14 +347,6 @@ func ParseReturnOperator(yaml interface{}) (*proskenion.ReturnOperator, error) {
 	return ret, nil
 }
 
-func ParseVariableOperator(yaml interface{}) (*proskenion.VariableOperator, error) {
-	if s, ok := yaml.(string); ok {
-		return &proskenion.VariableOperator{VariableName: s}, nil
-	} else {
-		return nil, ProslParseCastError("", yaml)
-	}
-}
-
 func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 	if v, ok := yaml.(map[interface{}]interface{}); ok {
 		if len(v) != 1 {
@@ -854,6 +846,14 @@ func ParseIndexedOperator(yaml interface{}) (*proskenion.IndexedOperator, error)
 		return ret, nil
 	}
 	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+}
+
+func ParseVariableOperator(yaml interface{}) (*proskenion.VariableOperator, error) {
+	if s, ok := yaml.(string); ok {
+		return &proskenion.VariableOperator{VariableName: s}, nil
+	} else {
+		return nil, ProslParseCastError("", yaml)
+	}
 }
 
 func ParseConditionalFormula(yaml interface{}) (*proskenion.ConditionalFormula, error) {
