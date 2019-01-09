@@ -15,8 +15,8 @@ type Validator interface {
 
 // TransferBalance Err
 var (
-	ErrCommandExecutorTransferBalanceNotFoundSrcAccountId      = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load SrcAccounId")
-	ErrCommandExecutorTransferBalanceNotFoundDestAccountId     = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load DestAccounId")
+	ErrCommandExecutorTransferBalanceNotFoundSrcAccountId       = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load SrcAccounId")
+	ErrCommandExecutorTransferBalanceNotFoundDestAccountId      = fmt.Errorf("Failed Command Executor TransferBalance Can Not Load DestAccounId")
 	ErrCommandExecutorTransferBalanceNotEnoughSrcAccountBalance = fmt.Errorf("Failed Command Executor TransferBalance Not Enough SrcAccount Balance")
 )
 
@@ -36,6 +36,32 @@ var (
 	ErrCommandExecutorAddPublicKeyDuplicatePubkey = fmt.Errorf("Failed Command Executor AddPublicKey Duplicate Add PublicKey")
 )
 
+// CreateStorage Err
+var (
+	ErrCommandExecutorCreateStorageNotDefinedStorage = fmt.Errorf("Failed Command Executor CreateStorage Not Defined Storage")
+)
+
+// UpdateObject Err
+var (
+	ErrCommandExecutorUpdateObjectNotExistWallet = fmt.Errorf("Failed Command Executor UpdateObject Not Exist Wallet")
+)
+
+// AddObject Err
+var (
+	ErrCommandExecutorAddObjectNotExistWallet = fmt.Errorf("Failed Command Executor AddObject Not Exist Wallet")
+)
+
+// TransferObject Err
+var (
+	ErrCommandExecutorTransferObjectNotExistSrcWallet  = fmt.Errorf("Failed Command Executor TransferObject Not Exist Source Wallet")
+	ErrCommandExecutorTransferObjectNotExistDestWallet = fmt.Errorf("Failed Command Executor TransferObject Not Exist Dest Wallet")
+)
+
+// Consign Err
+var (
+	ErrCommandExecutorConsignNotFoundAccount = fmt.Errorf("Failed Command Executor Consign Not Found Account")
+)
+
 // Transaction Err
 var (
 	ErrTxValidateNotFoundAuthorizer  = fmt.Errorf("Failed Transaction Validator Authorizer Not Found")
@@ -49,6 +75,13 @@ type CommandExecutor interface {
 	CreateAccount(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
 	AddPublicKeys(ObjectFinder, Command) error
+	DefineStorage(ObjectFinder, Command) error
+	CreateStorage(ObjectFinder, Command) error
+	UpdateObject(ObjectFinder, Command) error
+	AddObject(ObjectFinder, Command) error
+	TransferObject(ObjectFinder, Command) error
+	AddPeer(ObjectFinder, Command) error
+	Consign(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
@@ -57,5 +90,12 @@ type CommandValidator interface {
 	CreateAccount(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
 	AddPublicKeys(ObjectFinder, Command) error
+	DefineStorage(ObjectFinder, Command) error
+	CreateStorage(ObjectFinder, Command) error
+	UpdateObject(ObjectFinder, Command) error
+	AddObject(ObjectFinder, Command) error
+	TransferObject(ObjectFinder, Command) error
+	AddPeer(ObjectFinder, Command) error
+	Consign(ObjectFinder, Command) error
 	Tx(ObjectFinder, TxFinder, Transaction) error
 }

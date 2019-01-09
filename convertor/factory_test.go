@@ -1,7 +1,9 @@
 package convertor_test
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/proto"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -136,28 +138,104 @@ func TestTxModelBuilder(t *testing.T) {
 	t.Run("case transfer", func(t *testing.T) {
 		txBuilder := NewTestFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
-			TransferBalance("a", "b", 10).
-			CreateAccount("x", "y").
-			AddBalance("w", 10).
-			AddPublicKey("auth", "ac", []byte{1, 2, 3}).
+			TransferBalance("a", "b", 10).                                                 // [0]
+			CreateAccount("x", "y", []model.PublicKey{[]byte{1, 2, 3}}, 1).                // [1]
+			AddBalance("w", 10).                                                           // [2]
+			AddPublicKeys("auth", "ac", []model.PublicKey{[]byte{1, 2, 3}}).               // [3]
+			TransferBalance("src", "dest", 200).                                           // [4]
+			AddPublicKeys("authorizer", "account", []model.PublicKey{[]byte{4, 5, 6}}).    // [5]
+			RemovePublicKeys("authorizer", "account", []model.PublicKey{[]byte{4, 5, 6}}). // [6]
+			SetQuorum("authorizer", "account", 2).                                         // [7]
+			DefineStorage("authorizer", "account",
+															NewTestFactory().NewStorageBuilder().Int32("int", 32).Build()). // [8]
+			CreateStorage("authorizer", "wallet_id").                                                    // [9]
+			UpdateObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).           // [10]
+			AddObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).              // [11]
+			TransferObject("authorizer", "wallet_id", "dest", "key", NewTestFactory().NewEmptyObject()). // [12]
+			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                     // [13]
+			Consign("authorizer", "account", "peer").                                                    // [14]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
+		// transfer balance
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetAuthorizerId())
 		assert.Equal(t, "a", tx.GetPayload().GetCommands()[0].GetTargetId())
 		assert.Equal(t, "b", tx.GetPayload().GetCommands()[0].GetTransferBalance().GetDestAccountId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[0].GetTransferBalance().GetBalance())
 
+		// create account
 		assert.Equal(t, "x", tx.GetPayload().GetCommands()[1].GetAuthorizerId())
 		assert.Equal(t, "y", tx.GetPayload().GetCommands()[1].GetTargetId())
+		assert.Equal(t, []model.PublicKey{[]byte{1, 2, 3}}, tx.GetPayload().GetCommands()[1].GetCreateAccount().GetPublicKeys())
+		assert.Equal(t, int32(1), tx.GetPayload().GetCommands()[1].GetCreateAccount().GetQuorum())
 
+		// add balance
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetAuthorizerId())
 		assert.Equal(t, "w", tx.GetPayload().GetCommands()[2].GetTargetId())
 		assert.Equal(t, int64(10), tx.GetPayload().GetCommands()[2].GetAddBalance().GetBalance())
 
+		// add public keys
 		assert.Equal(t, "auth", tx.GetPayload().GetCommands()[3].GetAuthorizerId())
 		assert.Equal(t, "ac", tx.GetPayload().GetCommands()[3].GetTargetId())
-		assert.Equal(t, []byte{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKeys().GetPublicKeys()[0])
+		assert.Equal(t, model.PublicKey{1, 2, 3}, tx.GetPayload().GetCommands()[3].GetAddPublicKeys().GetPublicKeys()[0])
+
+		// transfer balance
+		assert.Equal(t, "src", tx.GetPayload().GetCommands()[4].GetTargetId())
+		assert.Equal(t, "dest", tx.GetPayload().GetCommands()[4].GetTransferBalance().GetDestAccountId())
+		assert.Equal(t, int64(200), tx.GetPayload().GetCommands()[4].GetTransferBalance().GetBalance())
+
+		// add publicKeys
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[5].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[5].GetTargetId())
+		assert.EqualValues(t, []model.PublicKey{[]byte{4, 5, 6}}, tx.GetPayload().GetCommands()[5].GetAddPublicKeys().GetPublicKeys())
+
+		// remove publicKeys
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[6].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[6].GetTargetId())
+		assert.EqualValues(t, []model.PublicKey{[]byte{4, 5, 6}}, tx.GetPayload().GetCommands()[6].GetRemovePublicKeys().GetPublicKeys())
+
+		// set quorum
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[7].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[7].GetTargetId())
+		assert.Equal(t, int32(2), tx.GetPayload().GetCommands()[7].GetSetQuorum().GetQuorum())
+
+		// define storage
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[8].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[8].GetTargetId())
+		assert.Equal(t, model.ObjectCode(model.Int32ObjectCode), model.ObjectCode(tx.GetPayload().GetCommands()[8].GetDefineStorage().GetStorage().GetObject()["int"].GetType()))
+		assert.Equal(t, int32(32), tx.GetPayload().GetCommands()[8].GetDefineStorage().GetStorage().GetObject()["int"].GetI32())
+
+		// create storage
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[9].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[9].GetTargetId())
+
+		// update object
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[10].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[10].GetTargetId())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[10].GetUpdateObject().GetObject().GetType())
+
+		// add object
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[11].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[11].GetTargetId())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[11].GetAddObject().GetObject().GetType())
+
+		// transferObject
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[12].GetAuthorizerId())
+		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[12].GetTargetId())
+		assert.Equal(t, "dest", tx.GetPayload().GetCommands()[12].GetTransferObject().GetDestAccountId())
+		assert.Equal(t, "key", tx.GetPayload().GetCommands()[12].GetTransferObject().GetKey())
+		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[12].GetTransferObject().GetObject().GetType())
+
+		// add peer
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[13].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[13].GetTargetId())
+		assert.Equal(t, "localhost", tx.GetPayload().GetCommands()[13].GetAddPeer().GetAddress())
+		assert.EqualValues(t, model.PublicKey{2, 2, 2}, tx.GetPayload().GetCommands()[13].GetAddPeer().GetPublicKey())
+
+		// consign
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[14].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[14].GetTargetId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
 	})
 }
 
@@ -167,40 +245,85 @@ func TestNewAccount(t *testing.T) {
 		accountId   string
 		accountName string
 		pubkeys     []model.PublicKey
+		quorum      int32
 		amount      int64
+		peerId      string
 	}{
 		{
 			"case 1",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 2",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 3",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{RandomByte(), RandomByte(), RandomByte(), RandomByte()},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
 		}, {
 			"case 4",
 			RandomStr(),
 			RandomStr(),
 			[]model.PublicKey{},
+			rand.Int31(),
 			rand.Int63(),
+			RandomStr(),
+		},
+		{
+			"case 5",
+			RandomStr(),
+			RandomStr(),
+			[]model.PublicKey{},
+			rand.Int31(),
+			rand.Int63(),
+			RandomStr(),
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.amount)
+			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.quorum, c.amount, c.peerId)
 			assert.Equal(t, c.accountId, ac.GetAccountId())
 			assert.Equal(t, c.accountName, ac.GetAccountName())
 			assert.Equal(t, c.pubkeys, ac.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac.GetQuorum())
 			assert.Equal(t, c.amount, ac.GetBalance())
+			assert.Equal(t, c.peerId, ac.GetDelegatePeerId())
+
+			ac2 := NewTestFactory().NewAccountBuilder().From(ac).Build()
+			assert.Equal(t, c.accountId, ac2.GetAccountId())
+			assert.Equal(t, c.accountName, ac2.GetAccountName())
+			assert.Equal(t, c.pubkeys, ac2.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac2.GetQuorum())
+			assert.Equal(t, c.amount, ac2.GetBalance())
+			assert.Equal(t, c.peerId, ac2.GetDelegatePeerId())
+
+			ac3 := NewTestFactory().NewAccountBuilder().
+				AccountId(c.accountId).
+				AccountName(c.accountName).
+				Balance(c.amount).
+				PublicKeys(c.pubkeys).
+				Quorum(c.quorum).
+				DelegatePeerId(c.peerId).
+				Build()
+
+			assert.Equal(t, c.accountId, ac3.GetAccountId())
+			assert.Equal(t, c.accountName, ac3.GetAccountName())
+			assert.Equal(t, c.pubkeys, ac3.GetPublicKeys())
+			assert.Equal(t, c.quorum, ac3.GetQuorum())
+			assert.Equal(t, c.amount, ac3.GetBalance())
+			assert.Equal(t, c.peerId, ac3.GetDelegatePeerId())
 		})
 	}
 }
@@ -208,32 +331,37 @@ func TestNewAccount(t *testing.T) {
 func TestNewPeer(t *testing.T) {
 	for _, c := range []struct {
 		name    string
+		id      string
 		address string
 		pubkey  model.PublicKey
 	}{
 		{
 			"case 1",
+			"peer@com.pr/peer",
 			"111.111.111.111",
 			RandomByte(),
 		},
 		{
 			"case 2",
+			"peer@com.pr/peer",
 			RandomStr(),
 			RandomByte(),
 		},
 		{
 			"case 3",
+			"peer@com.pr/peer",
 			"localhost",
 			nil,
 		},
 		{
 			"case 4",
+			"peer@com.pr/peer",
 			"",
 			nil,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			peer := NewTestFactory().NewPeer(c.address, c.pubkey)
+			peer := NewTestFactory().NewPeer(c.id, c.address, c.pubkey)
 			assert.Equal(t, c.address, peer.GetAddress())
 			assert.Equal(t, c.pubkey, peer.GetPublicKey())
 		})
@@ -243,24 +371,42 @@ func TestNewPeer(t *testing.T) {
 func TestModelFactory_NewQueryBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
 		builder := NewTestFactory().NewQueryBuilder()
+		where := &proskenion.ConditionalFormula{
+			Op: &proskenion.ConditionalFormula_Le{
+				Le: &proskenion.LeFormula{
+					Lop: &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{VariableOp: &proskenion.VariableOperator{VariableName: "a"}}},
+					Rop: &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{VariableOp: &proskenion.VariableOperator{VariableName: "b"}}},
+				},
+			},
+		}
+		whereByte, _ := proto.Marshal(where)
 		query := builder.CreatedTime(1).
-			TargetId("a").
+			FromId("a").
 			AuthorizerId("b").
+			Select("*").
+			OrderBy("key", model.DESC).
+			Where(whereByte).
+			Limit(10).
 			RequestCode(model.AccountObjectCode).
 			Build()
 		assert.Equal(t, int64(1), query.GetPayload().GetCreatedTime())
-		assert.Equal(t, "a", query.GetPayload().GetTargetId())
+		assert.Equal(t, "a", query.GetPayload().GetFromId())
 		assert.Equal(t, "b", query.GetPayload().GetAuthorizerId())
+		assert.Equal(t, "*", query.GetPayload().GetSelect())
+		assert.Equal(t, "key", query.GetPayload().GetOrderBy().GetKey())
+		assert.Equal(t, model.OrderCode(model.DESC), query.GetPayload().GetOrderBy().GetOrder())
+		assert.Equal(t, whereByte, query.GetPayload().GetWhere())
+		assert.Equal(t, int32(10), query.GetPayload().GetLimit())
 		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), query.GetPayload().GetRequestCode())
 	})
 }
 
 func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
-		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int63())
+		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
 		builder := NewTestFactory().NewQueryResponseBuilder()
 		res := builder.Account(expAc).Build()
-		actAc := res.GetPayload().GetAccount()
+		actAc := res.GetObject().GetAccount()
 		assert.Equal(t, expAc.GetAccountId(), actAc.GetAccountId())
 		assert.Equal(t, expAc.GetAccountName(), actAc.GetAccountName())
 		assert.Equal(t, expAc.GetPublicKeys(), actAc.GetPublicKeys())
@@ -269,18 +415,76 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 
 	t.Run("case 2 peer query", func(t *testing.T) {
 		pub, _ := RandomCryptor().NewKeyPairs()
-		expPeer := NewTestFactory().NewPeer("address:50051", pub)
+		expPeer := NewTestFactory().NewPeer(RandomStr(), "address:50051", pub)
 		res := NewTestFactory().NewQueryResponseBuilder().
 			Peer(expPeer).
 			Build()
-		actPeer := res.GetPayload().GetPeer()
+		actPeer := res.GetObject().GetPeer()
 		assert.Equal(t, expPeer.GetPublicKey(), actPeer.GetPublicKey())
 		assert.Equal(t, expPeer.GetAddress(), actPeer.GetAddress())
 	})
 
 }
 
-func NewObjectFactory_NewStorageBuilder(t *testing.T) {
+func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
+	fc := NewTestFactory()
+	t.Run("case 1 object builder", func(t *testing.T) {
+		dict := fc.NewObjectBuilder().Dict(map[string]model.Object{"key": fc.NewEmptyObject()}).Build()
+		list := fc.NewObjectBuilder().List([]model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}).Build()
+		account := fc.NewObjectBuilder().Account(fc.NewEmptyAccount()).Build()
+		sig := fc.NewObjectBuilder().Sig(fc.NewEmptySignature()).Build()
+		address := fc.NewObjectBuilder().Address("target@account.com").Build()
+		data := fc.NewObjectBuilder().Data([]byte("aaaa")).Build()
+		str := fc.NewObjectBuilder().Str("str").Build()
+		peer := fc.NewObjectBuilder().Peer(fc.NewEmptyPeer()).Build()
+		i32 := fc.NewObjectBuilder().Int32(32).Build()
+		i64 := fc.NewObjectBuilder().Int64(64).Build()
+		u32 := fc.NewObjectBuilder().Uint32(1).Build()
+		u64 := fc.NewObjectBuilder().Uint64(2).Build()
+		storage := fc.NewObjectBuilder().Storage(NewTestFactory().NewStorageBuilder().Int32("int32", 1).Build()).Build()
+
+		assert.Equal(t, map[string]model.Object{"key": fc.NewEmptyObject()}, dict.GetDict())
+		assert.Equal(t, model.ObjectCode(model.DictObjectCode), dict.GetType())
+
+		assert.Equal(t, []model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}, list.GetList())
+		assert.Equal(t, model.ObjectCode(model.ListObjectCode), list.GetType())
+
+		assert.Equal(t, fc.NewEmptyAccount(), account.GetAccount())
+		assert.Equal(t, model.ObjectCode(model.AccountObjectCode), account.GetType())
+
+		assert.Equal(t, fc.NewEmptySignature(), sig.GetSig())
+		assert.Equal(t, model.ObjectCode(model.SignatureObjectCode), sig.GetType())
+
+		assert.Equal(t, "target@account.com", address.GetAddress())
+		assert.Equal(t, model.ObjectCode(model.AddressObjectCode), address.GetType())
+
+		assert.Equal(t, []byte("aaaa"), data.GetData())
+		assert.Equal(t, model.ObjectCode(model.BytesObjectCode), data.GetType())
+
+		assert.Equal(t, "str", str.GetStr())
+		assert.Equal(t, model.ObjectCode(model.StringObjectCode), str.GetType())
+
+		assert.Equal(t, fc.NewEmptyPeer(), peer.GetPeer())
+		assert.Equal(t, model.ObjectCode(model.PeerObjectCode), peer.GetType())
+
+		assert.Equal(t, int32(32), i32.GetI32())
+		assert.Equal(t, model.ObjectCode(model.Int32ObjectCode), i32.GetType())
+
+		assert.Equal(t, int64(64), i64.GetI64())
+		assert.Equal(t, model.ObjectCode(model.Int64ObjectCode), i64.GetType())
+
+		assert.Equal(t, uint32(1), u32.GetU32())
+		assert.Equal(t, model.ObjectCode(model.Uint32ObjectCode), u32.GetType())
+
+		assert.Equal(t, uint64(2), u64.GetU64())
+		assert.Equal(t, model.ObjectCode(model.Uint64ObjectCode), u64.GetType())
+
+		assert.Equal(t, NewTestFactory().NewStorageBuilder().Int32("int32", 1).Build(), storage.GetStorage())
+		assert.Equal(t, model.ObjectCode(model.StorageObjectCode), storage.GetType())
+	})
+}
+
+func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 	fc := NewTestFactory()
 	t.Run("case 1 storage builder", func(t *testing.T) {
 		builder := fc.NewStorageBuilder()
@@ -314,7 +518,7 @@ func NewObjectFactory_NewStorageBuilder(t *testing.T) {
 		assert.Equal(t, "target@account.com", dict["address"].GetAddress())
 		assert.Equal(t, model.ObjectCode(model.AddressObjectCode), dict["address"].GetType())
 
-		assert.Equal(t, []byte("aaaa"), dict["data"].GetAddress())
+		assert.Equal(t, []byte("aaaa"), dict["data"].GetData())
 		assert.Equal(t, model.ObjectCode(model.BytesObjectCode), dict["data"].GetType())
 
 		assert.Equal(t, "str", dict["str"].GetStr())
@@ -323,16 +527,16 @@ func NewObjectFactory_NewStorageBuilder(t *testing.T) {
 		assert.Equal(t, fc.NewEmptyPeer(), dict["peer"].GetPeer())
 		assert.Equal(t, model.ObjectCode(model.PeerObjectCode), dict["peer"].GetType())
 
-		assert.Equal(t, 32, dict["int32"].GetI32())
+		assert.Equal(t, int32(32), dict["int32"].GetI32())
 		assert.Equal(t, model.ObjectCode(model.Int32ObjectCode), dict["int32"].GetType())
 
-		assert.Equal(t, 64, dict["int64"].GetI64())
+		assert.Equal(t, int64(64), dict["int64"].GetI64())
 		assert.Equal(t, model.ObjectCode(model.Int64ObjectCode), dict["int64"].GetType())
 
-		assert.Equal(t, 1, dict["uint64"].GetU32())
+		assert.Equal(t, uint32(1), dict["uint32"].GetU32())
 		assert.Equal(t, model.ObjectCode(model.Uint32ObjectCode), dict["uint32"].GetType())
 
-		assert.Equal(t, 2, dict["uint64"].GetU64())
+		assert.Equal(t, uint64(2), dict["uint64"].GetU64())
 		assert.Equal(t, model.ObjectCode(model.Uint64ObjectCode), dict["uint64"].GetType())
 	})
 }

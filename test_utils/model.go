@@ -17,12 +17,16 @@ func NewTestFactory() model.ModelFactory {
 		crypto.NewEd25519Sha256Cryptor(),
 		command.NewCommandExecutor(),
 		command.NewCommandValidator(),
-		query.NewQueryValidator(),
+		query.NewQueryVerifier(),
 	)
 }
 
 func RandomStr() string {
 	return strconv.FormatUint(rand.Uint64(), 36)
+}
+
+func RandomAccountId() string {
+	return RandomStr() + "@" + RandomStr()
 }
 
 func RandomByte() []byte {
@@ -38,7 +42,7 @@ func RandomInvalidSig() model.Signature {
 func RandomTx() model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
 		CreatedTime(rand.Int63()).
-		CreateAccount(RandomStr(), RandomStr()).
+		CreateAccount(RandomAccountId(), RandomAccountId(), []model.PublicKey{}, 1).
 		Build()
 	return tx
 }
@@ -80,12 +84,13 @@ func RandomTxs() []model.Transaction {
 }
 
 func RandomAccount() model.Account {
-	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int63())
+	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
+
 }
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
-	return NewTestFactory().NewPeer(RandomStr(), pub)
+	return NewTestFactory().NewPeer(RandomStr(), RandomStr(), pub)
 }
 
 func RandomBlock() model.Block {
@@ -111,8 +116,21 @@ func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []mod
 func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
 	q := NewTestFactory().NewQueryBuilder().
 		AuthorizerId(authorizer.AccountId).
-		TargetId(target).
+		FromId(model.MustAddress(target).AccountId()).
 		RequestCode(model.AccountObjectCode).
+		Build()
+	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
+	return q
+}
+
+func GetAccountListQuery(t *testing.T, authorizer *AccountWithPri, from string, key string, order model.OrderCode, limit int32) model.Query {
+	q := NewTestFactory().NewQueryBuilder().
+		AuthorizerId(authorizer.AccountId).
+		FromId(from).
+		Select("*").
+		RequestCode(model.ListObjectCode).
+		OrderBy(key, order).
+		Limit(limit).
 		Build()
 	require.NoError(t, q.Sign(authorizer.Pubkey, authorizer.Prikey))
 	return q
@@ -120,7 +138,7 @@ func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) mo
 
 func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
 	tx := NewTestFactory().NewTxBuilder().
-		CreateAccount(authorizer.AccountId, target).
+		CreateAccount(authorizer.AccountId, target, []model.PublicKey{}, 0).
 		Build()
 	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))
 	return tx

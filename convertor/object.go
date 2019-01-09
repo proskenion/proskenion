@@ -133,6 +133,13 @@ func (o *Object) GetDict() map[string]model.Object {
 	return o.modelObjectDictFromProtoObjectDict(o.Object.GetDict())
 }
 
+func (o *Object) GetStorage() model.Storage {
+	if o.Object == nil {
+		return nil
+	}
+	return &Storage{o.cryptor, o.Object.GetStorage()}
+}
+
 func (o *Object) Marshal() ([]byte, error) {
 	return proto.Marshal(o.Object)
 }
@@ -142,5 +149,8 @@ func (o *Object) Unmarshal(pb []byte) error {
 }
 
 func (o *Object) Hash() model.Hash {
+	if o.Object == nil {
+		return nil
+	}
 	return o.cryptor.Hash(o)
 }

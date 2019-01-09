@@ -15,6 +15,7 @@ import (
 	"github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
@@ -47,13 +48,14 @@ func main() {
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor()
 	cmdValidator := command.NewCommandValidator()
-	qValidator := query.NewQueryValidator()
-	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qValidator)
-
+	qVerifyier := query.NewQueryVerifier()
+	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifyier)
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
+
 	queue := repository.NewProposalTxQueueOnMemory(conf)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
+	qv := query.NewQueryValidator(rp, fc, conf)
 
 	commitChan := make(chan interface{})
 	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
@@ -68,8 +70,7 @@ func main() {
 	genesisTxList := func() core.TxList {
 		txList := repository.NewTxList(cryptor)
 		txList.Push(fc.NewTxBuilder().
-			CreateAccount("root", "root@com").
-			AddPublicKey("root", "root@com", pub).
+			CreateAccount("root", "root@com", []model.PublicKey{pub}, 1).
 			Build())
 		return txList
 	}
@@ -82,7 +83,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	api := gate.NewAPIGate(queue, qp, logger)
+	api := gate.NewAPIGate(queue, qp, qv, logger)
 	s := grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),

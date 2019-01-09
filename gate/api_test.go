@@ -22,7 +22,8 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
-	api := NewAPIGate(queue, qp, logger)
+	qv := query.NewQueryValidator(rp, fc, NewTestConfig())
+	api := NewAPIGate(queue, qp, qv, logger)
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
 
 	// genesis Commit
@@ -89,12 +90,12 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		{
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			core.ErrQueryProcessorNotSignedAuthorizer,
+			core.ErrAPIGateQueryValidateError,
 		},
 		{
 			GetAccountQuery(t, &AccountWithPri{"auth@com", acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			core.ErrQueryProcessorNotExistAuthoirizer,
+			core.ErrAPIGateQueryValidateError,
 		},
 	} {
 		res, err := api.Read(q.query)
@@ -102,9 +103,9 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 			assert.EqualError(t, errors.Cause(err), q.err.Error())
 		} else {
 			require.NoError(t, err)
-			assert.Equal(t, q.query.GetPayload().GetTargetId(), res.GetPayload().GetAccount().GetAccountId())
-			assert.Equal(t, q.pubkeys, res.GetPayload().GetAccount().GetPublicKeys())
-			assert.Equal(t, int64(0), res.GetPayload().GetAccount().GetBalance())
+			assert.Equal(t, model.MustAddress(q.query.GetPayload().GetFromId()).Account(), res.GetObject().GetAccount().GetAccountName())
+			assert.Equal(t, q.pubkeys, res.GetObject().GetAccount().GetPublicKeys())
+			assert.Equal(t, int64(0), res.GetObject().GetAccount().GetBalance())
 		}
 	}
 }

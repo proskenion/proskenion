@@ -5,6 +5,11 @@ import (
 	. "github.com/proskenion/proskenion/core/model"
 )
 
+const (
+	AccountStorageName = "account"
+	PeerStorageName    = "peer"
+)
+
 var (
 	ErrMerklePatriciaTreeNotSearchKey = errors.Errorf("Failed MerklePatriciaTree can not search key")
 	ErrMerklePatriciaTreeNotFoundKey  = errors.Errorf("Failed MerklePatriciaTree Not Found key")

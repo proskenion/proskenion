@@ -29,5 +29,4 @@ func BytesListFromPublicKeys(keys []PublicKey) [][]byte {
 		ret[i] = key
 	}
 	return ret
-
 }

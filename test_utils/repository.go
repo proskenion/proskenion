@@ -95,7 +95,7 @@ func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (m
 
 	for txList.Size() < 100 {
 		tx := NewTestFactory().NewTxBuilder().
-			CreateAccount("authorizer@com", RandomStr()+"@com").
+			CreateAccount("authorizer@com", RandomStr()+"@com", []model.PublicKey{}, 0).
 			CreatedTime(RandomNow()).Build()
 		// tx を構築
 		for _, cmd := range tx.GetPayload().GetCommands() {

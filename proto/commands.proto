@@ -3,7 +3,6 @@ package proskenion;
 
 
 import "objects.proto";
-import "storage.proto";
 
 /**
  * Command
@@ -24,6 +23,7 @@ message Command {
         AddObject addObject = 12;
         TransferObject transferObject = 13;
         AddPeer addPeer = 14;
+        Consign consign = 15;
     }
 }
 
@@ -118,4 +118,11 @@ message TransferObject {
 message AddPeer {
     string address = 1;
     bytes publicKey = 2;
+}
+
+/**
+ * Consign Command は Account と Peer を紐付ける
+ **/
+message Consign {
+    string peerId = 1;
 }

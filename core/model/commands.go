@@ -16,6 +16,7 @@ type Command interface {
 	GetAddObject() AddObject
 	GetTransferObject() TransferObject
 	GetAddPeer() AddPeer
+	GetConsign() Consign
 
 	Execute(ObjectFinder) error
 	Validate(ObjectFinder) error
@@ -26,18 +27,21 @@ type TransferBalance interface {
 	GetBalance() int64
 }
 
-type CreateAccount interface{}
+type CreateAccount interface {
+	GetPublicKeys() []PublicKey
+	GetQuorum() int32
+}
 
 type AddBalance interface {
 	GetBalance() int64
 }
 
 type AddPublicKeys interface {
-	GetPublicKeys() [][]byte
+	GetPublicKeys() []PublicKey
 }
 
 type RemovePublicKeys interface {
-	GetPublicKeys() [][]byte
+	GetPublicKeys() []PublicKey
 }
 
 type SetQuroum interface {
@@ -52,18 +56,26 @@ type CreateStorage interface {
 }
 
 type UpdateObject interface {
+	GetKey() string
 	GetObject() Object
 }
 
 type AddObject interface {
+	GetKey() string
 	GetObject() Object
 }
 
 type TransferObject interface {
+	GetKey() string
 	GetDestAccountId() string
+	GetObject() Object
 }
 
 type AddPeer interface {
 	GetAddress() string
 	GetPublicKey() []byte
+}
+
+type Consign interface {
+	GetPeerId() string
 }

@@ -16,6 +16,8 @@ enum ObjectCode {
     PeerObjectCode = 11;
     ListObjectCode = 12;
     DictObjectCode = 13;
+    StorageObjectCode = 14;
+    MegaStorageObjectCode = 15;
 }
 
 message Address {
@@ -31,8 +33,10 @@ message Account {
     string accountId = 1;
     string accountName = 2;
     repeated bytes publicKeys = 3;
-    int64 balance = 4;
-    string delegatePeerId = 5;
+    int32 quorum = 4;
+    int64 balance = 5;
+    string delegatePeerId = 6;
+
 }
 
 message Peer {
@@ -46,7 +50,26 @@ message ObjectList {
 }
 
 message ObjectDict {
-    map<string, Object> dict = 2;
+    map<string, Object> dict = 1;
+}
+
+message Storage {
+    map<string, Object> object = 1;
+}
+
+message MegaStorage {
+    map<string, Object> meta = 1;
+    // MerkleTree で管理
+    bytes megaBinaryHash = 2;
+}
+
+// 参考 : https://triple-underscore.github.io/RFC2616-ja.html#section-3.6.1
+message MegaBinaryChunk {
+    // 全体
+    int64 chunkSize = 1;
+    // どこから始まるか
+    int64 lastChunk = 2;
+    bytes data = 3;
 }
 
 message Object {
@@ -65,5 +88,7 @@ message Object {
         Peer peer = 12;
         ObjectList list = 13;
         ObjectDict dict = 14;
+        Storage storage = 15;
+        MegaStorage megaStorage = 16;
     }
 }

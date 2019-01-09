@@ -24,47 +24,52 @@ func (c *CommandExecutor) TransferBalance(wsv model.ObjectFinder, cmd model.Comm
 	transfer := cmd.GetTransferBalance()
 	srcAccount := c.factory.NewEmptyAccount()
 	destAccount := c.factory.NewEmptyAccount()
-	if err := wsv.Query(model.MustAddress(cmd.GetTargetId()), srcAccount); err != nil {
+	srcId := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	destId := model.MustAddress(model.MustAddress(cmd.GetTransferBalance().GetDestAccountId()).AccountId())
+	if err := wsv.Query(srcId, srcAccount); err != nil {
 		return errors.Wrap(core.ErrCommandExecutorTransferBalanceNotFoundSrcAccountId, err.Error())
 	}
-	if err := wsv.Query(model.MustAddress(transfer.GetDestAccountId()), destAccount); err != nil {
+	if err := wsv.Query(destId, destAccount); err != nil {
 		return errors.Wrap(core.ErrCommandExecutorTransferBalanceNotFoundDestAccountId, err.Error())
 	}
 	if srcAccount.GetBalance()-transfer.GetBalance() < 0 {
 		return errors.Wrap(core.ErrCommandExecutorTransferBalanceNotEnoughSrcAccountBalance,
 			fmt.Errorf("srcAccount Amount: %d, transfer Acmount: %d", srcAccount.GetBalance(), transfer.GetBalance()).Error())
 	}
-	newSrcAccount := c.factory.NewAccount(
-		srcAccount.GetAccountId(),
-		srcAccount.GetAccountName(),
-		srcAccount.GetPublicKeys(),
-		srcAccount.GetBalance()-transfer.GetBalance(),
-	)
-	newDestAccount := c.factory.NewAccount(
-		destAccount.GetAccountId(),
-		destAccount.GetAccountName(),
-		destAccount.GetPublicKeys(),
-		destAccount.GetBalance()+transfer.GetBalance(),
-	)
-	if err := wsv.Append(model.MustAddress(newSrcAccount.GetAccountId()), newSrcAccount); err != nil {
+	newSrcAccount := c.factory.NewAccountBuilder().
+		From(srcAccount).
+		Balance(srcAccount.GetBalance() - transfer.GetBalance()).
+		Build()
+	newDestAccount := c.factory.NewAccountBuilder().
+		From(destAccount).
+		Balance(destAccount.GetBalance() + transfer.GetBalance()).
+		Build()
+	if err := wsv.Append(srcId, newSrcAccount); err != nil {
 		return err
 	}
-	if err := wsv.Append(model.MustAddress(newDestAccount.GetAccountId()), newDestAccount); err != nil {
+	if err := wsv.Append(destId, newDestAccount); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
-	newAccount := c.factory.NewAccount(cmd.GetTargetId(), cmd.GetTargetId(), make([]model.PublicKey, 0), 0)
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	newAccount := c.factory.NewAccountBuilder().
+		AccountId(id.Account() + "@" + id.Domain()).
+		AccountName(id.Account()).
+		PublicKeys(cmd.GetCreateAccount().GetPublicKeys()).
+		Quorum(cmd.GetCreateAccount().GetQuorum()).
+		Build()
+
 	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(model.MustAddress(cmd.GetTargetId()), ac); err == nil {
+	if err := wsv.Query(id, ac); err == nil {
 		if ac.GetAccountId() == cmd.GetTargetId() {
 			return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
-				fmt.Errorf("already exist accountId : %s", cmd.GetTargetId()).Error())
+				fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
 		}
 	}
-	if err := wsv.Append(model.MustAddress(cmd.GetTargetId()), newAccount); err != nil {
+	if err := wsv.Append(id, newAccount); err != nil {
 		return err
 	}
 	return nil
@@ -73,19 +78,15 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 func (c *CommandExecutor) AddBalance(wsv model.ObjectFinder, cmd model.Command) error {
 	aa := cmd.GetAddBalance()
 	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(model.MustAddress(cmd.GetTargetId()), ac); err != nil {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	if err := wsv.Query(id, ac); err != nil {
 		return errors.Wrapf(core.ErrCommandExecutorAddBalanceNotExistAccount, err.Error())
 	}
-	if ac.GetAccountId() != cmd.GetTargetId() {
-		return core.ErrCommandExecutorAddBalanceNotExistAccount
-	}
-	newAc := c.factory.NewAccount(
-		ac.GetAccountId(),
-		ac.GetAccountName(),
-		ac.GetPublicKeys(),
-		ac.GetBalance()+aa.GetBalance(),
-	)
-	if err := wsv.Append(model.MustAddress(newAc.GetAccountId()), newAc); err != nil {
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		Balance(ac.GetBalance() + aa.GetBalance()).
+		Build()
+	if err := wsv.Append(id, newAc); err != nil {
 		return err
 	}
 	return nil
@@ -103,23 +104,183 @@ func containsPublicKey(keys []model.PublicKey, key model.PublicKey) bool {
 func (c *CommandExecutor) AddPublicKeys(wsv model.ObjectFinder, cmd model.Command) error {
 	ap := cmd.GetAddPublicKeys()
 	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(model.MustAddress(cmd.GetTargetId()), ac); err != nil {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	if err := wsv.Query(id, ac); err != nil {
 		return errors.Wrapf(core.ErrCommandExecutorAddPublicKeyNotExistAccount, err.Error())
-	}
-	if ac.GetAccountId() != cmd.GetTargetId() {
-		return core.ErrCommandExecutorAddPublicKeyNotExistAccount
 	}
 	if containsPublicKey(ac.GetPublicKeys(), ap.GetPublicKeys()[0]) {
 		return errors.Wrapf(core.ErrCommandExecutorAddPublicKeyDuplicatePubkey,
 			"duplicate key : %x", ap.GetPublicKeys())
 	}
-	newAc := c.factory.NewAccount(
-		ac.GetAccountId(),
-		ac.GetAccountName(),
-		append(ac.GetPublicKeys(), ap.GetPublicKeys()[0]),
-		ac.GetBalance(),
-	)
-	if err := wsv.Append(model.MustAddress(newAc.GetAccountId()), newAc); err != nil {
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		PublicKeys(append(ac.GetPublicKeys(), ap.GetPublicKeys()[0])).
+		Build()
+	if err := wsv.Append(id, newAc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) DefineStorage(wsv model.ObjectFinder, cmd model.Command) error {
+	ds := cmd.GetDefineStorage()
+	id := model.MustAddress(cmd.GetTargetId())
+
+	newStorage := c.factory.NewStorageBuilder().
+		From(ds.GetStorage()).
+		Build()
+	if err := wsv.Append(id, newStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) CreateStorage(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(cmd.GetTargetId())
+	mtSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(model.MustAddress("/"+id.Storage()), mtSt); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorCreateStorageNotDefinedStorage, err.Error())
+	}
+	if err := wsv.Append(id, mtSt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) UpdateObject(wsv model.ObjectFinder, cmd model.Command) error {
+	uo := cmd.GetUpdateObject()
+	id := model.MustAddress(cmd.GetTargetId())
+	mtSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(id, mtSt); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorUpdateObjectNotExistWallet, err.Error())
+	}
+	newSt := c.factory.NewStorageBuilder().
+		From(mtSt).
+		Set(uo.GetKey(), uo.GetObject()).
+		Build()
+	if err := wsv.Append(id, newSt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) AddObject(wsv model.ObjectFinder, cmd model.Command) error {
+	ao := cmd.GetAddObject()
+	id := model.MustAddress(cmd.GetTargetId())
+	mtSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(id, mtSt); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorAddObjectNotExistWallet, err.Error())
+	}
+	if o, ok := mtSt.GetObject()[ao.GetKey()]; ok {
+		var newSt model.Storage
+		switch o.GetType() {
+		case model.ListObjectCode:
+			objectList := o.GetList()
+			if objectList == nil {
+				objectList = make([]model.Object, 0, 1)
+			}
+			objectList = append(objectList, ao.GetObject())
+
+			newSt = c.factory.NewStorageBuilder().
+				From(mtSt).
+				List(ao.GetKey(), objectList).
+				Build()
+		case model.DictObjectCode:
+			return errors.Errorf("Failed AddObject UnImplement")
+		default:
+			return errors.Errorf("Failed AddObject type is not dict or list key: %s", ao.GetKey())
+		}
+		if err := wsv.Append(id, newSt); err != nil {
+			return err
+		}
+	} else {
+		return errors.Errorf("Failed AddObject is not key: %s", ao.GetKey())
+	}
+	return nil
+}
+
+func (c *CommandExecutor) TransferObject(wsv model.ObjectFinder, cmd model.Command) error {
+	to := cmd.GetTransferObject()
+	srcId := model.MustAddress(cmd.GetTargetId())
+	destId := model.MustAddress(to.GetDestAccountId())
+	srcSt := c.factory.NewEmptyStorage()
+	destSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(srcId, srcSt); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorTransferObjectNotExistSrcWallet, err.Error())
+	}
+	if err := wsv.Query(destId, destSt); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorTransferObjectNotExistDestWallet, err.Error())
+	}
+	srco, ok1 := srcSt.GetObject()[to.GetKey()]
+	desto, ok2 := destSt.GetObject()[to.GetKey()]
+	if !ok1 || !ok2 {
+		return errors.Errorf("Failed TransferObject is not key: %s", to.GetKey())
+	}
+
+	if srco.GetType() == model.ListObjectCode &&
+		desto.GetType() == model.ListObjectCode {
+		srcList := srco.GetList()
+		destList := desto.GetList()
+
+		if destList == nil {
+			destList = make([]model.Object, 0, 1)
+		}
+		f := false
+		for i, o := range srcList {
+			if bytes.Equal(o.Hash(), to.GetObject().Hash()) {
+				destList = append(destList, to.GetObject())
+				srcList = append(srcList[0:i], srcList[i+1:]...)
+				f = true
+			}
+		}
+		if !f {
+			return errors.Errorf("Failed TranferObject is not found object: %x", to.GetObject().Hash())
+		}
+
+		newSrcSt := c.factory.NewStorageBuilder().
+			From(srcSt).
+			List(to.GetKey(), srcList).
+			Build()
+		newDestSt := c.factory.NewStorageBuilder().
+			From(destSt).
+			List(to.GetKey(), destList).
+			Build()
+
+		if err := wsv.Append(srcId, newSrcSt); err != nil {
+			return err
+		}
+		if err := wsv.Append(destId, newDestSt); err != nil {
+			return err
+		}
+	} else {
+		return errors.Errorf("Failed TranferObject type is not dict or list key: %s", to.GetKey())
+	}
+	return nil
+}
+
+func (c *CommandExecutor) AddPeer(wsv model.ObjectFinder, cmd model.Command) error {
+	ap := cmd.GetAddPeer()
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).PeerId())
+	newPeer := c.factory.NewPeer(id.Account()+"@"+id.Domain(), ap.GetAddress(), ap.GetPublicKey())
+
+	if err := wsv.Append(id, newPeer); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) Consign(wsv model.ObjectFinder, cmd model.Command) error {
+	cc := cmd.GetConsign()
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	ac := c.factory.NewEmptyAccount()
+	if err := wsv.Query(id, ac); err != nil {
+		return errors.Wrap(core.ErrCommandExecutorConsignNotFoundAccount, err.Error())
+	}
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		DelegatePeerId(cc.GetPeerId()).
+		Build()
+	if err := wsv.Append(id, newAc); err != nil {
 		return err
 	}
 	return nil

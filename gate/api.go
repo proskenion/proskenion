@@ -12,10 +12,11 @@ type APIGate struct {
 	queue  core.ProposalTxQueue
 	logger log15.Logger
 	qp     core.QueryProcessor
+	qv     core.QueryValidator
 }
 
-func NewAPIGate(queue core.ProposalTxQueue, qp core.QueryProcessor, logger log15.Logger) core.APIGate {
-	return &APIGate{queue, logger, qp}
+func NewAPIGate(queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.APIGate {
+	return &APIGate{queue, logger, qp, qv}
 }
 
 func (a *APIGate) Write(tx model.Transaction) error {
@@ -35,7 +36,7 @@ func (a *APIGate) Read(query model.Query) (model.QueryResponse, error) {
 	if err := query.Verify(); err != nil {
 		return nil, errors.Wrap(core.ErrAPIGateQueryVerifyError, err.Error())
 	}
-	if err := query.Validate(); err != nil {
+	if err := a.qv.Validate(query); err != nil {
 		return nil, errors.Wrap(core.ErrAPIGateQueryValidateError, err.Error())
 	}
 	res, err := a.qp.Query(query)

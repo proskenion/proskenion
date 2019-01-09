@@ -1,7 +1,7 @@
 package convertor
 
 import (
-	"github.com/golang/protobuf/proto"
+	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
@@ -10,6 +10,22 @@ import (
 type Storage struct {
 	cryptor core.Cryptor
 	*proskenion.Storage
+}
+
+func ProslObjectMapsFromObjectMaps(objects map[string]model.Object) map[string]*proskenion.Object {
+	ret := make(map[string]*proskenion.Object)
+	for key, value := range objects {
+		ret[key] = value.(*Object).Object
+	}
+	return ret
+}
+
+func ProslObjectListFromObjectList(objects []model.Object) []*proskenion.Object {
+	ret := make([]*proskenion.Object, 0)
+	for _, value := range objects {
+		ret = append(ret, value.(*Object).Object)
+	}
+	return ret
 }
 
 func (s *Storage) GetObject() map[string]model.Object {

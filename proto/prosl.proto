@@ -105,12 +105,13 @@ message QueryOperator {
         string key = 1;
         Order order = 2;
     }
-    string select = 1;
-    ObjectCode type = 2;
-    string from = 3;
-    ConditionalFormula where = 4;
-    OrderBy orderBy = 5;
-    int32 limit = 6;
+    string authorizerId = 1;
+    string select = 2;
+    ObjectCode type = 3;
+    string from = 4;
+    ConditionalFormula where = 5;
+    OrderBy orderBy = 6;
+    int32 limit = 7;
 }
 
 message CommandOperator {

@@ -14,6 +14,7 @@ import (
 	"github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
@@ -43,13 +44,14 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor()
 	cmdValidator := command.NewCommandValidator()
-	qValidator := query.NewQueryValidator()
-	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qValidator)
+	qVerifier := query.NewQueryVerifier()
+	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
+	qv := query.NewQueryValidator(rp, fc, conf)
 
 	commitChan := make(chan interface{})
 	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
@@ -64,9 +66,8 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	genesisTxList := func() core.TxList {
 		txList := repository.NewTxList(cryptor)
 		txList.Push(fc.NewTxBuilder().
-			CreateAccount("root", "root@com").
-			AddPublicKey("root", "root@com", conf.Peer.PublicKeyBytes()).
-			CreateAccount("root", "authorizer@com").
+			CreateAccount("root", "root@com", []model.PublicKey{conf.Peer.PublicKeyBytes()}, 1).
+			CreateAccount("root", "authorizer@com", []model.PublicKey{}, 0).
 			Build())
 		return txList
 	}
@@ -77,7 +78,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
 	require.NoError(t, err)
 
-	api := gate.NewAPIGate(queue, qp, logger)
+	api := gate.NewAPIGate(queue, qp, qv, logger)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
 
 	logger.Info("================= Consensus Boot =================")

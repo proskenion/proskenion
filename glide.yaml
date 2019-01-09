@@ -1,6 +1,6 @@
 package: github.com/proskenion/proskenion
 import:
-- package: github.com/golang/protobuf
+- package: github.com/satellitex/protobuf
   subpackages:
   - proto
   - ptypes/empty

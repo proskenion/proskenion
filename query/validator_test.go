@@ -2,57 +2,40 @@ package query_test
 
 import (
 	"github.com/pkg/errors"
-	"github.com/proskenion/proskenion/core/model"
-	"github.com/proskenion/proskenion/query"
+	"github.com/proskenion/proskenion/core"
+	. "github.com/proskenion/proskenion/query"
+	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-// TODO test 不十分
-func TestNewQueryValidator(t *testing.T) {
-	for _, c := range []struct {
-		name         string
-		targetId     string
-		authorizerId string
-		objectCode   model.ObjectCode
-		err          error
-	}{
-		{
-			"case 1",
-			"target@com",
-			"authorizer@com",
-			model.AccountObjectCode,
-			nil,
-		},
-		{
-			"case 2 authorizer not account",
-			"target@com",
-			"authoirizer",
-			model.AccountObjectCode,
-			query.ErrQueryValidateAuthorizerIdNotAccountId,
-		},
-		{
-			"case 3 peer",
-			"peer1:50051",
-			"authorizer@com",
-			model.PeerObjectCode,
-			nil,
-		},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			query := NewTestFactory().NewQueryBuilder().
-				TargetId(c.targetId).
-				AuthorizerId(c.authorizerId).
-				CreatedTime(RandomNow()).
-				RequestCode(c.objectCode).
-				Build()
-			err := query.Validate()
-			if c.err != nil {
-				assert.EqualError(t, errors.Cause(err), c.err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
+// TODO 不十分
+func TestQueryValidator_Query(t *testing.T) {
+	fc := NewTestFactory()
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+
+	// GenesisCommit
+	authorizer := NewAccountWithPri("authorizer@com")
+	genesisCommit(t, rp, authorizer)
+
+	qv := NewQueryValidator(rp, fc, NewTestConfig())
+
+	query := GetAccountQuery(t, authorizer, "target@com")
+	err := qv.Validate(query)
+	require.NoError(t, err)
+
+	q2 := GetAccountQuery(t, authorizer, "target1@com")
+	err = qv.Validate(q2)
+	require.NoError(t, err)
+
+	tmpub, tmpri := RandomKeyPairs()
+	q3 := GetAccountQuery(t, &AccountWithPri{authorizer.AccountId, tmpub, tmpri}, "target@com")
+	err = qv.Validate(q3)
+	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotSignedAuthorizer.Error())
+
+	q4 := GetAccountQuery(t, &AccountWithPri{"authorizer1@com", tmpub, tmpri}, "target@com")
+	err = qv.Validate(q4)
+	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotExistAuthoirizer.Error())
 }
