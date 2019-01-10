@@ -3,7 +3,7 @@
   - query:
       select: peer
       type: Peer
-      from: domain.com#degrader.accounts
+      from: domain.com/peer
       order_by:
         - fav
         - DESC

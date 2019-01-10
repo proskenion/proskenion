@@ -4,7 +4,15 @@ package proskenion;
 import "objects.proto";
 
 enum ErrCode {
-    AnythingErrCode = 0;
+    NoErr = 0;
+    Anything = 1;
+    Internal = 2;
+    Sentence = 3;
+    UnImplemented = 4;
+    Assertation = 5;
+    QueryVerify = 6;
+    QueryValidate = 7;
+    Type = 8;
 }
 
 message Prosl {
@@ -21,8 +29,7 @@ message ProslOperator {
         ErrCatchOperator errOp = 5;
         RequireOperator requireOp = 6;
         AssertOperator assertOp = 7;
-        VerifyOperator verifyOp = 8;
-        ReturnOperator returnOp = 9;
+        ReturnOperator returnOp = 8;
     }
 }
 
@@ -58,10 +65,6 @@ message AssertOperator {
     ConditionalFormula op = 1;
 }
 
-message VerifyOperator {
-    ValueOperator op = 1;
-}
-
 message ReturnOperator {
     ValueOperator op = 1;
 }
@@ -69,6 +72,15 @@ message ReturnOperator {
 message VariableOperator {
     string variableName = 1;
 }
+
+message IsDefinedOperator {
+    string variableName = 1;
+}
+
+message VerifyOperator {
+    ValueOperator op = 1;
+}
+
 
 
 // === ValueOperator ===
@@ -93,6 +105,9 @@ message ValueOperator {
 
         VariableOperator variableOp = 15;
         Object object = 16;
+
+        IsDefinedOperator isDefinedOp = 17;
+        VerifyOperator verifyOp = 18;
     }
 }
 
@@ -105,10 +120,10 @@ message QueryOperator {
         string key = 1;
         Order order = 2;
     }
-    string authorizerId = 1;
+    ValueOperator authorizerId = 1;
     string select = 2;
     ObjectCode type = 3;
-    string from = 4;
+    ValueOperator from = 4;
     ConditionalFormula where = 5;
     OrderBy orderBy = 6;
     int32 limit = 7;
@@ -225,8 +240,4 @@ message LtFormula {
 message LeFormula {
     ValueOperator lop = 1;
     ValueOperator rop = 2;
-}
-
-message IsDefinedFormula {
-    string variableName = 1;
 }

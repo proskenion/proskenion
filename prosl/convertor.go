@@ -54,9 +54,9 @@ func ProslParseErrOperation(op string) error {
 func ProslParseErrCode(code string) proskenion.ErrCode {
 	switch code {
 	case "AnythingErrCode":
-		return proskenion.ErrCode_AnythingErrCode
+		return proskenion.ErrCode_Anything
 	}
-	return proskenion.ErrCode_AnythingErrCode
+	return proskenion.ErrCode_Anything
 }
 
 func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
@@ -109,6 +109,8 @@ func ProslParseObjectCode(code string) (proskenion.ObjectCode, error) {
 		return proskenion.ObjectCode_ListObjectCode, nil
 	case "dict":
 		return proskenion.ObjectCode_DictObjectCode, nil
+	case "storage":
+		return proskenion.ObjectCode_StorageObjectCode, nil
 	}
 	return 0, errors.Wrapf(ErrProslParseUnknownObjectCode, "unknown type : %s", code)
 }
@@ -179,12 +181,6 @@ func ParseProslOperator(yamap map[interface{}]interface{}) (*proskenion.ProslOpe
 				return nil, err
 			}
 			return &proskenion.ProslOperator{Op: &proskenion.ProslOperator_AssertOp{AssertOp: op}}, nil
-		case "verify":
-			op, err := ParseVerifyOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			return &proskenion.ProslOperator{Op: &proskenion.ProslOperator_VerifyOp{VerifyOp: op}}, nil
 		case "return":
 			op, err := ParseReturnOperator(value)
 			if err != nil {
@@ -329,15 +325,6 @@ func ParseAssertOperator(yaml interface{}) (*proskenion.AssertOperator, error) {
 	return ret, nil
 }
 
-func ParseVerifyOperator(yaml interface{}) (*proskenion.VerifyOperator, error) {
-	op, err := ParseValueOperator(yaml)
-	if err != nil {
-		return nil, err
-	}
-	ret := &proskenion.VerifyOperator{Op: op}
-	return ret, nil
-}
-
 func ParseReturnOperator(yaml interface{}) (*proskenion.ReturnOperator, error) {
 	op, err := ParseValueOperator(yaml)
 	if err != nil {
@@ -444,6 +431,18 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{op}}, nil
+			case "is_defined":
+				op, err := ParseIsDefinedOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_IsDefinedOp{op}}, nil
+			case "verify":
+				op, err := ParseVerifyOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VerifyOp{op}}, nil
 			}
 			return nil, ProslParseErrOperation(key.(string))
 		}
@@ -488,11 +487,11 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 		for key, value := range v {
 			switch key {
 			case "authorizer":
-				if s, ok := value.(string); ok {
-					ret.AuthorizerId = s
-				} else {
-					return nil, ProslParseCastError("", value)
+				op, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
 				}
+				ret.AuthorizerId = op
 			case "select":
 				if s, ok := value.(string); ok {
 					ret.Select = s
@@ -512,11 +511,11 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 				}
 				mustFlags |= 2
 			case "from":
-				if s, ok := value.(string); ok {
-					ret.From = s
-				} else {
-					return nil, ProslParseCastError("", value)
+				op, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
 				}
+				ret.From = op
 				mustFlags |= 4
 			case "where":
 				op, err := ParseConditionalFormula(value)
@@ -550,7 +549,7 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 				{fmt.Errorf("Must be type operand")},
 				{fmt.Errorf("Must be from operand")},
 			} {
-				if mustFlags&1 == 1 {
+				if mustFlags&1 == 0 {
 					err = multierr.Append(err, e.err)
 				}
 				mustFlags >>= 1
@@ -856,6 +855,22 @@ func ParseVariableOperator(yaml interface{}) (*proskenion.VariableOperator, erro
 	}
 }
 
+func ParseIsDefinedOperator(yaml interface{}) (*proskenion.IsDefinedOperator, error) {
+	if variableName, ok := yaml.(string); ok {
+		return &proskenion.IsDefinedOperator{VariableName: variableName}, nil
+	}
+	return nil, ProslParseCastError("", yaml)
+}
+
+func ParseVerifyOperator(yaml interface{}) (*proskenion.VerifyOperator, error) {
+	op, err := ParseValueOperator(yaml)
+	if err != nil {
+		return nil, err
+	}
+	ret := &proskenion.VerifyOperator{Op: op}
+	return ret, nil
+}
+
 func ParseConditionalFormula(yaml interface{}) (*proskenion.ConditionalFormula, error) {
 	if yamap, ok := yaml.(map[interface{}]interface{}); ok {
 		if len(yamap) != 1 {
@@ -1059,10 +1074,6 @@ func ParseLeFormula(yaml interface{}) (*proskenion.LeFormula, error) {
 		return &proskenion.LeFormula{Lop: ops[0], Rop: ops[1]}, nil
 	}
 	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
-}
-
-func ParseIsDefinedFormula(variableName string) (*proskenion.IsDefinedFormula, error) {
-	return &proskenion.IsDefinedFormula{VariableName: variableName}, nil
 }
 
 // pattern

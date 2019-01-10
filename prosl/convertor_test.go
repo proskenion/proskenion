@@ -46,7 +46,7 @@ func TestConvertYamlToMap(t *testing.T) {
 
 				assert.Contains(t, querymap, "from")
 				frommap := querymap["from"].(string)
-				assert.Equal(t, frommap, "domain.com#degrader.accounts")
+				assert.Equal(t, frommap, "domain.com/peer")
 
 				assert.Contains(t, querymap, "order_by")
 				ordermap := querymap["order_by"].([]interface{})
@@ -94,7 +94,7 @@ func TestConvertYamlToProbuf(t *testing.T) {
 		{
 			assert.Equal(t, "peer", queryOp.GetSelect())
 			assert.Equal(t, proskenion.ObjectCode_PeerObjectCode, queryOp.GetType())
-			assert.Equal(t, "domain.com#degrader.accounts", queryOp.GetFrom())
+			assert.Equal(t, "domain.com/peer", queryOp.GetFrom().GetObject().GetStr())
 			assert.Equal(t, "fav", queryOp.GetOrderBy().GetKey())
 			assert.Equal(t, proskenion.QueryOperator_DESC, queryOp.GetOrderBy().GetOrder())
 			assert.Equal(t, int32(20), queryOp.GetLimit())

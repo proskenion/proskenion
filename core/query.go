@@ -24,3 +24,9 @@ type QueryValidator interface {
 type QueryVerifier interface {
 	Verify(query model.Query) error
 }
+
+type Querycutor interface {
+	QueryProcessor
+	QueryValidator
+	QueryVerifier
+}
