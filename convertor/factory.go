@@ -534,7 +534,7 @@ func (t *TxBuilder) CreatedTime(time int64) model.TxBuilder {
 	return t
 }
 
-func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) TransferBalance(authorizerId, srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_TransferBalance{
@@ -544,7 +544,7 @@ func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, b
 				},
 			},
 			TargetId:     srcAccountId,
-			AuthorizerId: srcAccountId,
+			AuthorizerId: authorizerId,
 		})
 	return t
 }
@@ -564,7 +564,7 @@ func (t *TxBuilder) CreateAccount(authorizerId string, accountId string, publicK
 	return t
 }
 
-func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) AddBalance(authorizerId string, accountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_AddBalance{
@@ -573,7 +573,7 @@ func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder 
 				},
 			},
 			TargetId:     accountId,
-			AuthorizerId: accountId,
+			AuthorizerId: authorizerId,
 		})
 	return t
 }
@@ -716,6 +716,11 @@ func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string
 			TargetId:     accountId,
 			AuthorizerId: authorizerId,
 		})
+	return t
+}
+
+func (t *TxBuilder) AppendCommand(cmd model.Command) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands, cmd.(*Command).Command)
 	return t
 }
 

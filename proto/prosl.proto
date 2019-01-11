@@ -13,6 +13,8 @@ enum ErrCode {
     QueryVerify = 6;
     QueryValidate = 7;
     Type = 8;
+    NotEnoughArgument = 9;
+    FailedOperate = 10;
 }
 
 message Prosl {
@@ -135,7 +137,7 @@ message CommandOperator {
 }
 
 message TxOperator {
-    repeated CommandOperator commands = 1;
+    repeated ValueOperator commands = 1;
 }
 
 message PlusOperator {

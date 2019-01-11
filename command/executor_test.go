@@ -42,9 +42,9 @@ func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 
 func prePareAddBalance(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 	tx := fc.NewTxBuilder().
-		AddBalance(authorizerId, 1000).
-		AddBalance("account1@com", 100).
-		AddBalance("account2@com", 100).
+		AddBalance(authorizerId, authorizerId, 1000).
+		AddBalance(authorizerId, "account1@com", 100).
+		AddBalance(authorizerId, "account2@com", 100).
 		Build()
 	executeCommands(t, tx, wsv)
 }

@@ -26,6 +26,42 @@ const (
 	StorageObjectCode
 )
 
+func (o ObjectCode) String() string {
+	switch o {
+	case AnythingObjectCode:
+		return "Anything"
+	case BoolObjectCode:
+		return "Bool"
+	case Int32ObjectCode:
+		return "Int32"
+	case Int64ObjectCode:
+		return "Int64"
+	case Uint32ObjectCode:
+		return "Uint32"
+	case Uint64ObjectCode:
+		return "Uint64"
+	case StringObjectCode:
+		return "String"
+	case BytesObjectCode:
+		return "Bytes"
+	case AddressObjectCode:
+		return "Address"
+	case SignatureObjectCode:
+		return "Signature"
+	case AccountObjectCode:
+		return "Account"
+	case PeerObjectCode:
+		return "Peer"
+	case ListObjectCode:
+		return "List"
+	case DictObjectCode:
+		return "Dict"
+	case StorageObjectCode:
+		return "Storage"
+	}
+	return "UnexpectedType"
+}
+
 type Account interface {
 	GetAccountId() string
 	GetAccountName() string

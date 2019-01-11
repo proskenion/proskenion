@@ -3,6 +3,7 @@ package prosl
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 	"go.uber.org/multierr"
 	"gopkg.in/yaml.v2"
@@ -72,10 +73,18 @@ func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
 			Object: &proskenion.Object_I32{int32(v)},
 		}, nil
 	case string:
-		return &proskenion.Object{
-			Type:   proskenion.ObjectCode_StringObjectCode,
-			Object: &proskenion.Object_Str{v},
-		}, nil
+		_, err := model.NewAddress(v)
+		if err != nil {
+			return &proskenion.Object{
+				Type:   proskenion.ObjectCode_StringObjectCode,
+				Object: &proskenion.Object_Str{v},
+			}, nil
+		} else {
+			return &proskenion.Object{
+				Type:   proskenion.ObjectCode_AddressObjectCode,
+				Object: &proskenion.Object_Address{v},
+			}, nil
+		}
 	}
 	return nil, ProslParseUnknownCastError(value)
 }
@@ -592,11 +601,11 @@ func ParseCommandOperator(yaml interface{}) (*proskenion.CommandOperator, error)
 	return nil, ProslParseCastError(make(map[interface{}]interface{}), yaml)
 }
 
-func ParseCommandsOperator(yaml interface{}) ([]*proskenion.CommandOperator, error) {
+func ParseCommandsOperator(yaml interface{}) ([]*proskenion.ValueOperator, error) {
 	if yalist, ok := yaml.([]interface{}); ok {
-		ret := make([]*proskenion.CommandOperator, 0, len(yalist))
+		ret := make([]*proskenion.ValueOperator, 0, len(yalist))
 		for _, value := range yalist {
-			cmd, err := ParseCommandOperator(value)
+			cmd, err := ParseValueOperator(value)
 			if err != nil {
 				return nil, err
 			}
