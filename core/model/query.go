@@ -30,7 +30,7 @@ type QueryPayload interface {
 	GetSelect() string
 	GetRequestCode() ObjectCode
 	GetFromId() string
-	GetWhere() []byte
+	GetWhere() string
 	GetOrderBy() OrderBy
 	GetLimit() int32
 	GetCreatedTime() int64

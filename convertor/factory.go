@@ -4,7 +4,6 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
-	"github.com/satellitex/protobuf/proto"
 )
 
 type ObjectFactory struct {
@@ -750,10 +749,8 @@ func (q *QueryBuilder) FromId(fromId string) model.QueryBuilder {
 	return q
 }
 
-func (q *QueryBuilder) Where(where []byte) model.QueryBuilder {
-	cond := &proskenion.ConditionalFormula{}
-	proto.Unmarshal(where, cond)
-	q.Payload.Where = cond
+func (q *QueryBuilder) Where(where string) model.QueryBuilder {
+	q.Payload.Where = where
 	return q
 }
 

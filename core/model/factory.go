@@ -120,7 +120,7 @@ type QueryBuilder interface {
 	AuthorizerId(string) QueryBuilder
 	Select(string) QueryBuilder
 	FromId(string) QueryBuilder
-	Where([]byte) QueryBuilder
+	Where(string) QueryBuilder
 	OrderBy(key string, order OrderCode) QueryBuilder
 	Limit(int32) QueryBuilder
 	CreatedTime(int64) QueryBuilder

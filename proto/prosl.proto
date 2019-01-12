@@ -126,7 +126,7 @@ message QueryOperator {
     string select = 2;
     ObjectCode type = 3;
     ValueOperator from = 4;
-    ConditionalFormula where = 5;
+    ValueOperator where = 5;
     OrderBy orderBy = 6;
     int32 limit = 7;
 }

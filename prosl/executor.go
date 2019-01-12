@@ -362,15 +362,11 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 	}
 	// where
 	if op.GetWhere() != nil {
-		state = ExecuteProslConditionalFormula(op.GetWhere(), state)
+		state = ExecuteProslValueOperator(op.GetWhere(), state)
 		if state.Err != nil {
 			return state
 		}
-		b, err := state.ReturnObject.Object.Marshal()//TODO CAUTION:::!!!!! has bug
-		if err != nil {
-			return ReturnErrorProslStateValue(state, proskenion.ErrCode_Internal, "where conditional formula marshal error")
-		}
-		builder = builder.Where(b)
+		builder = builder.Where(state.ReturnObject.GetStr())
 	}
 	// order_by
 	if op.GetOrderBy() != nil {

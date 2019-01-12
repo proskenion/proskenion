@@ -527,7 +527,7 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 				ret.From = op
 				mustFlags |= 4
 			case "where":
-				op, err := ParseConditionalFormula(value)
+				op, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err
 				}

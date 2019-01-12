@@ -74,14 +74,6 @@ func (p *QueryPaylaod) GetRequestCode() model.ObjectCode {
 	return model.ObjectCode(p.RequstCode)
 }
 
-func (p *QueryPaylaod) GetWhere() []byte {
-	if p.Query_Payload == nil {
-		return nil
-	}
-	ret, _ := proto.Marshal(p.Where)
-	return ret
-}
-
 func (p *QueryPaylaod) GetOrderBy() model.OrderBy {
 	if p.Query_Payload == nil {
 		return &OrderBy{&proskenion.Query_OrderBy{}}
