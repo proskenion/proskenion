@@ -19,6 +19,100 @@ func (a *Account) GetPublicKeys() []model.PublicKey {
 	return model.PublicKeysFromBytesSlice(a.Account.GetPublicKeys())
 }
 
+func StrObject(str string, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_StringObjectCode,
+			Object: &proskenion.Object_Str{str},
+		},
+	}
+}
+
+func BytesObject(bytes []byte, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_BytesObjectCode,
+			Object: &proskenion.Object_Data{bytes},
+		},
+	}
+}
+
+func Int64Object(a int64, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_Int64ObjectCode,
+			Object: &proskenion.Object_I64{a},
+		},
+	}
+}
+
+func Int32Object(a int32, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_Int32ObjectCode,
+			Object: &proskenion.Object_I32{a},
+		},
+	}
+}
+
+func AddressObject(a string, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_AddressObjectCode,
+			Object: &proskenion.Object_Address{a},
+		},
+	}
+}
+
+func ProsObjectListFromModelObjectList(objects []model.Object) []*proskenion.Object {
+	ret := make([]*proskenion.Object, 0)
+	for _, value := range objects {
+		ret = append(ret, value.(*Object).Object)
+	}
+	return ret
+}
+
+func ListObject(l []model.Object, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_ListObjectCode,
+			Object: &proskenion.Object_List{&proskenion.ObjectList{List: ProsObjectListFromModelObjectList(l)}},
+		},
+	}
+}
+
+func PublicKeysToListObject(keys []model.PublicKey, cryptor core.Cryptor) model.Object {
+	obs := make([]model.Object, 0, len(keys))
+	for _, key := range keys {
+		obs = append(obs, BytesObject(key, cryptor))
+	}
+	return ListObject(obs, cryptor)
+}
+
+func (a *Account) GetFromKey(key string) model.Object {
+	switch key {
+	case "id", "account_id":
+		return AddressObject(a.GetAccountId(), a.cryptor)
+	case "name", "account_name":
+		return StrObject(a.GetAccountName(), a.cryptor)
+	case "keys", "public_keys":
+		return PublicKeysToListObject(a.GetPublicKeys(), a.cryptor)
+	case "balance":
+		return Int64Object(a.GetBalance(), a.cryptor)
+	case "quorum":
+		return Int32Object(a.GetQuorum(), a.cryptor)
+	case "peer_id", "delegate_peer_id", "peer":
+		return AddressObject(a.GetDelegatePeerId(), a.cryptor)
+	}
+	return nil
+}
+
 func (a *Account) Marshal() ([]byte, error) {
 	return proto.Marshal(a.Account)
 }
@@ -44,6 +138,18 @@ func (p *Peer) GetPublicKey() model.PublicKey {
 		return nil
 	}
 	return p.Peer.GetPublicKey()
+}
+
+func (a *Peer) GetFromKey(key string) model.Object {
+	switch key {
+	case "id", "peer_id":
+		return AddressObject(a.GetPeerId(), a.cryptor)
+	case "address", "ip":
+		return StrObject(a.GetAddress(), a.cryptor)
+	case "key", "public_key":
+		return BytesObject(a.GetPublicKey(), a.cryptor)
+	}
+	return nil
 }
 
 func (a *Peer) Marshal() ([]byte, error) {

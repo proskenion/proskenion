@@ -69,6 +69,7 @@ type Account interface {
 	GetBalance() int64
 	GetQuorum() int32
 	GetDelegatePeerId() string
+	GetFromKey(key string) Object
 	Modelor
 }
 
@@ -76,6 +77,7 @@ type Peer interface {
 	GetPeerId() string
 	GetAddress() string
 	GetPublicKey() PublicKey
+	GetFromKey(key string) Object
 	Modelor
 }
 

@@ -42,6 +42,10 @@ func (s *Storage) GetObject() map[string]model.Object {
 	return dict
 }
 
+func (s *Storage) GetFromKey(key string) model.Object {
+	return s.GetObject()[key]
+}
+
 func (s *Storage) Marshal() ([]byte, error) {
 	return proto.Marshal(s.Storage)
 }
