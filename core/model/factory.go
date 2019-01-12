@@ -40,20 +40,20 @@ type ModelFactory interface {
 }
 
 type ObjectBuilder interface {
-	Bool(value bool) ObjectBuilder
-	Int32(value int32) ObjectBuilder
-	Int64(value int64) ObjectBuilder
-	Uint32(value uint32) ObjectBuilder
-	Uint64(value uint64) ObjectBuilder
-	Str(value string) ObjectBuilder
-	Data(value []byte) ObjectBuilder
-	Address(value string) ObjectBuilder
-	Sig(value Signature) ObjectBuilder
-	Account(value Account) ObjectBuilder
-	Peer(value Peer) ObjectBuilder
-	List(value []Object) ObjectBuilder
-	Dict(value map[string]Object) ObjectBuilder
-	Storage(value Storage) ObjectBuilder
+	Bool(value bool) Object
+	Int32(value int32) Object
+	Int64(value int64) Object
+	Uint32(value uint32) Object
+	Uint64(value uint64) Object
+	Str(value string) Object
+	Data(value []byte) Object
+	Address(value string) Object
+	Sig(value Signature) Object
+	Account(value Account) Object
+	Peer(value Peer) Object
+	List(value []Object) Object
+	Dict(value map[string]Object) Object
+	Storage(value Storage) Object
 	Build() Object
 }
 

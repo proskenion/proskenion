@@ -86,7 +86,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 				obs = append(obs, q.selectStorage(storage, query))
 			}
 		}
-		object = q.fc.NewObjectBuilder().List(obs).Build()
+		object = q.fc.NewObjectBuilder().List(obs)
 	}
 	ret := q.fc.NewQueryResponseBuilder().Object(object).Build()
 	if err := q.signedResponse(ret); err != nil {
@@ -124,38 +124,24 @@ func (q *QueryProcessor) storageObjectQuery(qp model.QueryPayload, wsv core.WSV)
 
 func (q *QueryProcessor) selectAccount(ac model.Account, query model.Query) model.Object {
 	builder := q.fc.NewObjectBuilder()
-	switch query.GetPayload().GetSelect() {
-	case "id":
-		return builder.Address(ac.GetAccountId()).Build()
-	case "name":
-		return builder.Str(ac.GetAccountName()).Build()
-	case "keys":
-		objects := make([]model.Object, 0, len(ac.GetPublicKeys()))
-		for _, k := range ac.GetPublicKeys() {
-			objects = append(objects, q.fc.NewObjectBuilder().Data(k).Build())
+	if query.GetPayload().GetSelect() != "*" {
+		ret := ac.GetFromKey(query.GetPayload().GetSelect())
+		if ret != nil {
+			return ret
 		}
-		return builder.List(objects).Build()
-	case "balance":
-		return builder.Int64(ac.GetBalance()).Build()
-	case "quorum":
-		return builder.Int32(ac.GetQuorum()).Build()
-	case "peer":
-		return builder.Address(ac.GetDelegatePeerId()).Build()
 	}
-	return builder.Account(ac).Build()
+	return builder.Account(ac)
 }
 
 func (q *QueryProcessor) selectPeer(peer model.Peer, query model.Query) model.Object {
 	builder := q.fc.NewObjectBuilder()
-	switch query.GetPayload().GetSelect() {
-	case "id":
-		return builder.Address(peer.GetPeerId()).Build()
-	case "address":
-		return builder.Str(peer.GetAddress()).Build()
-	case "key":
-		return builder.Data(peer.GetPublicKey()).Build()
+	if query.GetPayload().GetSelect() != "*" {
+		ret := peer.GetFromKey(query.GetPayload().GetSelect())
+		if ret != nil {
+			return ret
+		}
 	}
-	return builder.Peer(peer).Build()
+	return builder.Peer(peer)
 }
 
 func (q *QueryProcessor) selectStorage(storage model.Storage, query model.Query) model.Object {
@@ -163,7 +149,7 @@ func (q *QueryProcessor) selectStorage(storage model.Storage, query model.Query)
 	if ret, ok := storage.GetObject()[query.GetPayload().GetSelect()]; ok {
 		return ret
 	}
-	return builder.Storage(storage).Build()
+	return builder.Storage(storage)
 }
 
 type AccountUnmarshalerFactory struct {

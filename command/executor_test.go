@@ -550,7 +550,7 @@ func TestCommandExecutor_UpdateObjectStorage(t *testing.T) {
 			authorizerId,
 			"account1@com/land",
 			"address",
-			fc.NewObjectBuilder().Str("1-1-1").Build(),
+			fc.NewObjectBuilder().Str("1-1-1"),
 			nil,
 		},
 		{
@@ -558,7 +558,7 @@ func TestCommandExecutor_UpdateObjectStorage(t *testing.T) {
 			authorizerId,
 			"account2@com/land",
 			"value",
-			fc.NewObjectBuilder().Int64(1000).Build(),
+			fc.NewObjectBuilder().Int64(1000),
 			nil,
 		},
 	} {
@@ -609,8 +609,8 @@ func TestCommandExecutor_AddObjectStorage(t *testing.T) {
 			authorizerId,
 			"account1@com/land",
 			"list",
-			fc.NewObjectBuilder().Str("a-a").Build(),
-			[]model.Object{fc.NewObjectBuilder().Str("a-a").Build()},
+			fc.NewObjectBuilder().Str("a-a"),
+			[]model.Object{fc.NewObjectBuilder().Str("a-a")},
 			nil,
 		},
 		{
@@ -618,10 +618,10 @@ func TestCommandExecutor_AddObjectStorage(t *testing.T) {
 			authorizerId,
 			"account1@com/land",
 			"list",
-			fc.NewObjectBuilder().Str("b-b").Build(),
+			fc.NewObjectBuilder().Str("b-b"),
 			[]model.Object{
-				fc.NewObjectBuilder().Str("a-a").Build(),
-				fc.NewObjectBuilder().Str("b-b").Build(),
+				fc.NewObjectBuilder().Str("a-a"),
+				fc.NewObjectBuilder().Str("b-b"),
 			},
 			nil,
 		},
@@ -647,7 +647,7 @@ func TestCommandExecutor_AddObjectStorage(t *testing.T) {
 				st := fc.NewEmptyStorage()
 				err = wsv.Query(model.MustAddress(c.storageId), st)
 				require.NoError(t, err)
-				assert.Equal(t, fc.NewObjectBuilder().List(c.objects).Build().Hash(),
+				assert.Equal(t, fc.NewObjectBuilder().List(c.objects).Hash(),
 					st.GetObject()[c.key].Hash())
 			}
 		})
@@ -662,11 +662,11 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 
 	executeCommands(t, fc.NewTxBuilder().
 		AddObject(authorizerId, "account1@com/land",
-			"list", fc.NewObjectBuilder().Str("aa").Build()).
+			"list", fc.NewObjectBuilder().Str("aa")).
 		AddObject(authorizerId, "account1@com/land",
-			"list", fc.NewObjectBuilder().Str("bb").Build()).
+			"list", fc.NewObjectBuilder().Str("bb")).
 		AddObject(authorizerId, "account1@com/land",
-			"list", fc.NewObjectBuilder().Str("cc").Build()).
+			"list", fc.NewObjectBuilder().Str("cc")).
 		Build(), wsv)
 
 	for _, c := range []struct {
@@ -686,12 +686,12 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 			"account1@com/land",
 			"account2@com/land",
 			"list",
-			fc.NewObjectBuilder().Str("bb").Build(),
+			fc.NewObjectBuilder().Str("bb"),
 			[]model.Object{
-				fc.NewObjectBuilder().Str("aa").Build(),
-				fc.NewObjectBuilder().Str("cc").Build(),
+				fc.NewObjectBuilder().Str("aa"),
+				fc.NewObjectBuilder().Str("cc"),
 			},
-			[]model.Object{fc.NewObjectBuilder().Str("bb").Build()},
+			[]model.Object{fc.NewObjectBuilder().Str("bb")},
 			nil,
 		},
 		{
@@ -700,11 +700,11 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 			"account1@com/land",
 			"account2@com/land",
 			"list",
-			fc.NewObjectBuilder().Str("aa").Build(),
-			[]model.Object{fc.NewObjectBuilder().Str("cc").Build()},
+			fc.NewObjectBuilder().Str("aa"),
+			[]model.Object{fc.NewObjectBuilder().Str("cc")},
 			[]model.Object{
-				fc.NewObjectBuilder().Str("bb").Build(),
-				fc.NewObjectBuilder().Str("aa").Build(),
+				fc.NewObjectBuilder().Str("bb"),
+				fc.NewObjectBuilder().Str("aa"),
 			},
 			nil,
 		},
@@ -714,12 +714,12 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 			"account1@com/land",
 			"account2@com/land",
 			"list",
-			fc.NewObjectBuilder().Str("cc").Build(),
+			fc.NewObjectBuilder().Str("cc"),
 			make([]model.Object, 0),
 			[]model.Object{
-				fc.NewObjectBuilder().Str("bb").Build(),
-				fc.NewObjectBuilder().Str("aa").Build(),
-				fc.NewObjectBuilder().Str("cc").Build(),
+				fc.NewObjectBuilder().Str("bb"),
+				fc.NewObjectBuilder().Str("aa"),
+				fc.NewObjectBuilder().Str("cc"),
 			},
 			nil,
 		},
@@ -739,13 +739,13 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 				srcSt := fc.NewEmptyStorage()
 				err = wsv.Query(model.MustAddress(c.storageId), srcSt)
 				require.NoError(t, err)
-				assert.Equal(t, fc.NewObjectBuilder().List(c.srcObs).Build().Hash(),
+				assert.Equal(t, fc.NewObjectBuilder().List(c.srcObs).Hash(),
 					srcSt.GetObject()[c.key].Hash())
 
 				dstSt := fc.NewEmptyStorage()
 				err = wsv.Query(model.MustAddress(c.destId), dstSt)
 				require.NoError(t, err)
-				assert.Equal(t, fc.NewObjectBuilder().List(c.dstObs).Build().Hash(),
+				assert.Equal(t, fc.NewObjectBuilder().List(c.dstObs).Hash(),
 					dstSt.GetObject()[c.key].Hash())
 			}
 		})

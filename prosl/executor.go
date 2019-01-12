@@ -3,6 +3,7 @@ package prosl
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
@@ -68,10 +69,10 @@ func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslSta
 	}
 }
 
-func ReturnValueProslStateValue(state *ProslStateValue, value model.Object) *ProslStateValue {
+func ReturnProslStateValue(state *ProslStateValue, value *ReturnObject) *ProslStateValue {
 	return &ProslStateValue{
 		Variables:    state.Variables,
-		ReturnObject: &ReturnObject{Object: value},
+		ReturnObject: value,
 		St:           AnotherOperator_State,
 		ErrCode:      proskenion.ErrCode_NoErr,
 		Err:          nil,
@@ -79,32 +80,18 @@ func ReturnValueProslStateValue(state *ProslStateValue, value model.Object) *Pro
 		Fc:           state.Fc,
 		Qc:           state.Qc,
 	}
+}
+
+func ReturnValueProslStateValue(state *ProslStateValue, value model.Object) *ProslStateValue {
+	return ReturnProslStateValue(state, &ReturnObject{Object: value})
 }
 
 func ReturnTxProslStateValue(state *ProslStateValue, value model.Transaction) *ProslStateValue {
-	return &ProslStateValue{
-		Variables:    state.Variables,
-		ReturnObject: &ReturnObject{Transaction: value},
-		St:           AnotherOperator_State,
-		ErrCode:      proskenion.ErrCode_NoErr,
-		Err:          nil,
-		Wsv:          state.Wsv,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
-	}
+	return ReturnProslStateValue(state, &ReturnObject{Transaction: value})
 }
 
 func ReturnCmdProslStateValue(state *ProslStateValue, value model.Command) *ProslStateValue {
-	return &ProslStateValue{
-		Variables:    state.Variables,
-		ReturnObject: &ReturnObject{Command: value},
-		St:           AnotherOperator_State,
-		ErrCode:      proskenion.ErrCode_NoErr,
-		Err:          nil,
-		Wsv:          state.Wsv,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
-	}
+	return ReturnProslStateValue(state, &ReturnObject{Command: value})
 }
 
 func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode, message string) *ProslStateValue {
@@ -514,48 +501,94 @@ func ExecuteProslValuedOperator(op *proskenion.ValuedOperator, state *ProslState
 		return state
 	}
 	object := state.ReturnObject.Object
+	if object == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, fmt.Sprintf("expected return Object, but: %#v, %s", state.ReturnObject, op.String()))
+	}
+
+	var ret model.Object
 	switch object.GetType() {
 	case model.StorageObjectCode:
-		ret := object.GetStorage().GetObject()[op.GetKey()]
+		ret = object.GetStorage().GetFromKey(op.GetKey())
 		state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
 		if state.Err != nil {
 			return state
 		}
 	case model.DictObjectCode:
-		ret := object.GetDict()[op.GetKey()]
+		ret = object.GetDict()[op.GetKey()]
 		state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
 		if state.Err != nil {
 			return state
 		}
 	case model.AccountObjectCode:
-		// TODO model.Account has model.Account.Get(key string)
+		ret = object.GetAccount().GetFromKey(op.GetKey())
+		state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
+		if state.Err != nil {
+			return state
+		}
 	case model.PeerObjectCode:
-		// TODO
+		ret = object.GetPeer().GetFromKey(op.GetKey())
+		state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
+		if state.Err != nil {
+			return state
+		}
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented,
 			fmt.Sprintf("unimplemented valued type: %s, %s", object.GetType().String(), op.String()))
 	}
-	return ReturnValueProslStateValue(state, state.ReturnObject.Object)
+	// already asserted ret == nil check
+	return ReturnValueProslStateValue(state, ret)
 }
 
 func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslStateValue) *ProslStateValue {
-	return nil
+	state = ExecuteProslValueOperator(op.GetObject(), state)
+	if state.Err != nil {
+		return state
+	}
+	object := state.ReturnObject.Object
+	if object == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, fmt.Sprintf("expected return Object, but: %#v, %s", state.ReturnObject, op.String()))
+	}
+	if object.GetType() != model.ListObjectCode {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented,
+			fmt.Sprintf("unimplemented indexed type: %s, %s", object.GetType().String(), op.String()))
+	}
+	if len(object.GetList()) <= int(op.GetIndex()) {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_OutOfRange,
+			fmt.Sprintf("list object length is %d, but index is %d, %s", len(object.GetList()), op.GetIndex(), op))
+	}
+
+	ret := object.GetList()[op.GetIndex()]
+	state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
+	if state.Err != nil {
+		return state
+	}
+	return ReturnValueProslStateValue(state, ret)
 }
 
 func ExecuteProslVariableOperator(op *proskenion.VariableOperator, state *ProslStateValue) *ProslStateValue {
-	return nil
+	if ret, ok := state.Variables[op.GetVariableName()]; ok {
+		return ReturnProslStateValue(state, ret)
+	}
+	return ReturnErrorProslStateValue(state, proskenion.ErrCode_Undefined,
+		fmt.Sprintf("undefined variable name: %s, %s", op.GetVariableName(), op.String()))
 }
 
 func ExecuteProslObjectOperator(op *proskenion.Object, state *ProslStateValue) *ProslStateValue {
-	return nil
+	object := state.Fc.NewObjectBuilder().Build()
+	object.(*convertor.Object).Object = op
+	return ReturnValueProslStateValue(state, object)
 }
 
 func ExecuteProslIsDefinedOperator(op *proskenion.IsDefinedOperator, state *ProslStateValue) *ProslStateValue {
-	return nil
+	if _, ok := state.Variables[op.GetVariableName()]; ok {
+		return ReturnValueProslStateValue(state, state.Fc.NewObjectBuilder().Bool(true))
+	}
+	return ReturnValueProslStateValue(state, state.Fc.NewObjectBuilder().Bool(false))
 }
 
 func ExecuteProslVerifyOperator(op *proskenion.VerifyOperator, state *ProslStateValue) *ProslStateValue {
-	return nil
+	// TODO : Signature verifier
+	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
 }
 
 func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) *ProslStateValue {

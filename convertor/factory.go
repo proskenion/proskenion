@@ -105,118 +105,118 @@ type ObjectBuilder struct {
 	*proskenion.Object
 }
 
-func (f *ObjectBuilder) Bool(value bool) model.ObjectBuilder {
+func (f *ObjectBuilder) Bool(value bool) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_BoolObjectCode,
 		Object: &proskenion.Object_Boolean{Boolean: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Int32(value int32) model.ObjectBuilder {
+func (f *ObjectBuilder) Int32(value int32) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Int32ObjectCode,
 		Object: &proskenion.Object_I32{I32: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Int64(value int64) model.ObjectBuilder {
+func (f *ObjectBuilder) Int64(value int64) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Int64ObjectCode,
 		Object: &proskenion.Object_I64{I64: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Uint32(value uint32) model.ObjectBuilder {
+func (f *ObjectBuilder) Uint32(value uint32) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Uint32ObjectCode,
 		Object: &proskenion.Object_U32{U32: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Uint64(value uint64) model.ObjectBuilder {
+func (f *ObjectBuilder) Uint64(value uint64) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Uint64ObjectCode,
 		Object: &proskenion.Object_U64{U64: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Str(value string) model.ObjectBuilder {
+func (f *ObjectBuilder) Str(value string) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_StringObjectCode,
 		Object: &proskenion.Object_Str{Str: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Data(value []byte) model.ObjectBuilder {
+func (f *ObjectBuilder) Data(value []byte) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_BytesObjectCode,
 		Object: &proskenion.Object_Data{Data: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Address(value string) model.ObjectBuilder {
+func (f *ObjectBuilder) Address(value string) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_AddressObjectCode,
 		Object: &proskenion.Object_Address{Address: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Sig(value model.Signature) model.ObjectBuilder {
+func (f *ObjectBuilder) Sig(value model.Signature) model.Object {
 	f.Object = &proskenion.Object{
 		Type: proskenion.ObjectCode_SignatureObjectCode,
 		Object: &proskenion.Object_Sig{Sig: &proskenion.Signature{
 			PublicKey: value.GetPublicKey(),
 			Signature: value.GetSignature()}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Account(value model.Account) model.ObjectBuilder {
+func (f *ObjectBuilder) Account(value model.Account) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_AccountObjectCode,
 		Object: &proskenion.Object_Account{Account: value.(*Account).Account},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Peer(value model.Peer) model.ObjectBuilder {
+func (f *ObjectBuilder) Peer(value model.Peer) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_PeerObjectCode,
 		Object: &proskenion.Object_Peer{Peer: value.(*Peer).Peer},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) List(value []model.Object) model.ObjectBuilder {
+func (f *ObjectBuilder) List(value []model.Object) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_ListObjectCode,
 		Object: &proskenion.Object_List{List: &proskenion.ObjectList{List: ProslObjectListFromObjectList(value)}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Dict(value map[string]model.Object) model.ObjectBuilder {
+func (f *ObjectBuilder) Dict(value map[string]model.Object) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_DictObjectCode,
 		Object: &proskenion.Object_Dict{Dict: &proskenion.ObjectDict{Dict: ProslObjectMapsFromObjectMaps(value)}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Storage(value model.Storage) model.ObjectBuilder {
+func (f *ObjectBuilder) Storage(value model.Storage) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_StorageObjectCode,
 		Object: &proskenion.Object_Storage{Storage: value.(*Storage).Storage},
 	}
-	return f
+	return f.Build()
 }
 
 func (f *ObjectBuilder) Build() model.Object {

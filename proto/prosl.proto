@@ -15,6 +15,9 @@ enum ErrCode {
     Type = 8;
     NotEnoughArgument = 9;
     FailedOperate = 10;
+    UnExpectedReturnValue = 11;
+    OutOfRange = 12;
+    Undefined = 13;
 }
 
 message Prosl {
