@@ -437,7 +437,7 @@ type GetOpser interface {
 	String() string
 }
 
-func ExecutePolynomialOperator(op GetOpser, f func(model.Object, model.Object, model.ModelFactory) model.Object, symbol string, state *ProslStateValue) *ProslStateValue {
+func ExecutePolynomiaValueOperator(op GetOpser, f func(model.Object, model.Object, model.ModelFactory) model.Object, symbol string, state *ProslStateValue) *ProslStateValue {
 	if len(op.GetOps()) < 2 {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_NotEnoughArgument, fmt.Sprintf("%s Operator minimum number of argument is 2, %s", symbol, op.String()))
 	}
@@ -460,39 +460,39 @@ func ExecutePolynomialOperator(op GetOpser, f func(model.Object, model.Object, m
 }
 
 func ExecuteProslPlusOperator(op *proskenion.PlusOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecutePlus, "+", state)
+	return ExecutePolynomiaValueOperator(op, ExecutePlus, "+", state)
 }
 
 func ExecuteProslMinusOperator(op *proskenion.MinusOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteMinus, "-", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteMinus, "-", state)
 }
 
 func ExecuteProslMulOperator(op *proskenion.MultipleOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteMul, "*", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteMul, "*", state)
 }
 
 func ExecuteProslDivOperator(op *proskenion.DivisionOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteDiv, "/", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteDiv, "/", state)
 }
 
 func ExecuteProslModOperator(op *proskenion.ModOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteMod, "%", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteMod, "%", state)
 }
 
 func ExecuteProslOrOperator(op *proskenion.OrOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteOr, "|", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteOr, "or", state)
 }
 
 func ExecuteProslAndOperator(op *proskenion.AndOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteAnd, "&", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteAnd, "and", state)
 }
 
 func ExecuteProslXorOperator(op *proskenion.XorOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteXor, "^", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteXor, "xor", state)
 }
 
 func ExecuteProslConcatOperator(op *proskenion.ConcatOperator, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomialOperator(op, ExecuteConcat, "concat", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteConcat, "concat", state)
 }
 
 func ExecuteProslValuedOperator(op *proskenion.ValuedOperator, state *ProslStateValue) *ProslStateValue {
@@ -616,38 +616,97 @@ func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *Pr
 	return state
 }
 
+func ExecutePolynomialCondOperator(op GetOpser, f func(model.Object, model.Object, model.ModelFactory) model.Object, symbol string, state *ProslStateValue) *ProslStateValue {
+	if len(op.GetOps()) < 2 {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_NotEnoughArgument, fmt.Sprintf("%s Operator minimum number of argument is 2, %s", symbol, op.String()))
+	}
+	state = ExecuteProslValueOperator(op.GetOps()[0], state)
+	if state.Err != nil {
+		return state
+	}
+	pr := state.ReturnObject.Object
+	for _, o := range op.GetOps()[1:] {
+		state = ExecuteProslValueOperator(o, state)
+		if state.Err != nil {
+			return state
+		}
+		ret := f(pr, state.ReturnObject.Object, state.Fc)
+		if ret == nil {
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+		}
+		if !ret.GetBoolean() {
+			return ReturnValueProslStateValue(state, ret)
+		}
+	}
+	return ReturnValueProslStateValue(state, state.Fc.NewObjectBuilder().Bool(true))
+}
+
 func ExecuteProslOrFormula(op *proskenion.OrFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomiaValueOperator(op, ExecuteCondOr, "or", state)
 }
 
 func ExecuteProslAndFormula(op *proskenion.AndFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomiaValueOperator(op, ExecuteCondAnd, "and", state)
 }
 
 func ExecuteProslNotFormula(op *proskenion.NotFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	state = ExecuteProslValueOperator(op.GetOp(), state)
+	if state.Err != nil {
+		return state
+	}
+	ret := ExecuteCondNot(state.ReturnObject.Object, state.Fc)
+	if ret == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+	}
+	return ReturnValueProslStateValue(state, ret)
+}
+
+func ExecuteValueOpeatorsToObjectList(op GetOpser, symbol string, state *ProslStateValue) ([]model.Object, *ProslStateValue) {
+	if len(op.GetOps()) < 2 {
+		return nil, ReturnErrorProslStateValue(state, proskenion.ErrCode_NotEnoughArgument,
+			fmt.Sprintf("%s Operator minimum number of argument is 2, %s", symbol, op.String()))
+	}
+	os := make([]model.Object, 0, len(op.GetOps()))
+	for _, o := range op.GetOps() {
+		state = ExecuteProslValueOperator(o, state)
+		if state.Err != nil {
+			return nil, state
+		}
+		os = append(os, state.ReturnObject.Object)
+	}
+	return os, state
 }
 
 func ExecuteProslEqFormula(op *proskenion.EqFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	os, state := ExecuteValueOpeatorsToObjectList(op, "eq(==)", state)
+	if state.Err != nil {
+		return state
+	}
+	ret := ExecuteCondEq(os, state.Fc)
+	return ReturnValueProslStateValue(state, ret)
 }
 
 func ExecuteProslNeFormula(op *proskenion.NeFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	os, state := ExecuteValueOpeatorsToObjectList(op, "ne(!=)", state)
+	if state.Err != nil {
+		return state
+	}
+	ret := ExecuteCondNe(os, state.Fc)
+	return ReturnValueProslStateValue(state, ret)
 }
 
 func ExecuteProslGtFormula(op *proskenion.GtFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomialCondOperator(op, ExecuteCondGt, "gt(>)", state)
 }
 
 func ExecuteProslGeFormula(op *proskenion.GeFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomialCondOperator(op, ExecuteCondGe, "ge(>=)", state)
 }
 
 func ExecuteProslLtFormula(op *proskenion.LtFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomialCondOperator(op, ExecuteCondLt, "lt(<)", state)
 }
 
 func ExecuteProslLeFormula(op *proskenion.LeFormula, state *ProslStateValue) *ProslStateValue {
-	return nil
+	return ExecutePolynomialCondOperator(op, ExecuteCondLe, "le(<=)", state)
 }

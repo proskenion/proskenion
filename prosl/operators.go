@@ -4,8 +4,9 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 )
 
+// ========================= ValueOp =========================
 func ExecutePlus(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -27,7 +28,7 @@ func ExecutePlus(a model.Object, b model.Object, fc model.ModelFactory) model.Ob
 }
 
 func ExecuteMinus(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -44,7 +45,7 @@ func ExecuteMinus(a model.Object, b model.Object, fc model.ModelFactory) model.O
 	return nil
 }
 func ExecuteMul(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -61,7 +62,7 @@ func ExecuteMul(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 	return nil
 }
 func ExecuteDiv(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -78,7 +79,7 @@ func ExecuteDiv(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 	return nil
 }
 func ExecuteMod(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -95,7 +96,7 @@ func ExecuteMod(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 	return nil
 }
 func ExecuteOr(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -112,7 +113,7 @@ func ExecuteOr(a model.Object, b model.Object, fc model.ModelFactory) model.Obje
 	return nil
 }
 func ExecuteAnd(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -130,7 +131,7 @@ func ExecuteAnd(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 }
 
 func ExecuteXor(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -148,7 +149,7 @@ func ExecuteXor(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 }
 
 func ExecuteConcat(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
@@ -159,4 +160,94 @@ func ExecuteConcat(a model.Object, b model.Object, fc model.ModelFactory) model.
 		return builder.List(append(a.GetList(), b.GetList()...))
 	}
 	return nil
+}
+
+// ========================= Cond =========================
+func ExecuteCondOr(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
+		return nil
+	}
+	builder := fc.NewObjectBuilder()
+	if a.GetType() == model.BoolObjectCode {
+		return builder.Bool(a.GetBoolean() && b.GetBoolean())
+	}
+	return nil
+}
+
+func ExecuteCondAnd(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil || a.GetType() != b.GetType() {
+		return nil
+	}
+	builder := fc.NewObjectBuilder()
+	if a.GetType() == model.BoolObjectCode {
+		return builder.Bool(a.GetBoolean() && b.GetBoolean())
+	}
+	return nil
+}
+
+func ExecuteCondNot(a model.Object, fc model.ModelFactory) model.Object {
+	if a == nil {
+		return nil
+	}
+	builder := fc.NewObjectBuilder()
+	if a.GetType() == model.BoolObjectCode {
+		return builder.Bool(!a.GetBoolean())
+	}
+	return nil
+}
+
+func ExecuteCondEq(os []model.Object, fc model.ModelFactory) model.Object {
+	if len(os) < 2 {
+		return nil
+	}
+	pr := os[0]
+	for _, o := range os[1:] {
+		if !model.ObjectEq(pr, o) {
+			fc.NewObjectBuilder().Bool(false)
+		}
+		pr = o
+	}
+	return fc.NewObjectBuilder().Bool(true)
+}
+
+func ExecuteCondNe(os []model.Object, fc model.ModelFactory) model.Object {
+	if len(os) < 2 {
+		return nil
+	}
+	st := make(map[string]struct{})
+	for _, o := range os {
+		if _, ok := st[string(o.Hash())]; ok {
+			return fc.NewObjectBuilder().Bool(false)
+		}
+		st[string(o.Hash())] = struct{}{}
+	}
+	return fc.NewObjectBuilder().Bool(true)
+}
+
+func ExecuteCondGt(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil {
+		return nil
+	}
+	return fc.NewObjectBuilder().Bool(model.ObjectLess(b, a))
+}
+
+func ExecuteCondGe(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil {
+		return nil
+	}
+	return fc.NewObjectBuilder().Bool(model.ObjectLess(b, a) || model.ObjectEq(b, a))
+}
+
+func ExecuteCondLt(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil {
+		return nil
+	}
+	return fc.NewObjectBuilder().Bool(model.ObjectLess(a, b))
+}
+
+func ExecuteCondLe(a, b model.Object, fc model.ModelFactory) model.Object {
+	if a == nil || b == nil {
+		return nil
+	}
+	return fc.NewObjectBuilder().Bool(model.ObjectLess(a, b) || model.ObjectEq(a, b))
 }

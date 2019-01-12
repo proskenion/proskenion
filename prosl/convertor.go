@@ -947,7 +947,7 @@ func ParseConditionalFormula(yaml interface{}) (*proskenion.ConditionalFormula, 
 	return nil, nil
 }
 
-func ParseOrFormula(yaml interface{}) (*proskenion.OrFormula, error) {
+func ParsePolynomialOperator(yaml interface{}) ([]*proskenion.ValueOperator, error) {
 	if yalist, ok := yaml.([]interface{}); ok {
 		ops := make([]*proskenion.ValueOperator, 0)
 		for _, value := range yalist {
@@ -957,132 +957,79 @@ func ParseOrFormula(yaml interface{}) (*proskenion.OrFormula, error) {
 			}
 			ops = append(ops, op)
 		}
-		return &proskenion.OrFormula{Ops: ops}, nil
+		return ops, nil
 	}
 	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+}
+
+func ParseOrFormula(yaml interface{}) (*proskenion.OrFormula, error) {
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
+	}
+	return &proskenion.OrFormula{Ops: ops}, nil
 }
 
 func ParseAndFormula(yaml interface{}) (*proskenion.AndFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.AndFormula{Ops: ops}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.AndFormula{Ops: ops}, nil
 }
 
 func ParseNotFormula(yaml interface{}) (*proskenion.NotFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		if len(yalist) != 1 {
-			return nil, ProslParseCastError(make([]interface{}, 0), yaml)
-		}
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.NotFormula{Op: ops[0]}, nil
+	op, err := ParseValueOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.NotFormula{Op: op}, nil
 }
 
 func ParseEqFormula(yaml interface{}) (*proskenion.EqFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.EqFormula{Ops: ops}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.EqFormula{Ops: ops}, nil
 }
 
 func ParseNeFormula(yaml interface{}) (*proskenion.NeFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.NeFormula{Lop: ops[0], Rop: ops[1]}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.NeFormula{Ops: ops}, nil
 }
 
 func ParseGtFormula(yaml interface{}) (*proskenion.GtFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.GtFormula{Lop: ops[0], Rop: ops[1]}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.GtFormula{Ops: ops}, nil
 }
-
 func ParseGeFormula(yaml interface{}) (*proskenion.GeFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.GeFormula{Lop: ops[0], Rop: ops[1]}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.GeFormula{Ops: ops}, nil
 }
 
 func ParseLtFormula(yaml interface{}) (*proskenion.LtFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.LtFormula{Lop: ops[0], Rop: ops[1]}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.LtFormula{Ops: ops}, nil
 }
-
 func ParseLeFormula(yaml interface{}) (*proskenion.LeFormula, error) {
-	if yalist, ok := yaml.([]interface{}); ok {
-		ops := make([]*proskenion.ValueOperator, 0)
-		for _, value := range yalist {
-			op, err := ParseValueOperator(value)
-			if err != nil {
-				return nil, err
-			}
-			ops = append(ops, op)
-		}
-		return &proskenion.LeFormula{Lop: ops[0], Rop: ops[1]}, nil
+	ops, err := ParsePolynomialOperator(yaml)
+	if err != nil {
+		return nil, err
 	}
-	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
+	return &proskenion.LeFormula{Ops: ops}, nil
 }
 
 // pattern

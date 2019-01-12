@@ -223,26 +223,21 @@ message EqFormula {
 }
 
 message NeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message GtFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
-}
+    repeated ValueOperator ops = 1;
+    }
 
 message GeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message LtFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message LeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }

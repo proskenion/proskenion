@@ -108,6 +108,15 @@ type Object interface {
 	Modelor
 }
 
+func ObjectEq(a, b Object) bool {
+	if a == nil && b == nil {
+		return true
+	} else if a == nil || b == nil {
+		return false
+	}
+	return bytes.Equal(a.Hash(), b.Hash())
+}
+
 // a < b
 func ObjectLess(a, b Object) bool {
 	switch a.GetType() {
