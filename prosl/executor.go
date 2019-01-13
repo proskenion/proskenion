@@ -51,9 +51,22 @@ type ProslStateValue struct {
 	St           OperatorState
 	ErrCode      proskenion.ErrCode
 	Err          error
-	Wsv          model.ObjectFinder
+	Wsv          core.WSV
 	Fc           model.ModelFactory
 	Qc           core.Querycutor
+}
+
+func InitProslStateValue(wsv core.WSV, fc model.ModelFactory, qc core.Querycutor) *ProslStateValue {
+	return &ProslStateValue{
+		Variables:    make(map[string]*ReturnObject),
+		ReturnObject: nil,
+		St:           AnotherOperator_State,
+		ErrCode:      proskenion.ErrCode_NoErr,
+		Err:          nil,
+		Wsv:          wsv,
+		Fc:           fc,
+		Qc:           qc,
+	}
 }
 
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
