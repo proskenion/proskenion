@@ -1,6 +1,7 @@
 package prosl
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core/model"
@@ -73,6 +74,15 @@ func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
 			Object: &proskenion.Object_I32{int32(v)},
 		}, nil
 	case string:
+		if strings.HasPrefix(v, "0x") {
+			data, err := hex.DecodeString(v[2:])
+			if err == nil {
+				return &proskenion.Object{
+					Type:   proskenion.ObjectCode_BytesObjectCode,
+					Object: &proskenion.Object_Data{data},
+				}, nil
+			}
+		}
 		_, err := model.NewAddress(v)
 		if err != nil {
 			return &proskenion.Object{
@@ -452,9 +462,20 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VerifyOp{op}}, nil
+			default: // another case, all command
+				op, err := ParseCommandOperator(v)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_CmdOp{op}}, nil
 			}
-			return nil, ProslParseErrOperation(key.(string))
 		}
+	} else if _, ok := yaml.([]interface{}); ok { // list op
+		op, err := ParseListOperator(yaml)
+		if err != nil {
+			return nil, err
+		}
+		return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_ListOp{op}}, nil
 	}
 	ob, err := ProslParsePrimitiveObject(yaml)
 	if err != nil {
@@ -575,7 +596,7 @@ func ParseCommandOperator(yaml interface{}) (*proskenion.CommandOperator, error)
 		if len(yamap) != 1 {
 			return nil, ProslParseArgumentError(1, len(yamap))
 		}
-		ret := &proskenion.CommandOperator{}
+		ret := &proskenion.CommandOperator{Params:make(map[string]*proskenion.ValueOperator)}
 		for key, value := range yamap {
 			if ks, ok := key.(string); ok {
 				ret.CommandName = ks
@@ -878,6 +899,21 @@ func ParseVerifyOperator(yaml interface{}) (*proskenion.VerifyOperator, error) {
 	}
 	ret := &proskenion.VerifyOperator{Op: op}
 	return ret, nil
+}
+
+func ParseListOperator(yaml interface{}) (*proskenion.ListOperator, error) {
+	if list, ok := yaml.([]interface{}); ok {
+		vops := make([]*proskenion.ValueOperator, 0, len(list))
+		for _, value := range list {
+			op, err := ParseValueOperator(value)
+			if err != nil {
+				return nil, err
+			}
+			vops = append(vops, op)
+		}
+		return &proskenion.ListOperator{Object: vops}, nil
+	}
+	return nil, ProslParseCastError(make([]interface{}, 0), yaml)
 }
 
 func ParseConditionalFormula(yaml interface{}) (*proskenion.ConditionalFormula, error) {

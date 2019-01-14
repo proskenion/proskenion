@@ -21,7 +21,7 @@ func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecu
 	ex := RandomCommandExecutor()
 
 	dtx := RandomDBATx()
-	wsv, err := repository.NewWSV(dtx, cryptor, nil)
+	wsv, err := repository.NewWSV(dtx, cryptor, fc,nil)
 	require.NoError(t, err)
 	return fc, ex, dtx, wsv
 }

@@ -109,7 +109,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 }
 
 func TestWSV(t *testing.T) {
-	wsv, err := NewWSV(RandomDBATx(), RandomCryptor(), model.Hash(nil))
+	wsv, err := NewWSV(RandomDBATx(), RandomCryptor(), NewTestFactory(), model.Hash(nil))
 	require.NoError(t, err)
 	test_WSV(t, wsv)
 }

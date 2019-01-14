@@ -13,6 +13,10 @@ func ObjectListToPublicKeys(list []model.Object) []model.PublicKey {
 	return ret
 }
 
+func ReturnCmdProslStateValue(state *ProslStateValue, cmd model.Command) *ProslStateValue {
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Command(cmd))
+}
+
 func ExecuteProslCreateAccount(params map[string]*proskenion.ValueOperator, state *ProslStateValue) *ProslStateValue {
 	builder := state.Fc.NewTxBuilder()
 	state = ExecuteProslValueOperator(params["authorizer_id"], state)
@@ -218,7 +222,7 @@ func ExecuteProslUpdateObject(params map[string]*proskenion.ValueOperator, state
 	if state.Err != nil {
 		return state
 	}
-	object := state.ReturnObject.Object
+	object := state.ReturnObject
 
 	return ReturnCmdProslStateValue(state,
 		builder.UpdateObject(authorizerId, targetId, key, object).Build().GetPayload().GetCommands()[0])
@@ -247,7 +251,7 @@ func ExecuteProslAddObject(params map[string]*proskenion.ValueOperator, state *P
 	if state.Err != nil {
 		return state
 	}
-	object := state.ReturnObject.Object
+	object := state.ReturnObject
 
 	return ReturnCmdProslStateValue(state,
 		builder.AddObject(authorizerId, targetId, key, object).Build().GetPayload().GetCommands()[0])
@@ -282,7 +286,7 @@ func ExecuteProslTransferObject(params map[string]*proskenion.ValueOperator, sta
 	if state.Err != nil {
 		return state
 	}
-	object := state.ReturnObject.Object
+	object := state.ReturnObject
 
 	return ReturnCmdProslStateValue(state,
 		builder.TransferObject(authorizerId, targetId, key, destAccountId, object).Build().GetPayload().GetCommands()[0])

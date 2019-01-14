@@ -24,6 +24,9 @@ const (
 	ListObjectCode
 	DictObjectCode
 	StorageObjectCode
+	MegaStorageObjectCode
+	CommandObjectCode
+	TransactionObjectCode
 )
 
 func (o ObjectCode) String() string {
@@ -58,6 +61,12 @@ func (o ObjectCode) String() string {
 		return "Dict"
 	case StorageObjectCode:
 		return "Storage"
+	case MegaStorageObjectCode:
+		return "MegaStorage"
+	case CommandObjectCode:
+		return "Command"
+	case TransactionObjectCode:
+		return "Transaction"
 	}
 	return "UnexpectedType"
 }
@@ -105,6 +114,8 @@ type Object interface {
 	GetList() []Object
 	GetDict() map[string]Object
 	GetStorage() Storage
+	GetCommand() Command
+	GetTransaction() Transaction
 	Modelor
 }
 
@@ -162,8 +173,8 @@ func ObjectLess(a, b Object) bool {
 				return len(a.GetDict()) < len(b.GetDict())
 			}
 		}
-	case StorageObjectCode:
-		return HasherLess(a.GetStorage(), b.GetStorage())
+	default:
+		return HasherLess(a, b)
 	}
 	return true
 }

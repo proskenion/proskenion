@@ -7,7 +7,7 @@ proto:
 .PHONY: build
 build:
 	go build -o ./bin/proskenion main.go
-	go build -o ./bin/keygen keygen.go
+	go build -o ./bin/keygen ./script/keygen.go
 
 .PHONY: build-osx
 build-osx:

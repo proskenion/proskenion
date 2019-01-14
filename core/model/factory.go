@@ -54,6 +54,8 @@ type ObjectBuilder interface {
 	List(value []Object) Object
 	Dict(value map[string]Object) Object
 	Storage(value Storage) Object
+	Command(value Command) Object
+	Transaction(value Transaction) Object
 	Build() Object
 }
 

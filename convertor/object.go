@@ -21,7 +21,7 @@ func (a *Account) GetPublicKeys() []model.PublicKey {
 
 func StrObject(str string, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_StringObjectCode,
 			Object: &proskenion.Object_Str{str},
@@ -31,7 +31,7 @@ func StrObject(str string, cryptor core.Cryptor) model.Object {
 
 func BytesObject(bytes []byte, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_BytesObjectCode,
 			Object: &proskenion.Object_Data{bytes},
@@ -41,7 +41,7 @@ func BytesObject(bytes []byte, cryptor core.Cryptor) model.Object {
 
 func Int64Object(a int64, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_Int64ObjectCode,
 			Object: &proskenion.Object_I64{a},
@@ -51,7 +51,7 @@ func Int64Object(a int64, cryptor core.Cryptor) model.Object {
 
 func Int32Object(a int32, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_Int32ObjectCode,
 			Object: &proskenion.Object_I32{a},
@@ -61,7 +61,7 @@ func Int32Object(a int32, cryptor core.Cryptor) model.Object {
 
 func AddressObject(a string, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_AddressObjectCode,
 			Object: &proskenion.Object_Address{a},
@@ -77,9 +77,9 @@ func ProsObjectListFromModelObjectList(objects []model.Object) []*proskenion.Obj
 	return ret
 }
 
-func ListObject(l []model.Object, cryptor core.Cryptor) model.Object {
+func PrimitiveListObject(l []model.Object, cryptor core.Cryptor) model.Object {
 	return &Object{
-		cryptor,
+		cryptor, nil, nil,
 		&proskenion.Object{
 			Type:   proskenion.ObjectCode_ListObjectCode,
 			Object: &proskenion.Object_List{&proskenion.ObjectList{List: ProsObjectListFromModelObjectList(l)}},
@@ -92,7 +92,7 @@ func PublicKeysToListObject(keys []model.PublicKey, cryptor core.Cryptor) model.
 	for _, key := range keys {
 		obs = append(obs, BytesObject(key, cryptor))
 	}
-	return ListObject(obs, cryptor)
+	return PrimitiveListObject(obs, cryptor)
 }
 
 func (a *Account) GetFromKey(key string) model.Object {
@@ -168,7 +168,9 @@ func (a *Peer) Hash() model.Hash {
 }
 
 type Object struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 	*proskenion.Object
 }
 
@@ -208,6 +210,8 @@ func (o *Object) modelObjectListFromProtoObjectList(objects *proskenion.ObjectLi
 	for i, object := range objects.GetList() {
 		ret[i] = &Object{
 			o.cryptor,
+			o.executor,
+			o.validator,
 			object,
 		}
 	}
@@ -226,6 +230,8 @@ func (o *Object) modelObjectDictFromProtoObjectDict(objects *proskenion.ObjectDi
 	for key, object := range objects.GetDict() {
 		ret[key] = &Object{
 			o.cryptor,
+			o.executor,
+			o.validator,
 			object,
 		}
 	}
@@ -243,7 +249,25 @@ func (o *Object) GetStorage() model.Storage {
 	if o.Object == nil {
 		return nil
 	}
-	return &Storage{o.cryptor, o.Object.GetStorage()}
+	return &Storage{o.cryptor, o.executor, o.validator, o.Object.GetStorage()}
+}
+
+func (o *Object) GetCommand() model.Command {
+	if o.Object == nil {
+		return nil
+	}
+	return &Command{o.Object.GetCommand(),
+		o.executor,
+		o.validator,
+		o.cryptor}
+}
+
+func (o *Object) GetTransaction() model.Transaction {
+	if o.Object == nil {
+		return nil
+	}
+	return &Transaction{o.Object.GetTransaction(),
+		o.cryptor, o.executor, o.validator}
 }
 
 func (o *Object) Marshal() ([]byte, error) {

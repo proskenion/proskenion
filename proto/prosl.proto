@@ -110,9 +110,10 @@ message ValueOperator {
 
         VariableOperator variableOp = 15;
         Object object = 16;
+        ListOperator listOp = 17;
 
-        IsDefinedOperator isDefinedOp = 17;
-        VerifyOperator verifyOp = 18;
+        IsDefinedOperator isDefinedOp = 18;
+        VerifyOperator verifyOp = 19;
     }
 }
 
@@ -189,6 +190,10 @@ message IndexedOperator {
     ValueOperator object = 1;
     ObjectCode type = 2;
     int32 index = 3;
+}
+
+message ListOperator {
+    repeated ValueOperator object = 1;
 }
 
 // === CodntionalFormula ====

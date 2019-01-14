@@ -198,7 +198,7 @@ type RepositoryTx struct {
 }
 
 func (r *RepositoryTx) WSV(hash model.Hash) (core.WSV, error) {
-	return NewWSV(r.tx, r.cryptor, hash)
+	return NewWSV(r.tx, r.cryptor, r.fc, hash)
 }
 
 func (r *RepositoryTx) TxHistory(hash model.Hash) (core.TxHistory, error) {

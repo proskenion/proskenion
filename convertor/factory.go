@@ -7,11 +7,13 @@ import (
 )
 
 type ObjectFactory struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 }
 
-func NewObjectFactory(cryptor core.Cryptor) model.ObjectFactory {
-	return &ObjectFactory{cryptor}
+func NewObjectFactory(cryptor core.Cryptor, executor core.CommandExecutor, validator core.CommandValidator) model.ObjectFactory {
+	return &ObjectFactory{cryptor, executor, validator}
 }
 
 func (f *ObjectFactory) NewEmptySignature() model.Signature {
@@ -76,32 +78,36 @@ func (f *ObjectFactory) NewPeer(peerId string, address string, pubkey model.Publ
 }
 
 func (f *ObjectFactory) NewObjectBuilder() model.ObjectBuilder {
-	return &ObjectBuilder{f.cryptor, &proskenion.Object{}}
+	return &ObjectBuilder{f.cryptor, f.executor, f.validator, &proskenion.Object{}}
 }
 
 func (f *ObjectFactory) NewStorageBuilder() model.StorageBuilder {
 	return &StorageBuilder{
 		f.cryptor,
+		f.executor,
+		f.validator,
 		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
 	}
 }
 
 func (f *ObjectFactory) NewEmptyStorage() model.Storage {
 	return &Storage{
-		f.cryptor,
+		f.cryptor, f.executor,f.validator,
 		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
 	}
 }
 
 func (f *ObjectFactory) NewEmptyObject() model.Object {
 	return &Object{
-		f.cryptor,
+		f.cryptor, f.executor, f.validator,
 		&proskenion.Object{},
 	}
 }
 
 type ObjectBuilder struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 	*proskenion.Object
 }
 
@@ -219,12 +225,30 @@ func (f *ObjectBuilder) Storage(value model.Storage) model.Object {
 	return f.Build()
 }
 
+func (f *ObjectBuilder) Command(value model.Command) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_CommandObjectCode,
+		Object: &proskenion.Object_Command{Command: value.(*Command).Command},
+	}
+	return f.Build()
+}
+
+func (f *ObjectBuilder) Transaction(value model.Transaction) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_TransactionObjectCode,
+		Object: &proskenion.Object_Transaction{Transaction: value.(*Transaction).Transaction},
+	}
+	return f.Build()
+}
+
 func (f *ObjectBuilder) Build() model.Object {
-	return &Object{f.cryptor, f.Object}
+	return &Object{f.cryptor, f.executor, f.validator, f.Object}
 }
 
 type StorageBuilder struct {
 	cryptor core.Cryptor
+	executor core.CommandExecutor
+	validator core.CommandValidator
 	*proskenion.Storage
 }
 
@@ -341,6 +365,8 @@ func (b *StorageBuilder) Set(key string, value model.Object) model.StorageBuilde
 func (b *StorageBuilder) Build() model.Storage {
 	return &Storage{
 		b.cryptor,
+		b.executor,
+		b.validator,
 		b.Storage,
 	}
 }
@@ -411,7 +437,8 @@ func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
 	cmdValidator core.CommandValidator,
 	queryVerifier core.QueryVerifier) model.ModelFactory {
-	factory := &ModelFactory{NewObjectFactory(cryptor), cryptor, executor, cmdValidator, queryVerifier}
+	factory := &ModelFactory{NewObjectFactory(cryptor, executor, cmdValidator),
+		cryptor, executor, cmdValidator, queryVerifier}
 	executor.SetFactory(factory)
 	cmdValidator.SetFactory(factory)
 	return factory

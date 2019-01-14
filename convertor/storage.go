@@ -9,6 +9,8 @@ import (
 
 type Storage struct {
 	cryptor core.Cryptor
+	e       core.CommandExecutor
+	v       core.CommandValidator
 	*proskenion.Storage
 }
 
@@ -35,7 +37,7 @@ func (s *Storage) GetObject() map[string]model.Object {
 	dict := make(map[string]model.Object)
 	for k, v := range s.Storage.GetObject() {
 		dict[k] = &Object{
-			s.cryptor,
+			s.cryptor, s.e, s.v,
 			v,
 		}
 	}

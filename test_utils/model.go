@@ -12,6 +12,11 @@ import (
 	"testing"
 )
 
+type PeerWithPri struct {
+	model.Peer
+	model.PrivateKey
+}
+
 func NewTestFactory() model.ModelFactory {
 	return convertor.NewModelFactory(
 		crypto.NewEd25519Sha256Cryptor(),

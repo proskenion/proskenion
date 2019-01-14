@@ -110,7 +110,7 @@ func (q *QueryResponse) GetObject() model.Object {
 	if q.Object == nil {
 		return &Object{}
 	}
-	return &Object{q.cryptor, q.QueryResponse.GetObject()}
+	return &Object{q.cryptor, nil, nil, q.QueryResponse.GetObject()}
 }
 
 func (q *QueryResponse) GetSignature() model.Signature {

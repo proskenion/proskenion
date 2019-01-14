@@ -433,6 +433,10 @@ func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
 		u64 := fc.NewObjectBuilder().Uint64(2)
 		b := fc.NewObjectBuilder().Bool(true)
 
+		expTx := fc.NewTxBuilder().CreateAccount("authorizer@com", "account@com", nil, 0).Build()
+		cmd := fc.NewObjectBuilder().Command(expTx.GetPayload().GetCommands()[0])
+		tx := fc.NewObjectBuilder().Transaction(expTx)
+
 		storage := fc.NewObjectBuilder().Storage(NewTestFactory().NewStorageBuilder().Int32("int32", 1).Build())
 
 		assert.Equal(t, map[string]model.Object{"key": fc.NewEmptyObject()}, dict.GetDict())
@@ -476,6 +480,13 @@ func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
 
 		assert.Equal(t, true, b.GetBoolean())
 		assert.Equal(t, model.BoolObjectCode, b.GetType())
+
+		assert.Equal(t, model.CommandObjectCode, cmd.GetType())
+		assert.Equal(t, expTx.GetPayload().GetCommands()[0].GetCreateAccount(),
+			cmd.GetCommand().GetCreateAccount())
+
+		assert.Equal(t, model.TransactionObjectCode, tx.GetType())
+		assert.Equal(t, expTx.Hash(), tx.GetTransaction().Hash())
 	})
 }
 
@@ -483,8 +494,8 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 	fc := NewTestFactory()
 	t.Run("case 1 storage builder", func(t *testing.T) {
 		builder := fc.NewStorageBuilder()
-		storage := builder.Dict("dict", map[string]model.Object{"key": fc.NewEmptyObject()}).
-			List("list", []model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}).
+		storage := builder.Dict("dict", map[string]model.Object{"key": fc.NewObjectBuilder().Int32(1)}).
+			List("list", []model.Object{fc.NewObjectBuilder().Int32(1), fc.NewObjectBuilder().Int32(2)}).
 			Account("account", fc.NewEmptyAccount()).
 			Sig("sig", fc.NewEmptySignature()).
 			Address("address", "target@account.com").
@@ -498,10 +509,12 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 			Build()
 
 		dict := storage.GetObject()
-		assert.Equal(t, map[string]model.Object{"key": fc.NewEmptyObject()}, dict["dict"].GetDict())
+		assert.Equal(t, fc.NewObjectBuilder().Int32(1).Hash(), dict["dict"].GetDict()["key"].Hash())
 		assert.Equal(t, model.DictObjectCode, dict["dict"].GetType())
 
-		assert.Equal(t, []model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()}, dict["list"].GetList())
+		for i, o := range []model.Object{fc.NewObjectBuilder().Int32(1), fc.NewObjectBuilder().Int32(2)} {
+			assert.Equal(t, o, dict["list"].GetList()[i])
+		}
 		assert.Equal(t, model.ListObjectCode, dict["list"].GetType())
 
 		assert.Equal(t, fc.NewEmptyAccount(), dict["account"].GetAccount())
