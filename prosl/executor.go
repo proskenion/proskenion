@@ -330,17 +330,15 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 	if state.Err != nil {
 		return state
 	}
-	builder = builder.FromId(state.ReturnObject.GetStr())
+	builder = builder.FromId(state.ReturnObject.GetAddress())
 
-	// optional
-	// authorizerId
-	if op.GetAuthorizerId() != nil {
-		state = ExecuteProslValueOperator(op.GetAuthorizerId(), state)
-		if state.Err != nil {
-			return state
-		}
-		builder = builder.AuthorizerId(state.ReturnObject.GetStr())
+	// authorizer
+	state = ExecuteProslValueOperator(op.GetAuthorizerId(), state)
+	if state.Err != nil {
+		return state
 	}
+	builder = builder.AuthorizerId(state.ReturnObject.GetAddress())
+
 	// where
 	if op.GetWhere() != nil {
 		state = ExecuteProslValueOperator(op.GetWhere(), state)
@@ -362,9 +360,12 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 	if err := state.Qc.Verify(query); err != nil {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_QueryVerify, err.Error())
 	}
-	if err := state.Qc.Validate(query); err != nil {
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_QueryValidate, err.Error())
-	}
+	// WIP : no validate
+	/*
+		if err := state.Qc.Validate(query); err != nil {
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_QueryValidate, err.Error())
+		}
+	*/
 	ret, err := state.Qc.Query(query)
 	if err != nil {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_Internal, err.Error())
@@ -421,9 +422,8 @@ func ExecuteProslCmdOperator(op *proskenion.CommandOperator, state *ProslStateVa
 	case "consign":
 		return ExecuteProslConsign(op.GetParams(), state)
 	default:
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented command : %s", op.GetCommandName()))
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented command : %s, %s", op.GetCommandName(), op.String()))
 	}
-	return ReturnErrorProslStateValue(state, proskenion.ErrCode_Internal, "internal error")
 }
 
 type GetOpser interface {

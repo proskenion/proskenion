@@ -2,7 +2,6 @@ package prosl_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/prosl"
@@ -17,7 +16,7 @@ import (
 
 const genesisRootId = "root@com"
 
-func Initalize() (model.ModelFactory, core.QueryProcessor, core.QueryValidator, core.QueryVerifier) {
+func Initalize() (core.Repository, model.ModelFactory, core.QueryProcessor, core.QueryValidator, core.QueryVerifier) {
 	dba := RandomDBA()
 	cryptor := RandomCryptor()
 	fc := NewTestFactory()
@@ -27,7 +26,7 @@ func Initalize() (model.ModelFactory, core.QueryProcessor, core.QueryValidator, 
 	qp := query.NewQueryProcessor(rp, fc, conf)
 	qv := query.NewQueryValidator(rp, fc, conf)
 	qc := query.NewQueryVerifier()
-	return fc, qp, qv, qc
+	return rp, fc, qp, qv, qc
 }
 
 func NewQuerycutor(qp core.QueryProcessor, qv core.QueryValidator, qc core.QueryVerifier) core.Querycutor {
@@ -94,7 +93,7 @@ func InitializeObjects(t *testing.T) {
 	}
 }
 
-func GenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository) {
 	buf, err := ioutil.ReadFile(filename)
 	require.NoError(t, err)
 
@@ -119,14 +118,41 @@ func GenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue) 
 	}
 	expTx := expB.Build()
 	actualTx := state.ReturnObject.GetTransaction()
-	fmt.Println(actualTx)
 	assert.Equal(t, expTx.Hash(), actualTx.Hash())
+
+	txList := EmptyTxList()
+	require.NoError(t, txList.Push(actualTx))
+	rp.GenesisCommit(txList)
+}
+
+func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+	buf, err := ioutil.ReadFile(filename)
+	require.NoError(t, err)
+
+	prosl, err := ConvertYamlToProtobuf(buf)
+	require.NoError(t, err)
+
+	state := ExecuteProsl(prosl, value)
+	require.NoError(t, state.Err)
+	require.NotNil(t, state.ReturnObject)
+
+	exIds := make([]string, 3)
+	for i, ac := range acs {
+		exIds[2-i] = ac.AccountId
+	}
+	actualList := state.ReturnObject.GetList()
+	for i, id := range exIds {
+		assert.Equal(t, id, actualList[i].GetAccount().GetAccountId())
+	}
 }
 
 func TestExecuteProsl(t *testing.T) {
-	fc, qp, qv, qc := Initalize()
+	rp, fc, qp, qv, qc := Initalize()
 	InitializeObjects(t)
-	GenesisExecuteProsl(t, "./test_yaml/genesis.yaml",
+	testGenesisExecuteProsl(t, "./test_yaml/genesis.yaml",
+		InitProslStateValue(fc, NewQuerycutor(qp, qv, qc)), rp)
+
+	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml",
 		InitProslStateValue(fc, NewQuerycutor(qp, qv, qc)))
 
 }

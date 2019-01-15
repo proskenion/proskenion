@@ -530,7 +530,7 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 		mustFlags := 0
 		for key, value := range v {
 			switch key {
-			case "authorizer":
+			case "authorizer", "authorizer_id":
 				op, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err
@@ -554,7 +554,7 @@ func ParseQueryOperator(yaml interface{}) (*proskenion.QueryOperator, error) {
 					return nil, ProslParseCastError("", value)
 				}
 				mustFlags |= 2
-			case "from":
+			case "from", "from_id":
 				op, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err

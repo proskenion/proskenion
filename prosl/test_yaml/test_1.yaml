@@ -1,12 +1,13 @@
 - set:
-    - peers
+    - acs
     - query:
-        select: *
-        type: Peer
+        authorizer: root@com
+        select: "*"
+        type: List
         from: com/account
         order_by:
           - balance
           - DESC
         limit: 20
 - return:
-    variable: peers
+    variable: acs
