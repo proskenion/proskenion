@@ -2,10 +2,11 @@ package prosl_test
 
 import (
 	"encoding/hex"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/prosl"
-	"github.com/proskenion/proskenion/query"
+	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -16,17 +17,13 @@ import (
 
 const genesisRootId = "root@com"
 
-func Initalize() (core.Repository, model.ModelFactory, core.QueryProcessor, core.QueryValidator, core.QueryVerifier) {
+func Initalize() (core.Repository, model.ModelFactory, *config.Config) {
 	dba := RandomDBA()
 	cryptor := RandomCryptor()
 	fc := NewTestFactory()
 	rp := repository.NewRepository(dba, cryptor, fc)
 	conf := NewTestConfig()
-
-	qp := query.NewQueryProcessor(rp, fc, conf)
-	qv := query.NewQueryValidator(rp, fc, conf)
-	qc := query.NewQueryVerifier()
-	return rp, fc, qp, qv, qc
+	return rp, fc, conf
 }
 
 func NewQuerycutor(qp core.QueryProcessor, qv core.QueryValidator, qc core.QueryVerifier) core.Querycutor {
@@ -93,13 +90,17 @@ func InitializeObjects(t *testing.T) {
 	}
 }
 
-func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository) {
+func testConvertProsl(t *testing.T, filename string) *proskenion.Prosl {
 	buf, err := ioutil.ReadFile(filename)
 	require.NoError(t, err)
 
 	prosl, err := ConvertYamlToProtobuf(buf)
 	require.NoError(t, err)
+	return prosl
+}
 
+func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository) {
+	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
 	require.NotNil(t, state.ReturnObject)
@@ -126,12 +127,7 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 }
 
 func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
-	buf, err := ioutil.ReadFile(filename)
-	require.NoError(t, err)
-
-	prosl, err := ConvertYamlToProtobuf(buf)
-	require.NoError(t, err)
-
+	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
 	require.NotNil(t, state.ReturnObject)
@@ -146,13 +142,22 @@ func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStat
 	}
 }
 
+func testGetTxAndFourceExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+	prosl := testConvertProsl(t, filename)
+	state := ExecuteProsl(prosl, value)
+	require.NoError(t, state.Err)
+	require.NotNil(t, state.ReturnObject)
+}
+
 func TestExecuteProsl(t *testing.T) {
-	rp, fc, qp, qv, qc := Initalize()
+	rp, fc, conf := Initalize()
 	InitializeObjects(t)
 	testGenesisExecuteProsl(t, "./test_yaml/genesis.yaml",
-		InitProslStateValue(fc, NewQuerycutor(qp, qv, qc)), rp)
+		InitProslStateValue(fc, rp, conf), rp)
 
 	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml",
-		InitProslStateValue(fc, NewQuerycutor(qp, qv, qc)))
+		InitProslStateValue(fc, rp, conf))
 
+	testGetTxAndFourceExecuteProsl(t, "./test_yaml/test_2.yaml",
+		InitProslStateValue(fc, rp, conf))
 }

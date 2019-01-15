@@ -3,10 +3,12 @@ package prosl
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/proskenion/proskenion/query"
 	"strings"
 )
 
@@ -19,12 +21,18 @@ var (
 	ErrProslExecuteUnknownObjectCode       = fmt.Errorf("Failed Prosl Execute Unklnown object code")
 	ErrProslExecuteQueryOperatorArgument   = fmt.Errorf("Failed Prosl not enough query operator arguments")
 
-	ErrProslExecuteSentence      = fmt.Errorf("Faile Prosl Execute Sentence error")
-	ErrProslExecuteInternal      = fmt.Errorf("Failed Prosl Execute internal error")
-	ErrProslExecuteUnImplemented = fmt.Errorf("Failed Prosl Execute unimplemented error")
-	ErrProslExecuteAssertation   = fmt.Errorf("Failed Prosl Execute assertation error")
-	ErrProslExecuteQueryVerify   = fmt.Errorf("Failed Prosl Execute query verify error")
-	ErrProslExecuteQueryValidate = fmt.Errorf("Failed Prosl Execute query validate error")
+	ErrProslExecuteSentence              = fmt.Errorf("Faile Prosl Execute Sentence error")
+	ErrProslExecuteInternal              = fmt.Errorf("Failed Prosl Execute internal error")
+	ErrProslExecuteUnImplemented         = fmt.Errorf("Failed Prosl Execute unimplemented error")
+	ErrProslExecuteAssertation           = fmt.Errorf("Failed Prosl Execute assertation error")
+	ErrProslExecuteQueryVerify           = fmt.Errorf("Failed Prosl Execute query verify error")
+	ErrProslExecuteQueryValidate         = fmt.Errorf("Failed Prosl Execute query validate error")
+	ErrProslExecuteType                  = fmt.Errorf("Failed Prosl Execute type error")
+	ErrProslExecuteNotEnoughArgument     = fmt.Errorf("Failed Prosl Execute not enough argument")
+	ErrProslExecuteFailedOperate         = fmt.Errorf("Failed Prosl Execute failed operate")
+	ErrProslExecuteUnExpectedReturnValue = fmt.Errorf("Failed Prosl Execute unexpected return value")
+	ErrProslExecuteOutOfRange            = fmt.Errorf("Failed Prosl Execute out of range")
+	ErrProslExecuteUndefined             = fmt.Errorf("Failed Prosl EXecute undefined")
 )
 
 type OperatorState int
@@ -39,49 +47,66 @@ const (
 	AssertOperator_State
 )
 
+type ProslConstState struct {
+	Variables map[string]model.Object
+	Fc        model.ModelFactory
+	Qc        core.Querycutor
+	Top       model.Block
+	Now       model.Block
+}
+
 type ProslStateValue struct {
-	Variables    map[string]model.Object
+	*ProslConstState
 	ReturnObject model.Object
 	St           OperatorState
 	ErrCode      proskenion.ErrCode
 	Err          error
-	Fc           model.ModelFactory
-	Qc           core.Querycutor
 }
 
-func InitProslStateValue(fc model.ModelFactory, qc core.Querycutor) *ProslStateValue {
+func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config.Config) *ProslStateValue {
+	qc := struct {
+		core.QueryProcessor
+		core.QueryValidator
+		core.QueryVerifier
+	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
+	top, _ := rp.Top()
 	return &ProslStateValue{
-		Variables:    make(map[string]model.Object),
+		ProslConstState: &ProslConstState{
+			Fc:        fc,
+			Qc:        qc,
+			Top:       top,
+			Variables: make(map[string]model.Object),
+		},
 		ReturnObject: nil,
 		St:           AnotherOperator_State,
 		ErrCode:      proskenion.ErrCode_NoErr,
 		Err:          nil,
-		Fc:           fc,
-		Qc:           qc,
 	}
+}
+
+func InitProslStateValueWithBlock(fc model.ModelFactory, rp core.Repository, conf *config.Config, block model.Block) *ProslStateValue {
+	state := InitProslStateValue(fc, rp, conf)
+	state.Now = block
+	return state
 }
 
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
 	return &ProslStateValue{
-		Variables:    state.Variables,
-		ReturnObject: nil,
-		St:           st,
-		ErrCode:      proskenion.ErrCode_NoErr,
-		Err:          nil,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
+		ProslConstState: state.ProslConstState,
+		ReturnObject:    nil,
+		St:              st,
+		ErrCode:         proskenion.ErrCode_NoErr,
+		Err:             nil,
 	}
 }
 
 func ReturnProslStateValue(state *ProslStateValue, value model.Object) *ProslStateValue {
 	return &ProslStateValue{
-		Variables:    state.Variables,
-		ReturnObject: value,
-		St:           AnotherOperator_State,
-		ErrCode:      proskenion.ErrCode_NoErr,
-		Err:          nil,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
+		ProslConstState: state.ProslConstState,
+		ReturnObject:    value,
+		St:              AnotherOperator_State,
+		ErrCode:         proskenion.ErrCode_NoErr,
+		Err:             nil,
 	}
 }
 
@@ -96,36 +121,50 @@ func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode,
 		err = errors.Wrap(ErrProslExecuteSentence, message)
 	case proskenion.ErrCode_UnImplemented:
 		err = errors.Wrap(ErrProslExecuteUnImplemented, message)
+	case proskenion.ErrCode_Assertation:
+		err = errors.Wrap(ErrProslExecuteAssertation, message)
+	case proskenion.ErrCode_QueryVerify:
+		err = errors.Wrap(ErrProslExecuteQueryVerify, message)
+	case proskenion.ErrCode_QueryValidate:
+		err = errors.Wrap(ErrProslExecuteQueryValidate, message)
+	case proskenion.ErrCode_Type:
+		err = errors.Wrap(ErrProslExecuteType, message)
+	case proskenion.ErrCode_NotEnoughArgument:
+		err = errors.Wrap(ErrProslExecuteNotEnoughArgument, message)
+	case proskenion.ErrCode_FailedOperate:
+		err = errors.Wrap(ErrProslExecuteFailedOperate, message)
+	case proskenion.ErrCode_UnExpectedReturnValue:
+		err = errors.Wrap(ErrProslExecuteUnExpectedReturnValue, message)
+	case proskenion.ErrCode_OutOfRange:
+		err = errors.Wrap(ErrProslExecuteOutOfRange, message)
+	case proskenion.ErrCode_Undefined:
+		err = errors.Wrap(ErrProslExecuteUndefined, message)
 	default:
 		err = errors.Wrap(ErrProslExecuteInternal, message)
 	}
 	return &ProslStateValue{
-		Variables:    state.Variables,
-		ReturnObject: nil,
-		St:           AnotherOperator_State,
-		ErrCode:      code,
-		Err:          err,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
+		ProslConstState: state.ProslConstState,
+		ReturnObject:    nil,
+		St:              AnotherOperator_State,
+		ErrCode:         code,
+		Err:             err,
 	}
 }
 
 func ReturnAssertProslStateValue(state *ProslStateValue, message string) *ProslStateValue {
 	return &ProslStateValue{
-		St:      AssertOperator_State,
-		ErrCode: proskenion.ErrCode_Assertation,
-		Err:     errors.Wrap(ErrProslExecuteAssertation, message),
-		Fc:      state.Fc,
-		Qc:      state.Qc,
+		ProslConstState: state.ProslConstState,
+		St:              AssertOperator_State,
+		ErrCode:         proskenion.ErrCode_Assertation,
+		Err:             errors.Wrap(ErrProslExecuteAssertation, message),
 	}
 }
 
 func ReturnReturnProslStateValue(state *ProslStateValue) *ProslStateValue {
 	return &ProslStateValue{
-		ReturnObject: state.ReturnObject,
-		St:           ReturnOperator_State,
-		Fc:           state.Fc,
-		Qc:           state.Qc,
+		ProslConstState: state.ProslConstState,
+		ReturnObject:    state.ReturnObject,
+		St:              ReturnOperator_State,
 	}
 }
 
