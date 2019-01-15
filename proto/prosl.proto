@@ -86,34 +86,33 @@ message VerifyOperator {
     ValueOperator op = 1;
 }
 
-
-
 // === ValueOperator ===
 message ValueOperator {
     oneof op {
         QueryOperator queryOp = 1;
         TxOperator txOp = 2;
         CommandOperator cmdOp = 3;
-        PlusOperator plusOp = 4;
-        MinusOperator minusOp = 5;
+        StorageOperator storageOp = 4;
 
-        MultipleOperator mulOp = 6;
-        DivisionOperator divOp = 7;
-        ModOperator modOp = 8;
-        OrOperator orOp = 9;
-        AndOperator andOp = 10;
-        XorOperator xorOp = 11;
-        ConcatOperator concatOp = 12;
+        PlusOperator plusOp = 10;
+        MinusOperator minusOp = 11;
+        MultipleOperator mulOp = 12;
+        DivisionOperator divOp = 13;
+        ModOperator modOp = 14;
+        OrOperator orOp = 15;
+        AndOperator andOp = 16;
+        XorOperator xorOp = 17;
+        ConcatOperator concatOp = 18;
 
-        ValuedOperator valuedOp = 13;
-        IndexedOperator indexedOp = 14;
+        ValuedOperator valuedOp = 20;
+        IndexedOperator indexedOp = 21;
+        VariableOperator variableOp = 22;
+        Object object = 23;
+        ListOperator listOp = 24;
+        MapOperator mapOp = 25;
 
-        VariableOperator variableOp = 15;
-        Object object = 16;
-        ListOperator listOp = 17;
-
-        IsDefinedOperator isDefinedOp = 18;
-        VerifyOperator verifyOp = 19;
+        IsDefinedOperator isDefinedOp = 30;
+        VerifyOperator verifyOp = 31;
     }
 }
 
@@ -142,6 +141,10 @@ message CommandOperator {
 
 message TxOperator {
     repeated ValueOperator commands = 1;
+}
+
+message StorageOperator {
+    MapOperator object = 1;
 }
 
 message PlusOperator {
@@ -196,6 +199,10 @@ message ListOperator {
     repeated ValueOperator object = 1;
 }
 
+message MapOperator {
+    map<string, ValueOperator> object = 1;
+}
+
 // === CodntionalFormula ====
 message ConditionalFormula {
     oneof op {
@@ -233,7 +240,7 @@ message NeFormula {
 
 message GtFormula {
     repeated ValueOperator ops = 1;
-    }
+}
 
 message GeFormula {
     repeated ValueOperator ops = 1;

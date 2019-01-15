@@ -107,7 +107,7 @@ func (a *Account) GetFromKey(key string) model.Object {
 		return Int64Object(a.GetBalance(), a.cryptor)
 	case "quorum":
 		return Int32Object(a.GetQuorum(), a.cryptor)
-	case "peer_id", "delegate_peer_id", "peer":
+	case "peer_id", "delegate_peer_id", "peer", "delegate_peer":
 		return AddressObject(a.GetDelegatePeerId(), a.cryptor)
 	}
 	return nil
@@ -268,6 +268,13 @@ func (o *Object) GetTransaction() model.Transaction {
 	}
 	return &Transaction{o.Object.GetTransaction(),
 		o.cryptor, o.executor, o.validator}
+}
+
+func (o *Object) GetBlock() model.Block {
+	if o.Object == nil {
+		return nil
+	}
+	return &Block{o.Object.GetBlock(), o.cryptor}
 }
 
 func (o *Object) Marshal() ([]byte, error) {

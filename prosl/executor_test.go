@@ -117,13 +117,17 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 	for i, ac := range acs {
 		expB = expB.AddBalance(genesisRootId, ac.AccountId, int64(10000*(i+1)))
 	}
-	expTx := expB.Build()
+	expTx := expB.DefineStorage(genesisRootId, "/degraders",
+		NewTestFactory().NewStorageBuilder().List("acs", make([]model.Object, 0)).Build()).
+		CreateStorage(genesisRootId, "root@com/degraders").
+		Build()
+
 	actualTx := state.ReturnObject.GetTransaction()
 	assert.Equal(t, expTx.Hash(), actualTx.Hash())
 
 	txList := EmptyTxList()
 	require.NoError(t, txList.Push(actualTx))
-	rp.GenesisCommit(txList)
+	require.NoError(t, rp.GenesisCommit(txList))
 }
 
 func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
@@ -142,11 +146,11 @@ func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStat
 	}
 }
 
-func testGetTxAndFourceExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
-	require.NotNil(t, state.ReturnObject)
+	require.NotNil(t, state.ReturnObject.GetTransaction())
 }
 
 func TestExecuteProsl(t *testing.T) {
@@ -158,6 +162,6 @@ func TestExecuteProsl(t *testing.T) {
 	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml",
 		InitProslStateValue(fc, rp, conf))
 
-	testGetTxAndFourceExecuteProsl(t, "./test_yaml/test_2.yaml",
+	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml",
 		InitProslStateValue(fc, rp, conf))
 }

@@ -92,7 +92,7 @@ func (f *ObjectFactory) NewStorageBuilder() model.StorageBuilder {
 
 func (f *ObjectFactory) NewEmptyStorage() model.Storage {
 	return &Storage{
-		f.cryptor, f.executor,f.validator,
+		f.cryptor, f.executor, f.validator,
 		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
 	}
 }
@@ -241,19 +241,34 @@ func (f *ObjectBuilder) Transaction(value model.Transaction) model.Object {
 	return f.Build()
 }
 
+func (f *ObjectBuilder) Block(value model.Block) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_BlockObjectCode,
+		Object: &proskenion.Object_Block{Block: value.(*Block).Block},
+	}
+	return f.Build()
+}
+
 func (f *ObjectBuilder) Build() model.Object {
 	return &Object{f.cryptor, f.executor, f.validator, f.Object}
 }
 
 type StorageBuilder struct {
-	cryptor core.Cryptor
-	executor core.CommandExecutor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
 	validator core.CommandValidator
 	*proskenion.Storage
 }
 
 func (b *StorageBuilder) From(s model.Storage) model.StorageBuilder {
 	b.Storage = s.(*Storage).Storage
+	return b
+}
+
+func (b *StorageBuilder) FromMap(s map[string]model.Object) model.StorageBuilder {
+	for key, value := range s {
+		b.Storage.Object[key] = value.(*Object).Object
+	}
 	return b
 }
 

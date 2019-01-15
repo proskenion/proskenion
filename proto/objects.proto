@@ -20,6 +20,7 @@ enum ObjectCode {
     MegaStorageObjectCode = 15;
     CommandObjectCode = 16;
     TransactionObjectCode = 17;
+    BlockObjectCode = 18;
 }
 
 message Address {
@@ -38,7 +39,6 @@ message Account {
     int32 quorum = 4;
     int64 balance = 5;
     string delegatePeerId = 6;
-
 }
 
 message Peer {
@@ -210,6 +210,29 @@ message Transaction {
     repeated Signature signatures = 2;
 }
 
+/**
+ * Block の構造
+ * height : 現在のBlockのHeight+1
+ * transactions : Transaction の集合（列)
+ * createdTime : Blockを生成した時間(リーダーがProposalを生成した時間であり、Commitされた時間ではない)
+ * commitTime : BlockをCommitされるべき時間(合意形成におけるそのRoundの終わりの時間)
+ * preBlockHash : 現在の Block の Hash
+ * signature : 現在のラウンドにおけるリーダーのSignature (hash = headerのHash + transactionsの累積Hash)
+ **/
+message Block {
+    message Payload {
+        int64 height = 1;
+        bytes preBlockHash = 2;
+        int64 createdTime = 3;
+        bytes wsvHash = 4;
+        bytes txHistoryHash = 5;
+        bytes txsHash = 6;
+        int32 round = 7;
+    }
+    Payload payload = 1;
+    Signature signature = 3;
+}
+
 message Object {
     ObjectCode type = 1;
     oneof object {
@@ -230,5 +253,6 @@ message Object {
         MegaStorage megaStorage = 16;
         Command command = 17;
         Transaction transaction = 18;
+        Block block = 19;
     }
 }

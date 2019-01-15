@@ -27,6 +27,7 @@ const (
 	MegaStorageObjectCode
 	CommandObjectCode
 	TransactionObjectCode
+	BlockObjectCode
 )
 
 func (o ObjectCode) String() string {
@@ -67,6 +68,8 @@ func (o ObjectCode) String() string {
 		return "Command"
 	case TransactionObjectCode:
 		return "Transaction"
+	case BlockObjectCode:
+		return "Block"
 	}
 	return "UnexpectedType"
 }
@@ -116,6 +119,7 @@ type Object interface {
 	GetStorage() Storage
 	GetCommand() Command
 	GetTransaction() Transaction
+	GetBlock() Block
 	Modelor
 }
 

@@ -56,11 +56,13 @@ type ObjectBuilder interface {
 	Storage(value Storage) Object
 	Command(value Command) Object
 	Transaction(value Transaction) Object
+	Block(block Block) Object
 	Build() Object
 }
 
 type StorageBuilder interface {
 	From(Storage) StorageBuilder
+	FromMap(map[string]Object) StorageBuilder
 	Int32(key string, value int32) StorageBuilder
 	Int64(key string, value int64) StorageBuilder
 	Uint32(key string, value uint32) StorageBuilder

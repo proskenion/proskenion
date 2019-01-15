@@ -2,7 +2,6 @@ syntax = "proto3";
 package proskenion;
 
 import "objects.proto";
-import "block.proto";
 
 
 // Error は GRPC Error Code で返す

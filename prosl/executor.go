@@ -13,14 +13,6 @@ import (
 )
 
 var (
-	ErrProslExecuteNotExpectedType         = fmt.Errorf("Failed Prosl Execute not expected type")
-	ErrProslExecuteUnExpectedCastType      = fmt.Errorf("Failed Prosl Execute Cast not expected type")
-	ErrProslExecuteArgumentSize            = fmt.Errorf("Failed Prosl Execute argument size")
-	ErrProslExecuteUnExpectedOperationName = fmt.Errorf("Failed Prosl Execute operation")
-	ErrProslExecuteInternalErr             = fmt.Errorf("Failed Prosl Execute Internal")
-	ErrProslExecuteUnknownObjectCode       = fmt.Errorf("Failed Prosl Execute Unklnown object code")
-	ErrProslExecuteQueryOperatorArgument   = fmt.Errorf("Failed Prosl not enough query operator arguments")
-
 	ErrProslExecuteSentence              = fmt.Errorf("Faile Prosl Execute Sentence error")
 	ErrProslExecuteInternal              = fmt.Errorf("Failed Prosl Execute internal error")
 	ErrProslExecuteUnImplemented         = fmt.Errorf("Failed Prosl Execute unimplemented error")
@@ -51,8 +43,6 @@ type ProslConstState struct {
 	Variables map[string]model.Object
 	Fc        model.ModelFactory
 	Qc        core.Querycutor
-	Top       model.Block
-	Now       model.Block
 }
 
 type ProslStateValue struct {
@@ -70,24 +60,21 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 		core.QueryVerifier
 	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
 	top, _ := rp.Top()
+	variables := make(map[string]model.Object)
+	if top != nil {
+		variables["top"] = fc.NewObjectBuilder().Block(top)
+	}
 	return &ProslStateValue{
 		ProslConstState: &ProslConstState{
 			Fc:        fc,
 			Qc:        qc,
-			Top:       top,
-			Variables: make(map[string]model.Object),
+			Variables: variables,
 		},
 		ReturnObject: nil,
 		St:           AnotherOperator_State,
 		ErrCode:      proskenion.ErrCode_NoErr,
 		Err:          nil,
 	}
-}
-
-func InitProslStateValueWithBlock(fc model.ModelFactory, rp core.Repository, conf *config.Config, block model.Block) *ProslStateValue {
-	state := InitProslStateValue(fc, rp, conf)
-	state.Now = block
-	return state
 }
 
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
@@ -321,6 +308,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslTxOperator(op.GetTxOp(), state)
 	case *proskenion.ValueOperator_CmdOp:
 		state = ExecuteProslCmdOperator(op.GetCmdOp(), state)
+	case *proskenion.ValueOperator_StorageOp:
+		state = ExecuteProslStorageOperator(op.GetStorageOp(), state)
 	case *proskenion.ValueOperator_PlusOp:
 		state = ExecuteProslPlusOperator(op.GetPlusOp(), state)
 	case *proskenion.ValueOperator_MinusOp:
@@ -353,6 +342,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslVerifyOperator(op.GetVerifyOp(), state)
 	case *proskenion.ValueOperator_ListOp:
 		state = ExecuteProslListOperator(op.GetListOp(), state)
+	case *proskenion.ValueOperator_MapOp:
+		state = ExecuteProslMapOperator(op.GetMapOp(), state)
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimlemented value operator, %s", op.String()))
 	}
@@ -465,6 +456,18 @@ func ExecuteProslCmdOperator(op *proskenion.CommandOperator, state *ProslStateVa
 	}
 }
 
+func ExecuteProslStorageOperator(op *proskenion.StorageOperator, state *ProslStateValue) *ProslStateValue {
+	state = ExecuteProslMapOperator(op.GetObject(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetDict() == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, fmt.Sprintf("expected dict, but %s, %s", state.ReturnObject.GetType(), op.String()))
+	}
+	storage := state.Fc.NewStorageBuilder().FromMap(state.ReturnObject.GetDict()).Build()
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Storage(storage))
+}
+
 type GetOpser interface {
 	GetOps() []*proskenion.ValueOperator
 	String() string
@@ -564,6 +567,12 @@ func ExecuteProslValuedOperator(op *proskenion.ValuedOperator, state *ProslState
 		if state.Err != nil {
 			return state
 		}
+	case model.BlockObjectCode:
+		ret = object.GetBlock().GetFromKey(op.GetKey())
+		state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
+		if state.Err != nil {
+			return state
+		}
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented,
 			fmt.Sprintf("unimplemented valued type: %s, %s", object.GetType().String(), op.String()))
@@ -625,9 +634,6 @@ func ExecuteProslVerifyOperator(op *proskenion.VerifyOperator, state *ProslState
 }
 
 func ExecuteProslListOperator(op *proskenion.ListOperator, state *ProslStateValue) *ProslStateValue {
-	if len(op.GetObject()) > 1 {
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_NotEnoughArgument, fmt.Sprintf("%s Operator minimum number of argument is 1, %s", "list", op.String()))
-	}
 	obs := make([]model.Object, 0, len(op.GetObject()))
 	for _, v := range op.GetObject() {
 		state = ExecuteProslValueOperator(v, state)
@@ -637,6 +643,18 @@ func ExecuteProslListOperator(op *proskenion.ListOperator, state *ProslStateValu
 		obs = append(obs, state.ReturnObject)
 	}
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(obs))
+}
+
+func ExecuteProslMapOperator(op *proskenion.MapOperator, state *ProslStateValue) *ProslStateValue {
+	obs := make(map[string]model.Object)
+	for key, value := range op.GetObject() {
+		state = ExecuteProslValueOperator(value, state)
+		if state.Err != nil {
+			return state
+		}
+		obs[key] = state.ReturnObject
+	}
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Dict(obs))
 }
 
 func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) *ProslStateValue {

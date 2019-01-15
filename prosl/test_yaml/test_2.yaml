@@ -1,0 +1,61 @@
+- set: # height % 20 を取得、20回で周期的
+    - ind
+    - mod:
+        - valued:
+            - variable: top
+            - int64
+            - height
+        - 2
+- if: # 一周したら
+    - eq:
+        - ind
+        - 0
+    - set: # account List を取得
+        - acs
+        - query:
+            select: "*"
+            type: List
+            from: com/account
+            order_by:
+              - value
+              - DESC
+            limit: 2
+    - set:
+        - add_degrade
+        - update_object:
+            target_id: root@com/degraders
+            objects: acs
+    - return:
+        transaction:
+          commands:
+            - variable: add_degrade
+            - add_balance:
+                authorizer_id:
+                  valued:
+                    - indexed:
+                      - acs
+                      - account
+                      - 0
+                    - address
+                    - id
+                balance: 1000
+- else:
+    - set:
+        - acs
+        - query:
+            select: "acs"
+            type: List
+            from: root@com/degraders
+    - return:
+        transaction:
+          commands:
+            - add_balance:
+                authorizer_id:
+                  valued:
+                    - indexed:
+                        - acs
+                        - account
+                        - 1
+                    - address
+                    - id
+                balance: 1000
