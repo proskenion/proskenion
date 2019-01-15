@@ -10,7 +10,7 @@ import (
 )
 
 func TestConvertYamlToMap(t *testing.T) {
-	buf, err := ioutil.ReadFile("./example.yaml")
+	buf, err := ioutil.ReadFile("./test_yaml/example.yaml")
 	require.NoError(t, err)
 
 	yamap, err := ConvertYamlToMap(buf)
@@ -79,7 +79,7 @@ func TestConvertYamlToMap(t *testing.T) {
 }
 
 func TestConvertYamlToProbuf(t *testing.T) {
-	buf, err := ioutil.ReadFile("./example.yaml")
+	buf, err := ioutil.ReadFile("./test_yaml/example.yaml")
 	require.NoError(t, err)
 
 	prosl, err := ConvertYamlToProtobuf(buf)

@@ -20,16 +20,28 @@
                 - 0x7ae0937f747fff11760db2f1a08d2e1892a25fdc7adb39714fb596081478d0a7
               quorum: 1
           - create_account:
-                authorizer_id: root@com
-                account_id: account2@com
-                public_keys:
-                    - 0xf7dc24e3ac16779f071cc0bcc4971f0bc9d2ca3bf78047282796a0dcb9da7278
-                quorum: 1
+              authorizer_id: root@com
+              account_id: account2@com
+              public_keys:
+                  - 0xf7dc24e3ac16779f071cc0bcc4971f0bc9d2ca3bf78047282796a0dcb9da7278
+              quorum: 1
           - create_account:
+              authorizer_id: root@com
+              account_id: account3@com
+              public_keys:
+                  - 0xb3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635
+              quorum: 1
+          - add_balance:
                 authorizer_id: root@com
-                account_id: account3@com
-                public_keys:
-                    - 0xb3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635
-                quorum: 1
+                account_id: account1@com
+                balance: 10000ll
+          - add_balance:
+              authorizer_id: root@com
+              account_id: account2@com
+              balance: 20000ll
+          - add_balance:
+              authorizer_id: root@com
+              account_id: account3@com
+              balance: 30000LL
 - return:
     variable: tx

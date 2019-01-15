@@ -8,6 +8,7 @@ import (
 	"github.com/proskenion/proskenion/proto"
 	"go.uber.org/multierr"
 	"gopkg.in/yaml.v2"
+	"strconv"
 	"strings"
 )
 
@@ -38,7 +39,7 @@ func ProslParseCastError(ex interface{}, ac interface{}) error {
 }
 
 func ProslParseUnknownCastError(ac interface{}) error {
-	return errors.Wrapf(ErrProslParseUnExpectedCastType, "unknown type : %T", ac)
+	return errors.Wrapf(ErrProslParseUnExpectedCastType, "unknown type : %T, %#v", ac, ac)
 }
 
 func ProslParseArgumentError(ex int, ac int) error {
@@ -62,20 +63,33 @@ func ProslParseErrCode(code string) proskenion.ErrCode {
 }
 
 func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
-	switch v := value.(type) {
-	case int64:
-		return &proskenion.Object{
-			Type:   proskenion.ObjectCode_Int64ObjectCode,
-			Object: &proskenion.Object_I64{v},
-		}, nil
+	switch s := value.(type) {
 	case int:
 		return &proskenion.Object{
 			Type:   proskenion.ObjectCode_Int32ObjectCode,
-			Object: &proskenion.Object_I32{int32(v)},
+			Object: &proskenion.Object_I32{int32(s)},
 		}, nil
 	case string:
-		if strings.HasPrefix(v, "0x") {
-			data, err := hex.DecodeString(v[2:])
+		// case : int64, suffix has "LL" or "ll"
+		if strings.HasSuffix(s, "ll") || strings.HasSuffix(s, "LL") {
+			ret, err := strconv.ParseInt(s[:len(s)-2], 10, 64)
+			if err == nil {
+				return &proskenion.Object{
+					Type:   proskenion.ObjectCode_Int64ObjectCode,
+					Object: &proskenion.Object_I64{ret},
+				}, nil
+			}
+		}
+		// case : int32, can convert to int
+		if ret, err := strconv.ParseInt(s, 10, 32); err == nil {
+			return &proskenion.Object{
+				Type:   proskenion.ObjectCode_Int32ObjectCode,
+				Object: &proskenion.Object_I32{int32(ret)},
+			}, nil
+		}
+		// case : binary, prefix is 0x
+		if strings.HasPrefix(s, "0x") {
+			data, err := hex.DecodeString(s[2:])
 			if err == nil {
 				return &proskenion.Object{
 					Type:   proskenion.ObjectCode_BytesObjectCode,
@@ -83,18 +97,18 @@ func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
 				}, nil
 			}
 		}
-		_, err := model.NewAddress(v)
-		if err != nil {
-			return &proskenion.Object{
-				Type:   proskenion.ObjectCode_StringObjectCode,
-				Object: &proskenion.Object_Str{v},
-			}, nil
-		} else {
+		// case : address, can convert address
+		if _, err := model.NewAddress(s); err == nil {
 			return &proskenion.Object{
 				Type:   proskenion.ObjectCode_AddressObjectCode,
-				Object: &proskenion.Object_Address{v},
+				Object: &proskenion.Object_Address{s},
 			}, nil
 		}
+		// case : string, another case
+		return &proskenion.Object{
+			Type:   proskenion.ObjectCode_StringObjectCode,
+			Object: &proskenion.Object_Str{s},
+		}, nil
 	}
 	return nil, ProslParseUnknownCastError(value)
 }
@@ -596,7 +610,7 @@ func ParseCommandOperator(yaml interface{}) (*proskenion.CommandOperator, error)
 		if len(yamap) != 1 {
 			return nil, ProslParseArgumentError(1, len(yamap))
 		}
-		ret := &proskenion.CommandOperator{Params:make(map[string]*proskenion.ValueOperator)}
+		ret := &proskenion.CommandOperator{Params: make(map[string]*proskenion.ValueOperator)}
 		for key, value := range yamap {
 			if ks, ok := key.(string); ok {
 				ret.CommandName = ks

@@ -2,6 +2,7 @@ package prosl_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/prosl"
@@ -13,6 +14,8 @@ import (
 	"io/ioutil"
 	"testing"
 )
+
+const genesisRootId = "root@com"
 
 func Initalize() (model.ModelFactory, core.QueryProcessor, core.QueryValidator, core.QueryVerifier) {
 	dba := RandomDBA()
@@ -103,16 +106,20 @@ func GenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue) 
 	require.NotNil(t, state.ReturnObject)
 
 	expB := NewTestFactory().NewTxBuilder().
-		AddPeer("root@com",
+		AddPeer(genesisRootId,
 			peer.GetPeerId(),
 			peer.GetAddress(),
 			peer.GetPublicKey()).
-		CreateAccount("root@com", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1)
+		CreateAccount(genesisRootId, authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1)
 	for _, ac := range acs {
-		expB = expB.CreateAccount("root@com", ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
+		expB = expB.CreateAccount(genesisRootId, ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
+	}
+	for i, ac := range acs {
+		expB = expB.AddBalance(genesisRootId, ac.AccountId, int64(10000*(i+1)))
 	}
 	expTx := expB.Build()
 	actualTx := state.ReturnObject.GetTransaction()
+	fmt.Println(actualTx)
 	assert.Equal(t, expTx.Hash(), actualTx.Hash())
 }
 
@@ -121,4 +128,5 @@ func TestExecuteProsl(t *testing.T) {
 	InitializeObjects(t)
 	GenesisExecuteProsl(t, "./test_yaml/genesis.yaml",
 		InitProslStateValue(fc, NewQuerycutor(qp, qv, qc)))
+
 }
