@@ -18,6 +18,7 @@ enum ErrCode {
     UnExpectedReturnValue = 11;
     OutOfRange = 12;
     Undefined = 13;
+    CastType = 14;
 }
 
 message Prosl {
@@ -110,6 +111,7 @@ message ValueOperator {
         Object object = 23;
         ListOperator listOp = 24;
         MapOperator mapOp = 25;
+        CastOperator castOp = 26;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
@@ -201,6 +203,11 @@ message ListOperator {
 
 message MapOperator {
     map<string, ValueOperator> object = 1;
+}
+
+message CastOperator {
+    ObjectCode type = 1;
+    ValueOperator object = 2;
 }
 
 // === CodntionalFormula ====

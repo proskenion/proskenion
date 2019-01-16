@@ -59,6 +59,26 @@ func Int32Object(a int32, cryptor core.Cryptor) model.Object {
 	}
 }
 
+func Uint64Object(a uint64, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor, nil, nil,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_Uint64ObjectCode,
+			Object: &proskenion.Object_U64{a},
+		},
+	}
+}
+
+func Uint32Object(a uint32, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor, nil, nil,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_Uint32ObjectCode,
+			Object: &proskenion.Object_U32{a},
+		},
+	}
+}
+
 func AddressObject(a string, cryptor core.Cryptor) model.Object {
 	return &Object{
 		cryptor, nil, nil,
@@ -275,6 +295,71 @@ func (o *Object) GetBlock() model.Block {
 		return nil
 	}
 	return &Block{o.Object.GetBlock(), o.cryptor}
+}
+
+func (o *Object) Cast(code model.ObjectCode) (model.Object, bool) {
+	if o.GetType() == code {
+		return o, true
+	}
+	switch code {
+	case model.Int32ObjectCode:
+		switch o.GetType() {
+		case model.Int64ObjectCode:
+			return Int32Object(int32(o.GetI64()), o.cryptor), true
+		case model.Uint32ObjectCode:
+			return Int32Object(int32(o.GetU32()), o.cryptor), true
+		case model.Uint64ObjectCode:
+			return Int32Object(int32(o.GetU64()), o.cryptor), true
+		}
+	case model.Int64ObjectCode:
+		switch o.GetType() {
+		case model.Int32ObjectCode:
+			return Int64Object(int64(o.GetI32()), o.cryptor), true
+		case model.Uint32ObjectCode:
+			return Int64Object(int64(o.GetU32()), o.cryptor), true
+		case model.Uint64ObjectCode:
+			return Int64Object(int64(o.GetU64()), o.cryptor), true
+		}
+	case model.Uint32ObjectCode:
+		switch o.GetType() {
+		case model.Int32ObjectCode:
+			return Uint32Object(uint32(o.GetI32()), o.cryptor), true
+		case model.Int64ObjectCode:
+			return Uint32Object(uint32(o.GetI64()), o.cryptor), true
+		case model.Uint64ObjectCode:
+			return Uint32Object(uint32(o.GetU64()), o.cryptor), true
+		}
+	case model.Uint64ObjectCode:
+		switch o.GetType() {
+		case model.Int32ObjectCode:
+			return Uint64Object(uint64(o.GetI32()), o.cryptor), true
+		case model.Int64ObjectCode:
+			return Uint64Object(uint64(o.GetI64()), o.cryptor), true
+		case model.Uint32ObjectCode:
+			return Uint64Object(uint64(o.GetU32()), o.cryptor), true
+		}
+	case model.StringObjectCode:
+		switch o.GetType() {
+		case model.Int32ObjectCode:
+			return StrObject(string(o.GetI32()), o.cryptor), true
+		case model.Int64ObjectCode:
+			return StrObject(string(o.GetI64()), o.cryptor), true
+		case model.Uint32ObjectCode:
+			return StrObject(string(o.GetU32()), o.cryptor), true
+		case model.Uint64ObjectCode:
+			return StrObject(string(o.GetU64()), o.cryptor), true
+		}
+	case model.BytesObjectCode:
+		switch o.GetType() {
+		case model.StringObjectCode:
+			return BytesObject([]byte(o.GetStr()), o.cryptor), true
+		}
+	case model.AddressObjectCode:
+		if o.GetType() == model.StringObjectCode {
+			return AddressObject(o.GetStr(), o.cryptor), true
+		}
+	}
+	return nil, false
 }
 
 func (o *Object) Marshal() ([]byte, error) {

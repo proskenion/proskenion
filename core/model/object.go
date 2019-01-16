@@ -120,6 +120,7 @@ type Object interface {
 	GetCommand() Command
 	GetTransaction() Transaction
 	GetBlock() Block
+	Cast(code ObjectCode) (Object, bool)
 	Modelor
 }
 
@@ -215,8 +216,6 @@ func NewAddress(id string) (Address, error) {
 		t = WallettAddressType
 	} else if regexp.GetRegexp().VerifyAccountId.MatchString(id) {
 		t = AccountAddressType
-	} else if regexp.GetRegexp().VerifyDomainId.MatchString(id) {
-		t = DomainAddressType
 	} else if regexp.GetRegexp().VerifyStorageId.MatchString(id) {
 		t = StorageAddressType
 	}

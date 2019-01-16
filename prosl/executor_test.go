@@ -2,6 +2,7 @@ package prosl_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -146,11 +147,35 @@ func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStat
 	}
 }
 
+func accountsToObjectList(accounts []model.Account) model.Object {
+	obs := make([]model.Object, 0)
+	for _, ac := range accounts {
+		obs = append(obs, NewTestFactory().NewObjectBuilder().Account(ac))
+	}
+	return NewTestFactory().NewObjectBuilder().List(obs)
+}
+
 func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
-	require.NotNil(t, state.ReturnObject.GetTransaction())
+
+	actualTx := state.ReturnObject.GetTransaction()
+	require.NotNil(t, actualTx)
+
+	expTx := state.Fc.NewTxBuilder().
+		UpdateObject(genesisRootId, "root@com/degraders", "acs",
+			accountsToObjectList(
+				[]model.Account{
+					state.Fc.NewAccount(acs[2].AccountId, model.MustAddress(acs[2].AccountId).Account(), []model.PublicKey{acs[2].Pubkey}, 1, 30000, ""),
+					state.Fc.NewAccount(acs[1].AccountId, model.MustAddress(acs[1].AccountId).Account(), []model.PublicKey{acs[1].Pubkey}, 1, 20000, ""),
+				})).
+		AddBalance(genesisRootId, acs[2].AccountId, 10000).
+		Build()
+
+	fmt.Println(expTx)
+	fmt.Println(actualTx)
+	assert.Equal(t, expTx.Hash(), actualTx.Hash())
 }
 
 func TestExecuteProsl(t *testing.T) {

@@ -78,6 +78,9 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 }
 
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
+	if state.St == ReturnOperator_State {
+		return state
+	}
 	return &ProslStateValue{
 		ProslConstState: state.ProslConstState,
 		ReturnObject:    nil,
@@ -101,7 +104,8 @@ func ReturnTxProslStateValue(state *ProslStateValue, value model.Transaction) *P
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Transaction(value))
 }
 
-func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode, message string) *ProslStateValue {
+func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode, format string, a ...interface{}) *ProslStateValue {
+	message := fmt.Sprintf(format, a...)
 	var err error
 	switch code {
 	case proskenion.ErrCode_Sentence:
@@ -160,13 +164,13 @@ type Stringer interface {
 }
 
 func ExecuteAssertType(op Stringer, o model.Object, expectedType model.ObjectCode, state *ProslStateValue) *ProslStateValue {
-	if o != nil {
+	if o == nil {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type,
-			fmt.Sprintf("expected type is %s, but nil, %s", expectedType.String(), op.String()))
+			"expected type is %s, but nil, %s", expectedType.String(), op.String())
 	}
 	if o.GetType() != expectedType {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type,
-			fmt.Sprintf("expected type is %s, but %s, %s", expectedType.String(), o.GetType().String(), op.String()))
+			"expected type is %s, but %s, %s", expectedType.String(), o.GetType().String(), op.String())
 	}
 	return state
 }
@@ -176,6 +180,9 @@ func ExecuteProsl(prosl *proskenion.Prosl, state *ProslStateValue) *ProslStateVa
 	for _, op := range ops {
 		state = ExecuteProslOpFormula(op, state)
 		if state.Err != nil {
+			return state
+		}
+		if state.St == ReturnOperator_State {
 			return state
 		}
 	}
@@ -344,8 +351,10 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslListOperator(op.GetListOp(), state)
 	case *proskenion.ValueOperator_MapOp:
 		state = ExecuteProslMapOperator(op.GetMapOp(), state)
+	case *proskenion.ValueOperator_CastOp:
+		state = ExecuteProslCastOperator(op.GetCastOp(), state)
 	default:
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimlemented value operator, %s", op.String()))
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, "unimlemented value operator, %s", op.String())
 	}
 	return state
 }
@@ -462,7 +471,7 @@ func ExecuteProslStorageOperator(op *proskenion.StorageOperator, state *ProslSta
 		return state
 	}
 	if state.ReturnObject.GetDict() == nil {
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, fmt.Sprintf("expected dict, but %s, %s", state.ReturnObject.GetType(), op.String()))
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "expected dict, but %s, %s", state.ReturnObject.GetType(), op.String())
 	}
 	storage := state.Fc.NewStorageBuilder().FromMap(state.ReturnObject.GetDict()).Build()
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Storage(storage))
@@ -596,7 +605,7 @@ func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslSta
 	}
 	if len(object.GetList()) <= int(op.GetIndex()) {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_OutOfRange,
-			fmt.Sprintf("list object length is %d, but index is %d, %s", len(object.GetList()), op.GetIndex(), op))
+			"list object length is %d, but index is %d, %s", len(object.GetList()), op.GetIndex(), op)
 	}
 
 	ret := object.GetList()[op.GetIndex()]
@@ -655,6 +664,23 @@ func ExecuteProslMapOperator(op *proskenion.MapOperator, state *ProslStateValue)
 		obs[key] = state.ReturnObject
 	}
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Dict(obs))
+}
+
+func ExecuteProslCastOperator(op *proskenion.CastOperator, state *ProslStateValue) *ProslStateValue {
+	code := op.GetType()
+	state = ExecuteProslValueOperator(op.GetObject(), state)
+	if state.Err != nil {
+		return state
+	}
+	object := state.ReturnObject
+	if object == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "Return Object is nil, %s", op.String())
+	}
+	ret, ok := object.Cast(model.ObjectCode(code))
+	if !ok {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_CastType, "Can not cast %s to %s, %s", object.GetType().String(), op.GetType().String(), op.String())
+	}
+	return ReturnProslStateValue(state, ret)
 }
 
 func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) *ProslStateValue {

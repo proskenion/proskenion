@@ -488,6 +488,12 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VariableOp{op}}, nil
+			case "cast":
+				op, err := ParseCastOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_CastOp{op}}, nil
 			case "is_defined":
 				op, err := ParseIsDefinedOperator(value)
 				if err != nil {
@@ -865,6 +871,9 @@ func ParseConcatOperator(yaml interface{}) (*proskenion.ConcatOperator, error) {
 
 func ParseValuedOperator(yaml interface{}) (*proskenion.ValuedOperator, error) {
 	if yalist, ok := yaml.([]interface{}); ok {
+		if len(yalist) != 3 {
+			return nil, ProslParseArgumentError(3, len(yalist), yaml)
+		}
 		ret := &proskenion.ValuedOperator{}
 
 		// 0 - value operator
@@ -880,6 +889,9 @@ func ParseValuedOperator(yaml interface{}) (*proskenion.ValuedOperator, error) {
 			return nil, ProslParseCastError("", yalist, yaml)
 		}
 		t, err := ProslParseObjectCode(types)
+		if err != nil {
+			return nil, err
+		}
 		ret.Type = t
 
 		// 2 - key operator
@@ -895,6 +907,9 @@ func ParseValuedOperator(yaml interface{}) (*proskenion.ValuedOperator, error) {
 
 func ParseIndexedOperator(yaml interface{}) (*proskenion.IndexedOperator, error) {
 	if yalist, ok := yaml.([]interface{}); ok {
+		if len(yalist) != 3 {
+			return nil, ProslParseArgumentError(3, len(yalist), yaml)
+		}
 		ret := &proskenion.IndexedOperator{}
 
 		// 0 - value operator
@@ -910,6 +925,9 @@ func ParseIndexedOperator(yaml interface{}) (*proskenion.IndexedOperator, error)
 			return nil, ProslParseCastError("", yalist, yaml)
 		}
 		t, err := ProslParseObjectCode(types)
+		if err != nil {
+			return nil, err
+		}
 		ret.Type = t
 
 		// 2 - key operator
@@ -929,6 +947,35 @@ func ParseVariableOperator(yaml interface{}) (*proskenion.VariableOperator, erro
 	} else {
 		return nil, ProslParseCastError("", yaml, yaml)
 	}
+}
+
+func ParseCastOperator(yaml interface{}) (*proskenion.CastOperator, error) {
+	if yalist, ok := yaml.([]interface{}); ok {
+		if len(yalist) != 2 {
+			return nil, ProslParseArgumentError(3, len(yalist), yaml)
+		}
+		ret := &proskenion.CastOperator{}
+
+		// 0 - type operator
+		if s, ok := yalist[0].(string); ok {
+			types, err := ProslParseObjectCode(s)
+			if err != nil {
+				return nil, err
+			}
+			ret.Type = types
+		} else {
+			return nil, ProslParseCastError("", yalist, yaml)
+		}
+
+		// 1 - value operator
+		value, err := ParseValueOperator(yalist[1])
+		if err != nil {
+			return nil, err
+		}
+		ret.Object = value
+		return ret, nil
+	}
+	return nil, ProslParseCastError(make([]interface{}, 0), yaml, yaml)
 }
 
 func ParseIsDefinedOperator(yaml interface{}) (*proskenion.IsDefinedOperator, error) {
