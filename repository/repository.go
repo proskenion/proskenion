@@ -26,8 +26,8 @@ type Repository struct {
 	cryptor core.Cryptor
 	fc      model.ModelFactory
 
-	top    model.Block
-	height int64
+	TopBlock model.Block
+	Height   int64
 }
 
 func NewRepository(dba core.DBA, cryptor core.Cryptor, fc model.ModelFactory) core.Repository {
@@ -43,10 +43,10 @@ func (r *Repository) Begin() (core.RepositoryTx, error) {
 }
 
 func (r *Repository) Top() (model.Block, bool) {
-	if r.top == nil {
+	if r.TopBlock == nil {
 		return nil, false
 	}
-	return r.top, true
+	return r.TopBlock, true
 }
 
 func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
@@ -102,6 +102,8 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 		}
 	}
 
+	// TODO Incentive Prosl exeucute (fource execute)
+
 	// hash check
 	wsvHash := wsv.Hash()
 	if err != nil {
@@ -123,9 +125,9 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 		return err
 	}
 	// top ブロックを更新
-	if r.height < block.GetPayload().GetHeight() {
-		r.height = block.GetPayload().GetHeight()
-		r.top = block
+	if r.Height < block.GetPayload().GetHeight() {
+		r.Height = block.GetPayload().GetHeight()
+		r.TopBlock = block
 	}
 	return commitTx(dtx)
 }
@@ -162,6 +164,8 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 		}
 	}
 
+	// TODO incentive prosl fource execute
+
 	// hash check and block 生成
 	wsvHash := wsv.Hash()
 	if err != nil {
@@ -186,8 +190,8 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 		return err
 	}
 	// top ブロックを更新
-	r.height = genesisBlock.GetPayload().GetHeight()
-	r.top = genesisBlock
+	r.Height = genesisBlock.GetPayload().GetHeight()
+	r.TopBlock = genesisBlock
 	return commitTx(dtx)
 }
 

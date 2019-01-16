@@ -203,7 +203,7 @@ func ExecuteCondEq(os []model.Object, fc model.ModelFactory) model.Object {
 	pr := os[0]
 	for _, o := range os[1:] {
 		if !model.ObjectEq(pr, o) {
-			fc.NewObjectBuilder().Bool(false)
+			return fc.NewObjectBuilder().Bool(false)
 		}
 		pr = o
 	}

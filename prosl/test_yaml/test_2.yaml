@@ -1,16 +1,19 @@
+- set:
+    - height
+    - valued:
+        - variable: top
+        - int64
+        - height
 - set: # height % 20 を取得、20回で周期的
     - ind
     - cast:
         - int32
         - mod:
-            - valued:
-                - variable: top
-                - int64
-                - height
+            - variable: height
             - 2ll
 - if: # 一周したら
     - eq:
-        - ind
+        - variable: ind
         - 0
     - set: # account List を取得
         - acs
@@ -51,7 +54,7 @@
         - acs
         - query:
             authorizer: root@com
-            select: "acs"
+            select: acs
             type: List
             from: root@com/degraders
     - return:

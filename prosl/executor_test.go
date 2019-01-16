@@ -2,7 +2,6 @@ package prosl_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -128,7 +127,7 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 
 	txList := EmptyTxList()
 	require.NoError(t, txList.Push(actualTx))
-	require.NoError(t, rp.GenesisCommit(txList))
+	CommitTxWrapBlock(t, rp, state.Fc, actualTx)
 }
 
 func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
@@ -155,7 +154,7 @@ func accountsToObjectList(accounts []model.Account) model.Object {
 	return NewTestFactory().NewObjectBuilder().List(obs)
 }
 
-func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository, expTx model.Transaction) {
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
@@ -163,19 +162,8 @@ func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateV
 	actualTx := state.ReturnObject.GetTransaction()
 	require.NotNil(t, actualTx)
 
-	expTx := state.Fc.NewTxBuilder().
-		UpdateObject(genesisRootId, "root@com/degraders", "acs",
-			accountsToObjectList(
-				[]model.Account{
-					state.Fc.NewAccount(acs[2].AccountId, model.MustAddress(acs[2].AccountId).Account(), []model.PublicKey{acs[2].Pubkey}, 1, 30000, ""),
-					state.Fc.NewAccount(acs[1].AccountId, model.MustAddress(acs[1].AccountId).Account(), []model.PublicKey{acs[1].Pubkey}, 1, 20000, ""),
-				})).
-		AddBalance(genesisRootId, acs[2].AccountId, 10000).
-		Build()
-
-	fmt.Println(expTx)
-	fmt.Println(actualTx)
 	assert.Equal(t, expTx.Hash(), actualTx.Hash())
+	CommitTxWrapBlock(t, rp, state.Fc, actualTx)
 }
 
 func TestExecuteProsl(t *testing.T) {
@@ -187,6 +175,21 @@ func TestExecuteProsl(t *testing.T) {
 	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml",
 		InitProslStateValue(fc, rp, conf))
 
+	expTx := fc.NewTxBuilder().
+		UpdateObject(genesisRootId, "root@com/degraders", "acs",
+			accountsToObjectList(
+				[]model.Account{
+					fc.NewAccount(acs[2].AccountId, model.MustAddress(acs[2].AccountId).Account(), []model.PublicKey{acs[2].Pubkey}, 1, 30000, ""),
+					fc.NewAccount(acs[1].AccountId, model.MustAddress(acs[1].AccountId).Account(), []model.PublicKey{acs[1].Pubkey}, 1, 20000, ""),
+				})).
+		AddBalance(genesisRootId, acs[2].AccountId, 10000).
+		Build()
 	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml",
-		InitProslStateValue(fc, rp, conf))
+		InitProslStateValue(fc, rp, conf), rp, expTx)
+
+	expTx = fc.NewTxBuilder().
+		AddBalance(genesisRootId, acs[1].AccountId, 10000).
+		Build()
+	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml",
+		InitProslStateValue(fc, rp, conf), rp, expTx)
 }
