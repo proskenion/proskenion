@@ -71,7 +71,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 	})
 
 	t.Run("Failed, over limits random valid tx push", func(t *testing.T) {
-		limit := NewTestConfig().ProposalTxsLimits
+		limit := RandomConfig().ProposalTxsLimits
 		txs := make([]model.Transaction, 0, limit)
 		for i := 0; i < limit; i++ {
 			txs = append(txs, RandomTx())
@@ -105,7 +105,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 	})
 
 	t.Run("Failed, over limits random tx push and erase", func(t *testing.T) {
-		limit := NewTestConfig().ProposalTxsLimits
+		limit := RandomConfig().ProposalTxsLimits
 		txs := make([]model.Transaction, 0, limit)
 		txs2 := make([]model.Transaction, 0, limit/2)
 		for i := 0; i < limit; i++ {
@@ -161,6 +161,6 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 }
 
 func TestProposalTxQueueOnMemory(t *testing.T) {
-	queue := NewProposalTxQueueOnMemory(NewTestConfig())
+	queue := NewProposalTxQueueOnMemory(RandomConfig())
 	testProposalTxQueue(t, queue)
 }

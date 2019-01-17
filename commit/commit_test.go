@@ -10,7 +10,7 @@ import (
 )
 
 func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	cryptor := RandomCryptor()
 	queue := RandomQueue()
 	cconf := RandomCommitProperty()

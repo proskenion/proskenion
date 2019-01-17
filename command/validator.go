@@ -3,20 +3,24 @@ package command
 import (
 	"bytes"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type CommandValidator struct {
-	fc model.ModelFactory
+	fc    model.ModelFactory
+	prosl core.Prosl
+	conf  *config.Config
 }
 
-func NewCommandValidator() core.CommandValidator {
-	return &CommandValidator{}
+func NewCommandValidator(conf *config.Config) core.CommandValidator {
+	return &CommandValidator{conf: conf}
 }
 
-func (c *CommandValidator) SetFactory(factory model.ModelFactory) {
+func (c *CommandValidator) SetField(factory model.ModelFactory, prosl core.Prosl) {
 	c.fc = factory
+	c.prosl = prosl
 }
 
 func (c *CommandValidator) TransferBalance(wsv model.ObjectFinder, cmd model.Command) error {

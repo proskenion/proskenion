@@ -17,7 +17,7 @@ type AccountManager struct {
 }
 
 func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	c, err := client.NewAPIGateClient(server, fc)
 	require.NoError(t, err)
 	return &AccountManager{

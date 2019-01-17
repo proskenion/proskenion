@@ -19,6 +19,7 @@ import (
 	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/p2p"
+	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
@@ -42,13 +43,18 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	cryptor := crypto.NewEd25519Sha256Cryptor()
 
 	db := dba.NewDBSQLite(conf)
-	cmdExecutor := command.NewCommandExecutor()
-	cmdValidator := command.NewCommandValidator()
+	cmdExecutor := command.NewCommandExecutor(conf)
+	cmdValidator := command.NewCommandValidator(conf)
 	qVerifier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
+
+	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+
+	cmdExecutor.SetField(fc, pr)
+	cmdValidator.SetField(fc, pr)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
 	qv := query.NewQueryValidator(rp, fc, conf)
@@ -91,7 +97,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	}
 }
 
-func NewTestServer() *grpc.Server {
+func RandomServer() *grpc.Server {
 	return grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),

@@ -21,12 +21,12 @@ import (
 )
 
 func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIGateServer) {
-	fc := NewTestFactory()
-	conf := NewTestConfig()
+	fc := RandomFactory()
+	conf := RandomConfig()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
-	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
+	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
+	qp := query.NewQueryProcessor(rp, fc, RandomConfig())
 	qv := query.NewQueryValidator(rp, fc, conf)
 	api := gate.NewAPIGate(queue, qp, qv, logger)
 
@@ -140,7 +140,7 @@ func TestAPIGateServer_Query(t *testing.T) {
 				statusCheck(t, err, c.code)
 			} else {
 				require.NoError(t, err)
-				resq := NewTestFactory().NewEmptyQueryResponse()
+				resq := RandomFactory().NewEmptyQueryResponse()
 				resq.(*convertor.QueryResponse).QueryResponse = res
 
 				assert.Equal(t, model.MustAddress(c.query.GetPayload().GetFromId()).Account(), resq.GetObject().GetAccount().GetAccountName())

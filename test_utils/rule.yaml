@@ -1,0 +1,24 @@
+# default variables: target_id, account_id
+- set:
+    - prflag
+    - query:
+        authorizer: root@com
+        select: "prosl_type"
+        type: string
+        from:
+          concat:
+            - variable: account_id
+            - "/prflag"
+- set:
+    - prtype
+    - query:
+        authorizer: root@com
+        select: "prosl_type"
+        type: string
+        from: target_id
+- if:
+    - eq:
+        - prflag
+        - prtype
+    - return: True
+- return: False

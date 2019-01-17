@@ -12,13 +12,13 @@ func TestScenario(t *testing.T) {
 
 	// Boot Server
 	conf := config.NewConfig("config.yaml")
-	server := NewTestServer()
+	server := RandomServer()
 	go func() {
 		SetUpTestServer(t, conf, server)
 	}()
 	time.Sleep(time.Second * 2)
 
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	serverPeer := fc.NewPeer(RandomStr(), ":50023", conf.Peer.PublicKeyBytes())
 	am := NewAccountManager(t, serverPeer)
 

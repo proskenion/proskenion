@@ -2,11 +2,11 @@ package command_test
 
 import (
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
-	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,13 +15,11 @@ import (
 
 const authorizerId = "authorizer@com"
 
-func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecutor, core.DBATx, core.WSV) {
-	fc := NewTestFactory()
-	cryptor := RandomCryptor()
-	ex := RandomCommandExecutor()
-
-	dtx := RandomDBATx()
-	wsv, err := repository.NewWSV(dtx, cryptor, fc,nil)
+func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecutor, core.RepositoryTx, core.WSV) {
+	fc, ex, _, _, rp, _, _ := NewTestFactories()
+	dtx, err := rp.Begin()
+	require.NoError(t, err)
+	wsv, err := dtx.WSV(nil)
 	require.NoError(t, err)
 	return fc, ex, dtx, wsv
 }
@@ -74,7 +72,53 @@ func prePareAddPeer(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder)
 		AddPeer(authorizerId, "peer4@com", "0.0.0.3:5050", RandomPublicKey()).
 		Build()
 	executeCommands(t, tx, wsv)
+}
 
+func genProslStorage(fc model.ModelFactory, prosl []byte, prType string) model.Storage {
+	return fc.NewStorageBuilder().
+		Data(core.ProslKey, prosl).
+		Str(core.ProslTypeKey, prType).
+		Build()
+}
+
+func preParaProslSave(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder, conf *config.Config) {
+	proslSt := fc.NewStorageBuilder().Data(core.ProslKey, nil).Str(core.ProslTypeKey, "none").Build()
+
+	consensusPr := ConvertYamlFileToProtoBinary(t, conf.Prosl.Consensus.Path)
+	incentivePr := ConvertYamlFileToProtoBinary(t, conf.Prosl.Incentive.Path)
+	rulePr := ConvertYamlFileToProtoBinary(t, conf.Prosl.Rule.Path)
+
+	tx := fc.NewTxBuilder().
+		DefineStorage(authorizerId, conf.Prosl.Id, proslSt).
+		CreateStorage(authorizerId, conf.Prosl.Consensus.Id).
+		CreateStorage(authorizerId, conf.Prosl.Incentive.Id).
+		CreateStorage(authorizerId, conf.Prosl.Rule.Id).
+		UpdateObject(authorizerId, conf.Prosl.Consensus.Id, core.ProslKey,
+			fc.NewObjectBuilder().Data(consensusPr)).
+		UpdateObject(authorizerId, conf.Prosl.Incentive.Id, core.ProslKey,
+			fc.NewObjectBuilder().Data(incentivePr)).
+		UpdateObject(authorizerId, conf.Prosl.Rule.Id, core.ProslKey,
+			fc.NewObjectBuilder().Data(rulePr)).
+		UpdateObject(authorizerId, conf.Prosl.Consensus.Id, core.ProslTypeKey,
+			fc.NewObjectBuilder().Str(core.ConsensusKey)).
+		UpdateObject(authorizerId, conf.Prosl.Incentive.Id, core.ProslTypeKey,
+			fc.NewObjectBuilder().Str(core.IncentiveKey)).
+		UpdateObject(authorizerId, conf.Prosl.Rule.Id, core.ProslTypeKey,
+			fc.NewObjectBuilder().Str(core.ChangeRuleLey)).
+		Build()
+	executeCommands(t, tx, wsv)
+}
+
+func prePareForRule(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder) {
+	prflagSt := fc.NewStorageBuilder().Str(core.ProslTypeKey, "none").Build()
+	tx := fc.NewTxBuilder().
+		DefineStorage(authorizerId, "/prflag", prflagSt).
+		CreateStorage(authorizerId, "account1@com/prflag").
+		CreateStorage(authorizerId, "account1@com/prflag").
+		UpdateObject(authorizerId, "account1@com/prflag",
+			core.ProslTypeKey, fc.NewObjectBuilder().Str("incentive")).
+		Build()
+	executeCommands(t, tx, wsv)
 }
 
 func executeCommands(t *testing.T, tx model.Transaction, wsv model.ObjectFinder) {
@@ -855,11 +899,11 @@ func TestCommandExecutor_Consign(t *testing.T) {
 	require.NoError(t, dtx.Commit())
 }
 
-/*
-CreateStorage(ObjectFinder, Command) error
-UpdateObject(ObjectFinder, Command) error
-AddObject(ObjectFinder, Command) error
-TransferObject(ObjectFinder, Command) error
-AddPeer(ObjectFinder, Command) error
-Consign(ObjectFinder, Command) error
-*/
+func TestCommandExecutor_CheckAndCommitProsl(t *testing.T) {
+	fc, _, _, wsv := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, wsv)
+	prePareAddPeer(t, fc, wsv)
+	preParaProslSave(t, fc, wsv, RandomConfig())
+	prePareForRule(t, fc, wsv)
+
+}

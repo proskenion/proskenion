@@ -46,7 +46,7 @@ func RandomStrKey() []byte {
 }
 
 func RandomQueue() core.ProposalTxQueue {
-	config := NewTestConfig()
+	config := RandomConfig()
 	queue := repository.NewProposalTxQueueOnMemory(config)
 	for i := 0; i < 100; i++ {
 		tx := RandomValidTx()
@@ -98,7 +98,7 @@ func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (m
 	txList := repository.NewTxList(RandomCryptor())
 
 	for txList.Size() < 100 {
-		tx := NewTestFactory().NewTxBuilder().
+		tx := RandomFactory().NewTxBuilder().
 			CreateAccount("authorizer@com", RandomStr()+"@com", []model.PublicKey{}, 0).
 			CreatedTime(RandomNow()).Build()
 		// tx を構築
@@ -117,7 +117,7 @@ func RandomCommitableBlock(t *testing.T, top model.Block, rp core.Repository) (m
 	newTxHistoryHash := MustHash(txHistory)
 	newWSVHash := MustHash(wsv)
 
-	newBlock := NewTestFactory().NewBlockBuilder().
+	newBlock := RandomFactory().NewBlockBuilder().
 		Round(0).
 		TxsHash(txList.Top()).
 		TxHistoryHash(newTxHistoryHash).

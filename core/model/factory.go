@@ -110,7 +110,7 @@ type TxBuilder interface {
 	RemovePublicKeys(authorizerId string, accountId string, pubkeys []PublicKey) TxBuilder
 	SetQuorum(authorizerId string, accountId string, quorum int32) TxBuilder
 	DefineStorage(authorizerId string, storageId string, storage Storage) TxBuilder
-	CreateStorage(authorizerId string, storageId string) TxBuilder
+	CreateStorage(authorizerId string, walletId string) TxBuilder
 	UpdateObject(authorizerId string, walletId string, key string, object Object) TxBuilder
 	AddObject(authorizerId string, walletId string, key string, object Object) TxBuilder
 	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder

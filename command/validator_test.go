@@ -12,7 +12,7 @@ import (
 )
 
 func TestCommandValidator_Tx(t *testing.T) {
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
 
 	acs := []*AccountWithPri{

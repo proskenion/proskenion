@@ -15,12 +15,13 @@ type CommandExecutor struct {
 	conf    *config.Config
 }
 
-func NewCommandExecutor() core.CommandExecutor {
-	return &CommandExecutor{}
+func NewCommandExecutor(conf *config.Config) core.CommandExecutor {
+	return &CommandExecutor{conf: conf}
 }
 
-func (c *CommandExecutor) SetFactory(factory model.ModelFactory) {
+func (c *CommandExecutor) SetField(factory model.ModelFactory, prosl core.Prosl) {
 	c.factory = factory
+	c.prosl = prosl
 }
 
 func (c *CommandExecutor) TransferBalance(wsv model.ObjectFinder, cmd model.Command) error {
@@ -294,7 +295,7 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	targetId := model.MustAddress(cmd.GetTargetId())
 
 	// 1. get rule prosl
-	ruleId := model.MustAddress(c.conf.ChangeRule.Default)
+	ruleId := model.MustAddress(c.conf.Prosl.Rule.Id)
 	ruleSt := c.factory.NewEmptyStorage()
 	if err := wsv.Query(ruleId, ruleSt); err != nil {
 		return err
@@ -323,11 +324,11 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	var destId model.Address
 	switch t {
 	case core.IncentiveKey:
-		destId = model.MustAddress(c.conf.Incentive.Id)
+		destId = model.MustAddress(c.conf.Prosl.Incentive.Id)
 	case core.ConsensusKey:
-		destId = model.MustAddress(c.conf.Consensus.Id)
+		destId = model.MustAddress(c.conf.Prosl.Consensus.Id)
 	case core.ChangeRuleLey:
-		destId = model.MustAddress(c.conf.ChangeRule.Id)
+		destId = model.MustAddress(c.conf.Prosl.Rule.Id)
 	default:
 		return errors.Errorf("not found key %s, or unexpected value: %s", core.ProslKey, t)
 	}

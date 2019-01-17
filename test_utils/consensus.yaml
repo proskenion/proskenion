@@ -1,0 +1,13 @@
+- set:
+    - acs
+    - query:
+        authorizer: root@com
+        select: "*"
+        type: List
+        from: com/account
+        order_by:
+          - balance
+          - DESC
+        limit: 20
+- return:
+    variable: acs

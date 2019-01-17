@@ -1,7 +1,6 @@
 package test_utils
 
 import (
-	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
@@ -10,14 +9,13 @@ import (
 )
 
 func RandomCommandExecutor() core.CommandExecutor {
-	fc := NewTestFactory()
-	ex := command.NewCommandExecutor()
-	ex.SetFactory(fc)
+	_, ex, _, _, _, _, _ := NewTestFactories()
 	return ex
 }
 
 func RandomCommandValidator() core.CommandValidator {
-	return command.NewCommandValidator()
+	_, _, vl, _, _, _, _ := NewTestFactories()
+	return vl
 }
 
 type AccountWithPri struct {
@@ -29,7 +27,7 @@ type AccountWithPri struct {
 func GenesisCommitFromAccounts(t *testing.T, rp core.Repository, acs []*AccountWithPri) {
 	txList := repository.NewTxList(RandomCryptor())
 
-	builder := NewTestFactory().NewTxBuilder()
+	builder := RandomFactory().NewTxBuilder()
 	for _, ac := range acs {
 		builder = builder.CreateAccount("root", ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
 	}
@@ -48,7 +46,7 @@ func NewAccountWithPri(name string) *AccountWithPri {
 }
 
 func RandomLandStorage(address string, id string, value int64, list []model.Object) model.Storage {
-	return NewTestFactory().NewStorageBuilder().
+	return RandomFactory().NewStorageBuilder().
 		Str("address", address).
 		Address("owner", id).
 		Int64("value", value).

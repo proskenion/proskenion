@@ -14,7 +14,7 @@ func TestAccount_GetFromKey(t *testing.T) {
 		RandomPublicKey(),
 	}
 	exKeys := PublicKeysToListObject(keys, RandomCryptor())
-	a := NewTestFactory().NewAccountBuilder().
+	a := RandomFactory().NewAccountBuilder().
 		AccountId("account@domain").
 		AccountName("account").
 		PublicKeys(keys).
@@ -42,7 +42,7 @@ func TestAccount_GetFromKey(t *testing.T) {
 
 func TestPeer_GetFromKey(t *testing.T) {
 	key := RandomPublicKey()
-	p := NewTestFactory().NewPeer("peer@domain", "1.1.1.1:0000", key)
+	p := RandomFactory().NewPeer("peer@domain", "1.1.1.1:0000", key)
 
 	assert.Equal(t, "peer@domain", p.GetFromKey("id").GetAddress())
 	assert.Equal(t, "peer@domain", p.GetFromKey("peer_id").GetAddress())
@@ -55,7 +55,7 @@ func TestPeer_GetFromKey(t *testing.T) {
 }
 
 func TestStorage_GetFromKey(t *testing.T) {
-	st := NewTestFactory().
+	st := RandomFactory().
 		NewStorageBuilder().
 		Address("address", "account@com").
 		Str("str", "mojimoji").

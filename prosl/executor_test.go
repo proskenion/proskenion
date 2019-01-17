@@ -20,9 +20,9 @@ const genesisRootId = "root@com"
 func Initalize() (core.Repository, model.ModelFactory, *config.Config) {
 	dba := RandomDBA()
 	cryptor := RandomCryptor()
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	rp := repository.NewRepository(dba, cryptor, fc)
-	conf := NewTestConfig()
+	conf := RandomConfig()
 	return rp, fc, conf
 }
 
@@ -68,7 +68,7 @@ func InitializeObjects(t *testing.T) {
 		keypairs[0].PrivateKey,
 	}
 	peer = PeerWithPri{
-		NewTestFactory().NewPeer("root@peer", "127.0.0.1:50055", keypairs[1].PublicKey),
+		RandomFactory().NewPeer("root@peer", "127.0.0.1:50055", keypairs[1].PublicKey),
 		keypairs[1].PrivateKey,
 	}
 	acs = []AccountWithPri{
@@ -105,7 +105,7 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 	require.NoError(t, state.Err)
 	require.NotNil(t, state.ReturnObject)
 
-	expB := NewTestFactory().NewTxBuilder().
+	expB := RandomFactory().NewTxBuilder().
 		AddPeer(genesisRootId,
 			peer.GetPeerId(),
 			peer.GetAddress(),
@@ -118,7 +118,7 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 		expB = expB.AddBalance(genesisRootId, ac.AccountId, int64(10000*(i+1)))
 	}
 	expTx := expB.DefineStorage(genesisRootId, "/degraders",
-		NewTestFactory().NewStorageBuilder().List("acs", make([]model.Object, 0)).Build()).
+		RandomFactory().NewStorageBuilder().List("acs", make([]model.Object, 0)).Build()).
 		CreateStorage(genesisRootId, "root@com/degraders").
 		Build()
 
@@ -149,9 +149,9 @@ func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStat
 func accountsToObjectList(accounts []model.Account) model.Object {
 	obs := make([]model.Object, 0)
 	for _, ac := range accounts {
-		obs = append(obs, NewTestFactory().NewObjectBuilder().Account(ac))
+		obs = append(obs, RandomFactory().NewObjectBuilder().Account(ac))
 	}
-	return NewTestFactory().NewObjectBuilder().List(obs)
+	return RandomFactory().NewObjectBuilder().List(obs)
 }
 
 func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository, expTx model.Transaction) {

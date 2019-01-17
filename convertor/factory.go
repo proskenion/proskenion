@@ -454,8 +454,6 @@ func NewModelFactory(cryptor core.Cryptor,
 	queryVerifier core.QueryVerifier) model.ModelFactory {
 	factory := &ModelFactory{NewObjectFactory(cryptor, executor, cmdValidator),
 		cryptor, executor, cmdValidator, queryVerifier}
-	executor.SetFactory(factory)
-	cmdValidator.SetFactory(factory)
 	return factory
 }
 

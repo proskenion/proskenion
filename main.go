@@ -20,6 +20,7 @@ import (
 	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/p2p"
+	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
@@ -46,13 +47,19 @@ func main() {
 	conf.Peer.PrivateKey = hex.EncodeToString(pri)
 
 	db := dba.NewDBSQLite(conf)
-	cmdExecutor := command.NewCommandExecutor()
-	cmdValidator := command.NewCommandValidator()
+	cmdExecutor := command.NewCommandExecutor(conf)
+	cmdValidator := command.NewCommandValidator(conf)
 	qVerifyier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifyier)
-	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
 
+	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
+
+	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+
+	// cmd executor and validator set field.
+	cmdExecutor.SetField(fc, pr)
+	cmdValidator.SetField(fc, pr)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
 	qv := query.NewQueryValidator(rp, fc, conf)

@@ -12,7 +12,7 @@ import (
 func TestRepository_Commit(t *testing.T) {
 	dba := RandomDBA()
 	cryptor := RandomCryptor()
-	fc := NewTestFactory()
+	fc := RandomFactory()
 
 	rp := NewRepository(dba, cryptor, fc)
 

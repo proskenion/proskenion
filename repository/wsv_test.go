@@ -44,7 +44,7 @@ func (f *AccountUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
 }
 
 func NewAccountUnmarshalerFactory() *AccountUnmarshalerFactory {
-	return &AccountUnmarshalerFactory{NewTestFactory()}
+	return &AccountUnmarshalerFactory{RandomFactory()}
 }
 
 func testWSV_QueryAll(t *testing.T, wsv core.WSV, acs []model.Account, id model.Address) {
@@ -109,7 +109,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 }
 
 func TestWSV(t *testing.T) {
-	wsv, err := NewWSV(RandomDBATx(), RandomCryptor(), NewTestFactory(), model.Hash(nil))
+	wsv, err := NewWSV(RandomDBATx(), RandomCryptor(), RandomFactory(), model.Hash(nil))
 	require.NoError(t, err)
 	test_WSV(t, wsv)
 }

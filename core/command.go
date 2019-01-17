@@ -64,7 +64,7 @@ var (
 
 // CheckAndCommitProsl Err
 var (
-	ErrCommandExecutorCheckAndCommitProslInvalid = fmt.Errorf("Failed Check And Commit Prosl invalid change rule: false")
+	ErrCommandExecutorCheckAndCommitProslInvalid  = fmt.Errorf("Failed Check And Commit Prosl invalid change rule: false")
 	ErrCommandExecutorCheckAndCommitProslNotFound = fmt.Errorf("Failed Check And Commit Prosl not found target prosl")
 )
 
@@ -76,16 +76,16 @@ var (
 )
 
 const (
-	TargetIdKey = "target_id"
-	ProslKey = "prosl"
-	ProslTypeKey = "prosl_type"
-	IncentiveKey = "incentive"
-	ConsensusKey = "consensus"
+	TargetIdKey   = "target_id"
+	ProslKey      = "prosl"
+	ProslTypeKey  = "prosl_type"
+	IncentiveKey  = "incentive"
+	ConsensusKey  = "consensus"
 	ChangeRuleLey = "rule"
 )
 
 type CommandExecutor interface {
-	SetFactory(factory ModelFactory)
+	SetField(factory ModelFactory, prosl Prosl)
 	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
@@ -101,7 +101,7 @@ type CommandExecutor interface {
 }
 
 type CommandValidator interface {
-	SetFactory(factory ModelFactory)
+	SetField(factory ModelFactory, prosl Prosl)
 	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
