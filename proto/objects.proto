@@ -199,6 +199,25 @@ message Consign {
 }
 
 /**
+ * Register Incentive
+ * Register Consensus
+ * Register Change Incentive
+ * Register Change Consensus
+ **/
+message RegisterIncentive {
+    bytes prosl = 1;
+}
+message RegisterConsensus {
+    bytes prosl = 1;
+}
+message RegisterChangeIncentive {
+    bytes prosl = 1;
+}
+message RegisterChangeConsensus {
+    bytes prosl = 1;
+}
+
+/**
  * Transaction は Client が送信する取引の内容を記述したもの。
  **/
 message Transaction {
