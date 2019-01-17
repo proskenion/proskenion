@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type CommandExecutor struct {
 	factory model.ModelFactory
+	prosl   core.Prosl
+	conf    *config.Config
 }
 
 func NewCommandExecutor() core.CommandExecutor {
@@ -281,6 +284,54 @@ func (c *CommandExecutor) Consign(wsv model.ObjectFinder, cmd model.Command) err
 		DelegatePeerId(cc.GetPeerId()).
 		Build()
 	if err := wsv.Append(id, newAc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.Command) error {
+	cc := cmd.GetCheckAndCommitProsl()
+	targetId := model.MustAddress(cmd.GetTargetId())
+
+	// 1. get rule prosl
+	ruleId := model.MustAddress(c.conf.ChangeRule.Default)
+	ruleSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(ruleId, ruleSt); err != nil {
+		return err
+	}
+	buf := ruleSt.GetFromKey(core.ProslKey).GetData()
+	if err := c.prosl.Unmarshal(buf); err != nil {
+		return err
+	}
+
+	// 2. rule prosl execute with prams + ["target_id"] = target_id
+	params := cc.GetVariables()
+	params[core.TargetIdKey] = c.factory.NewObjectBuilder().Address(cmd.GetTargetId())
+	if check, err := c.prosl.ExecuteWithParams(params); err != nil {
+		return err
+	} else if !check.GetBoolean() {
+		return errors.Wrapf(core.ErrCommandExecutorCheckAndCommitProslInvalid,
+			"variables: %#v", cc.GetVariables())
+	}
+
+	// 3. if true, targetId 's prosl setting to dest incentive or consensus or rule
+	proSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(targetId, proSt); err != nil {
+		return errors.Wrap(core.ErrCommandExecutorCheckAndCommitProslNotFound, err.Error())
+	}
+	t := proSt.GetFromKey(core.ProslTypeKey).GetStr()
+	var destId model.Address
+	switch t {
+	case core.IncentiveKey:
+		destId = model.MustAddress(c.conf.Incentive.Id)
+	case core.ConsensusKey:
+		destId = model.MustAddress(c.conf.Consensus.Id)
+	case core.ChangeRuleLey:
+		destId = model.MustAddress(c.conf.ChangeRule.Id)
+	default:
+		return errors.Errorf("not found key %s, or unexpected value: %s", core.ProslKey, t)
+	}
+	if err := wsv.Append(destId, proSt); err != nil {
 		return err
 	}
 	return nil

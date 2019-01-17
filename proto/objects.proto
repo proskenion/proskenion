@@ -95,11 +95,8 @@ message Command {
         TransferObject transferObject = 13;
         AddPeer addPeer = 14;
         Consign consign = 15;
-        RegisterIncentive registerIncentive = 16;
-        RegisterConsensus registerConsensus = 17;
-        RegisterChangeIncentive registerChangeIncentive = 18;
-        RegisterChangeConsensus registerChangeConsensus = 19;
-    }
+        CheckAndCommitProsl checkAndCommitProsl = 16;
+   }
 }
 
 /**
@@ -203,22 +200,13 @@ message Consign {
 }
 
 /**
- * Register Incentive
- * Register Consensus
- * Register Change Incentive
- * Register Change Consensus
+ * CheckAndCommitProsl は target_id で指定した prosl を
+ *  variables に引数列を渡して change_rule prosl が true を返した時
+ *  incentive or consensus or change_rule として再定義する。
+ *
  **/
-message RegisterIncentive {
-    bytes prosl = 1;
-}
-message RegisterConsensus {
-    bytes prosl = 1;
-}
-message RegisterChangeIncentive {
-    bytes prosl = 1;
-}
-message RegisterChangeConsensus {
-    bytes prosl = 1;
+message CheckAndCommitProsl {
+    map<string, Object> variables = 2;
 }
 
 /**

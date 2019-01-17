@@ -12,6 +12,9 @@ type Config struct {
 	ProposalTxsLimits int          `yaml:"proposal_txs_limits"`
 	Commit            CommitConfig `yaml:"commit"`
 	Peer              PeerConfig   `yaml:"peer"`
+	Incentive DefaultProslConfig `yaml:"incentive"`
+	Consensus DefaultProslConfig `yaml:"consensus"`
+	ChangeRule DefaultProslConfig `yaml:"change_rule"`
 }
 
 type DBConfig struct {
@@ -28,6 +31,11 @@ type PeerConfig struct {
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
 	Port       string `yaml:"port"`
+}
+
+type DefaultProslConfig struct {
+	Default string `yaml:"default"`
+	Id string `yaml:"address"`
 }
 
 func (c PeerConfig) PublicKeyBytes() model.PublicKey {

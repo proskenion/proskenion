@@ -17,10 +17,7 @@ type Command interface {
 	GetTransferObject() TransferObject
 	GetAddPeer() AddPeer
 	GetConsign() Consign
-	GetRegisterIncentive() RegisterIncentive
-	GetRegisterConsensus() RegisterConsensus
-	GetRegisterChangeIncentive() RegisterChangeIncentive
-	GetRegisterChangeConsensus() RegisterChangeConsensus
+	GetCheckAndCommitProsl() CheckAndCommitProsl
 
 	Execute(ObjectFinder) error
 	Validate(ObjectFinder) error
@@ -84,18 +81,6 @@ type Consign interface {
 	GetPeerId() string
 }
 
-type RegisterIncentive interface {
-	GetProsl() []byte
-}
-
-type RegisterConsensus interface {
-	GetProsl() []byte
-}
-
-type RegisterChangeIncentive interface {
-	GetProsl() []byte
-}
-
-type RegisterChangeConsensus interface {
-	GetProsl() []byte
+type CheckAndCommitProsl interface {
+	GetVariables() map[string]Object
 }

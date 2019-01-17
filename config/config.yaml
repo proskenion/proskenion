@@ -10,3 +10,12 @@ peer:
  public_key: 0
  private_key: 0
  port: 50023
+incentive:
+ default: incentive.yaml
+ path: incentive/prosl
+consensus:
+ default: consensus.yaml
+ id: consensus/prosl
+change_rule:
+ default: rule.yaml
+ id: rule/prosl

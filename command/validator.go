@@ -63,6 +63,10 @@ func (c *CommandValidator) Consign(wsv model.ObjectFinder, cmd model.Command) er
 	return nil
 }
 
+func (c *CommandValidator) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
 func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) bool {
 	for _, sig := range sigs {
 		if bytes.Equal(sig.GetPublicKey(), key) {

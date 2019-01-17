@@ -45,6 +45,17 @@ func (p *Prosl) Execute() (model.Object, error) {
 	return state.ReturnObject, nil
 }
 
+func (p *Prosl) ExecuteWithParams (params map[string]model.Object) (model.Object, error) {
+	if p.prosl == nil {
+		return nil, errors.Errorf("Must be prosl setting, from yaml or protobuf binary")
+	}
+	state := ExecuteProsl(p.prosl, InitProslStateValue(p.fc, p.rp, p.conf))
+	if state.Err != nil {
+		return nil, state.Err
+	}
+	return state.ReturnObject, nil
+}
+
 func (p *Prosl) Unmarshal(proslData []byte) error {
 	err := proto.Unmarshal(proslData, p.prosl)
 	if err != nil {

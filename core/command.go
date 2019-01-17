@@ -62,11 +62,26 @@ var (
 	ErrCommandExecutorConsignNotFoundAccount = fmt.Errorf("Failed Command Executor Consign Not Found Account")
 )
 
+// CheckAndCommitProsl Err
+var (
+	ErrCommandExecutorCheckAndCommitProslInvalid = fmt.Errorf("Failed Check And Commit Prosl invalid change rule: false")
+	ErrCommandExecutorCheckAndCommitProslNotFound = fmt.Errorf("Failed Check And Commit Prosl not found target prosl")
+)
+
 // Transaction Err
 var (
 	ErrTxValidateNotFoundAuthorizer  = fmt.Errorf("Failed Transaction Validator Authorizer Not Found")
 	ErrTxValidateNotSignedAuthorizer = fmt.Errorf("Failed Transaction Validator Authorizer's not signed")
 	ErrTxValidateAlreadyExist        = fmt.Errorf("Failed Transaction Validator Already Exists")
+)
+
+const (
+	TargetIdKey = "target_id"
+	ProslKey = "prosl"
+	ProslTypeKey = "prosl_type"
+	IncentiveKey = "incentive"
+	ConsensusKey = "consensus"
+	ChangeRuleLey = "rule"
 )
 
 type CommandExecutor interface {
@@ -82,6 +97,7 @@ type CommandExecutor interface {
 	TransferObject(ObjectFinder, Command) error
 	AddPeer(ObjectFinder, Command) error
 	Consign(ObjectFinder, Command) error
+	CheckAndCommitProsl(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
@@ -98,4 +114,5 @@ type CommandValidator interface {
 	AddPeer(ObjectFinder, Command) error
 	Consign(ObjectFinder, Command) error
 	Tx(ObjectFinder, TxFinder, Transaction) error
+	CheckAndCommitProsl(ObjectFinder, Command) error
 }

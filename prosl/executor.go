@@ -77,6 +77,34 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 	}
 }
 
+func InitProslStateValueWithPrams(fc model.ModelFactory, rp core.Repository, conf *config.Config, params map[string]model.Object) *ProslStateValue {
+	qc := struct {
+		core.QueryProcessor
+		core.QueryValidator
+		core.QueryVerifier
+	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
+	top, _ := rp.Top()
+	variables := make(map[string]model.Object)
+	// params setting
+	for key, value := range params {
+		variables[key] = value
+	}
+	if top != nil {
+		variables["top"] = fc.NewObjectBuilder().Block(top)
+	}
+	return &ProslStateValue{
+		ProslConstState: &ProslConstState{
+			Fc:        fc,
+			Qc:        qc,
+			Variables: variables,
+		},
+		ReturnObject: nil,
+		St:           AnotherOperator_State,
+		ErrCode:      proskenion.ErrCode_NoErr,
+		Err:          nil,
+	}
+}
+
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
 	if state.St == ReturnOperator_State {
 		return state
