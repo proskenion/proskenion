@@ -95,6 +95,10 @@ message Command {
         TransferObject transferObject = 13;
         AddPeer addPeer = 14;
         Consign consign = 15;
+        RegisterIncentive registerIncentive = 16;
+        RegisterConsensus registerConsensus = 17;
+        RegisterChangeIncentive registerChangeIncentive = 18;
+        RegisterChangeConsensus registerChangeConsensus = 19;
     }
 }
 
