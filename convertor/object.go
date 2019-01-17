@@ -348,6 +348,8 @@ func (o *Object) Cast(code model.ObjectCode) (model.Object, bool) {
 			return StrObject(string(o.GetU32()), o.cryptor), true
 		case model.Uint64ObjectCode:
 			return StrObject(string(o.GetU64()), o.cryptor), true
+		case model.AddressObjectCode:
+			return StrObject(string(o.GetAddress()), o.cryptor), true
 		}
 	case model.BytesObjectCode:
 		switch o.GetType() {

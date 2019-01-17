@@ -1,6 +1,7 @@
 package convertor_test
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -146,12 +147,14 @@ func TestTxModelBuilder(t *testing.T) {
 			SetQuorum("authorizer", "account", 2).                                         // [7]
 			DefineStorage("authorizer", "account",
 															RandomFactory().NewStorageBuilder().Int32("int", 32).Build()). // [8]
-			CreateStorage("authorizer", "wallet_id").                                                    // [9]
+			CreateStorage("authorizer", "wallet_id").                                                   // [9]
 			UpdateObject("authorizer", "wallet_id", "key", RandomFactory().NewEmptyObject()).           // [10]
 			AddObject("authorizer", "wallet_id", "key", RandomFactory().NewEmptyObject()).              // [11]
 			TransferObject("authorizer", "wallet_id", "dest", "key", RandomFactory().NewEmptyObject()). // [12]
-			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                     // [13]
-			Consign("authorizer", "account", "peer").                                                    // [14]
+			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                    // [13]
+			Consign("authorizer", "account", "peer").                                                   // [14]
+			CheckAndCommitProsl("authorizer", "a@c/p",
+				map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[15]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
@@ -235,6 +238,12 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[14].GetAuthorizerId())
 		assert.Equal(t, "account", tx.GetPayload().GetCommands()[14].GetTargetId())
 		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
+
+		// check and commit prosl
+		fmt.Println("prosl: ",tx.GetPayload().GetCommands()[15])
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[15].GetAuthorizerId())
+		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[15].GetTargetId())
+		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[15].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())
 	})
 }
 

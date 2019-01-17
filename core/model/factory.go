@@ -116,6 +116,7 @@ type TxBuilder interface {
 	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder
 	AddPeer(authorizerId string, peerId string, address string, pubkey PublicKey) TxBuilder
 	Consign(authorizerId string, accountId string, peerId string) TxBuilder
+	CheckAndCommitProsl(authorizerId string, proslId string, params map[string]Object) TxBuilder
 	AppendCommand(cmd Command) TxBuilder
 	Build() Transaction
 }

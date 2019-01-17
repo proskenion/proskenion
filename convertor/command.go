@@ -212,9 +212,9 @@ type CheckAndCommitProsl struct {
 }
 
 func (c *Command) GetCheckAndCommitProsl() model.CheckAndCommitProsl {
-	return &CheckAndCommitProsl{}
+	return &CheckAndCommitProsl{c.cryptor, c.executor, c.validator, c.Command.GetCheckAndCommitProsl()}
 }
 
 func (c *CheckAndCommitProsl) GetVariables() map[string]model.Object {
-	return ObjectMapsFromProslObjectMaps(c.c, c.e, c.v, c.CheckAndCommitProsl.GetVariables())
+	return ObjectMapsFromProslObjectMaps(c.c, c.e, c.v, c.CheckAndCommitProsl.Variables)
 }

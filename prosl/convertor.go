@@ -469,7 +469,7 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_XorOp{op}}, nil
-			case "cocnat":
+			case "concat":
 				op, err := ParseConcatOperator(value)
 				if err != nil {
 					return nil, err

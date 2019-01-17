@@ -15,16 +15,23 @@ import (
 
 const authorizerId = "authorizer@com"
 
-func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecutor, core.RepositoryTx, core.WSV) {
+func prePareCommandExecutor(t *testing.T) (model.ModelFactory, core.CommandExecutor, core.Repository) {
 	fc, ex, _, _, rp, _, _ := NewTestFactories()
+	return fc, ex, rp
+}
+
+func prePareGetDtxWSV(t *testing.T, rp core.Repository) (core.RepositoryTx, core.WSV) {
 	dtx, err := rp.Begin()
 	require.NoError(t, err)
 	wsv, err := dtx.WSV(nil)
+	if block, ok := rp.Top(); ok {
+		wsv, err = dtx.WSV(block.GetPayload().GetWSVHash())
+	}
 	require.NoError(t, err)
-	return fc, ex, dtx, wsv
+	return dtx, wsv
 }
 
-func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
+func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, rp core.Repository) {
 	tx := fc.NewTxBuilder().
 		CreateAccount(authorizerId, authorizerId, []model.PublicKey{}, 0).
 		CreateAccount(authorizerId, "account1@com", []model.PublicKey{}, 0).
@@ -33,21 +40,19 @@ func prePareCreateAccounts(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
 		CreateAccount(authorizerId, "account4@com", []model.PublicKey{}, 0).
 		CreateAccount(authorizerId, "account5@com", []model.PublicKey{}, 0).
 		Build()
-	for _, cmd := range tx.GetPayload().GetCommands() {
-		require.NoError(t, cmd.Execute(wsv))
-	}
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
-func prePareAddBalance(t *testing.T, fc model.ModelFactory, wsv core.WSV) {
+func prePareAddBalance(t *testing.T, fc model.ModelFactory, rp core.Repository) {
 	tx := fc.NewTxBuilder().
 		AddBalance(authorizerId, authorizerId, 1000).
 		AddBalance(authorizerId, "account1@com", 100).
 		AddBalance(authorizerId, "account2@com", 100).
 		Build()
-	executeCommands(t, tx, wsv)
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
-func prePareCreateStorage(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder) {
+func prePareCreateStorage(t *testing.T, fc model.ModelFactory, rp core.Repository) {
 	mtSt := RandomLandStorage("none", authorizerId, 0, make([]model.Object, 0))
 	walletIds := []string{
 		"account1@com/land",
@@ -61,27 +66,20 @@ func prePareCreateStorage(t *testing.T, fc model.ModelFactory, wsv model.ObjectF
 	for _, id := range walletIds {
 		builder = builder.CreateStorage(authorizerId, id)
 	}
-	executeCommands(t, builder.Build(), wsv)
+	CommitTxWrapBlock(t, rp, fc, builder.Build())
 }
 
-func prePareAddPeer(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder) {
+func prePareAddPeer(t *testing.T, fc model.ModelFactory, rp core.Repository) {
 	tx := fc.NewTxBuilder().
 		AddPeer(authorizerId, "peer1@com", "0.0.0.0:5050", RandomPublicKey()).
 		AddPeer(authorizerId, "peer2@com", "0.0.0.1:5050", RandomPublicKey()).
 		AddPeer(authorizerId, "peer3@com", "0.0.0.2:5050", RandomPublicKey()).
 		AddPeer(authorizerId, "peer4@com", "0.0.0.3:5050", RandomPublicKey()).
 		Build()
-	executeCommands(t, tx, wsv)
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
-func genProslStorage(fc model.ModelFactory, prosl []byte, prType string) model.Storage {
-	return fc.NewStorageBuilder().
-		Data(core.ProslKey, prosl).
-		Str(core.ProslTypeKey, prType).
-		Build()
-}
-
-func preParaProslSave(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder, conf *config.Config) {
+func preParaProslSave(t *testing.T, fc model.ModelFactory, rp core.Repository, conf *config.Config) {
 	proslSt := fc.NewStorageBuilder().Data(core.ProslKey, nil).Str(core.ProslTypeKey, "none").Build()
 
 	consensusPr := ConvertYamlFileToProtoBinary(t, conf.Prosl.Consensus.Path)
@@ -106,29 +104,29 @@ func preParaProslSave(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinde
 		UpdateObject(authorizerId, conf.Prosl.Rule.Id, core.ProslTypeKey,
 			fc.NewObjectBuilder().Str(core.ChangeRuleLey)).
 		Build()
-	executeCommands(t, tx, wsv)
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
-func prePareForRule(t *testing.T, fc model.ModelFactory, wsv model.ObjectFinder) {
+func prePareForRule(t *testing.T, fc model.ModelFactory, rp core.Repository) {
 	prflagSt := fc.NewStorageBuilder().Str(core.ProslTypeKey, "none").Build()
+
 	tx := fc.NewTxBuilder().
 		DefineStorage(authorizerId, "/prflag", prflagSt).
 		CreateStorage(authorizerId, "account1@com/prflag").
-		CreateStorage(authorizerId, "account1@com/prflag").
+		CreateStorage(authorizerId, "account2@com/prflag").
 		UpdateObject(authorizerId, "account1@com/prflag",
 			core.ProslTypeKey, fc.NewObjectBuilder().Str("incentive")).
 		Build()
-	executeCommands(t, tx, wsv)
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
-func executeCommands(t *testing.T, tx model.Transaction, wsv model.ObjectFinder) {
-	for _, cmd := range tx.GetPayload().GetCommands() {
-		require.NoError(t, cmd.Execute(wsv))
-	}
+func executeCommands(t *testing.T, fc model.ModelFactory, tx model.Transaction, rp core.Repository) {
+	CommitTxWrapBlock(t, rp, fc, tx)
 }
 
 func TestCommandExecutor_CreateAccount(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
+	fc, ex, rp := prePareCommandExecutor(t)
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 
 	for _, c := range []struct {
 		name           string
@@ -183,8 +181,9 @@ func TestCommandExecutor_CreateAccount(t *testing.T) {
 }
 
 func TestCommandExecutor_AddBalance(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 
 	for _, c := range []struct {
 		name           string
@@ -257,10 +256,11 @@ func TestCommandExecutor_AddBalance(t *testing.T) {
 }
 
 func TestCommandExecutor_TransferBalance(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareAddBalance(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddBalance(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name            string
 		exAuthoirzerId  string
@@ -361,8 +361,8 @@ func TestCommandExecutor_TransferBalance(t *testing.T) {
 }
 
 func TestCommandExecutor_AddPublicKey(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
 
 	keys := []model.PublicKey{
 		RandomPublicKey(),
@@ -370,6 +370,7 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 		RandomPublicKey(),
 	}
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -456,9 +457,10 @@ func TestCommandExecutor_AddPublicKey(t *testing.T) {
 }
 
 func TestCommandExecutor_DefineStorage(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -515,9 +517,10 @@ func TestCommandExecutor_DefineStorage(t *testing.T) {
 }
 
 func TestCommandExecutor_CreateStorage(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -577,10 +580,11 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 }
 
 func TestCommandExecutor_UpdateObjectStorage(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareCreateStorage(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareCreateStorage(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -635,10 +639,11 @@ func TestCommandExecutor_UpdateObjectStorage(t *testing.T) {
 }
 
 func TestCommandExecutor_AddObjectStorage(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareCreateStorage(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareCreateStorage(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -700,19 +705,20 @@ func TestCommandExecutor_AddObjectStorage(t *testing.T) {
 }
 
 func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareCreateStorage(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareCreateStorage(t, fc, rp)
 
-	executeCommands(t, fc.NewTxBuilder().
+	CommitTxWrapBlock(t, rp, fc, fc.NewTxBuilder().
 		AddObject(authorizerId, "account1@com/land",
 			"list", fc.NewObjectBuilder().Str("aa")).
 		AddObject(authorizerId, "account1@com/land",
 			"list", fc.NewObjectBuilder().Str("bb")).
 		AddObject(authorizerId, "account1@com/land",
 			"list", fc.NewObjectBuilder().Str("cc")).
-		Build(), wsv)
+		Build())
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -798,9 +804,10 @@ func TestCommandExecutor_TransferObjectStorage(t *testing.T) {
 }
 
 func TestCommandExecutor_AddPeer(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -851,10 +858,11 @@ func TestCommandExecutor_AddPeer(t *testing.T) {
 }
 
 func TestCommandExecutor_Consign(t *testing.T) {
-	fc, ex, dtx, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareAddPeer(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
 
+	dtx, wsv := prePareGetDtxWSV(t, rp)
 	for _, c := range []struct {
 		name         string
 		authorizerId string
@@ -900,10 +908,75 @@ func TestCommandExecutor_Consign(t *testing.T) {
 }
 
 func TestCommandExecutor_CheckAndCommitProsl(t *testing.T) {
-	fc, _, _, wsv := prePareCommandExecutor(t)
-	prePareCreateAccounts(t, fc, wsv)
-	prePareAddPeer(t, fc, wsv)
-	preParaProslSave(t, fc, wsv, RandomConfig())
-	prePareForRule(t, fc, wsv)
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+	preParaProslSave(t, fc, rp, RandomConfig())
+	prePareForRule(t, fc, rp)
 
+	// preParaForRule
+	newCpr := ConvertYamlFileToProtoBinary(t, "../test_utils/new_consensus.yaml")
+	tx := fc.NewTxBuilder().
+		CreateStorage(authorizerId, "account1@incentive.com/prosl").
+		UpdateObject(authorizerId, "account1@incentive.com/prosl",
+			core.ProslKey, fc.NewObjectBuilder().Data(newCpr)).
+		UpdateObject(authorizerId, "account1@incentive.com/prosl",
+			core.ProslTypeKey, fc.NewObjectBuilder().Str(core.IncentiveKey)).
+		Build()
+	CommitTxWrapBlock(t, rp, fc, tx)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		walletId     string
+		params       map[string]model.Object
+		expCpr       []byte
+		err          error
+	}{
+		{
+			"case 1 : return false",
+			authorizerId,
+			"account1@incentive.com/prosl",
+			make(map[string]model.Object),
+			nil,
+			core.ErrCommandExecutorCheckAndCommitProslInvalid,
+		},
+		{
+			"case 2 : return false",
+			authorizerId,
+			"account1@incentive.com/prosl",
+			map[string]model.Object{"account_id": fc.NewObjectBuilder().Str("account2@com")},
+			nil,
+			core.ErrCommandExecutorCheckAndCommitProslInvalid,
+		},
+		{
+			"case 3 : no error",
+			authorizerId,
+			"account1@incentive.com/prosl",
+			map[string]model.Object{"account_id": fc.NewObjectBuilder().Str("account1@com")},
+			newCpr,
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := fc.NewTxBuilder().
+				CheckAndCommitProsl(c.authorizerId, c.walletId, c.params).
+				Build().
+				GetPayload().
+				GetCommands()[0]
+			err := ex.CheckAndCommitProsl(wsv, cmd)
+			if c.err != nil {
+				assert.EqualErrorf(t, errors.Cause(err), c.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				st := fc.NewEmptyStorage()
+				err = wsv.Query(model.MustAddress(RandomConfig().Prosl.Incentive.Id), st)
+				require.NoError(t, err)
+				assert.Equal(t, c.expCpr, st.GetFromKey(core.ProslKey).GetData())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
 }

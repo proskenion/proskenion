@@ -45,7 +45,7 @@ func (w *WSV) Query(targetId model.Address, value model.Unmarshaler) error {
 	it, err := w.tree.Find(makeWSVId(targetId))
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
-			return errors.Wrap(core.ErrWSVNotFound, err.Error())
+			return errors.Wrapf(core.ErrWSVNotFound, "targetId: %s, err: %s", targetId.Id(), err.Error())
 		}
 		return err
 	}
@@ -59,7 +59,7 @@ func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]mo
 	it, err := w.tree.Search(makeWSVId(fromId))
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotSearchKey {
-			return nil, errors.Wrap(core.ErrWSVNotFound, err.Error())
+			return nil, errors.Wrapf(core.ErrWSVNotFound, "fromId: %s, err: %s", fromId.Id(), err.Error())
 		}
 		return nil, err
 	}

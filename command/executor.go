@@ -308,11 +308,11 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	// 2. rule prosl execute with prams + ["target_id"] = target_id
 	params := cc.GetVariables()
 	params[core.TargetIdKey] = c.factory.NewObjectBuilder().Address(cmd.GetTargetId())
-	if check, err := c.prosl.ExecuteWithParams(params); err != nil {
-		return err
+	if check, variables, err := c.prosl.ExecuteWithParams(params); err != nil {
+		return errors.Errorf("variales: %+v, error: %s", variables, err.Error())
 	} else if !check.GetBoolean() {
 		return errors.Wrapf(core.ErrCommandExecutorCheckAndCommitProslInvalid,
-			"variables: %#v", cc.GetVariables())
+			"variables: %+v", variables)
 	}
 
 	// 3. if true, targetId 's prosl setting to dest incentive or consensus or rule

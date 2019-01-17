@@ -758,6 +758,18 @@ func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string
 	return t
 }
 
+func (t *TxBuilder) CheckAndCommitProsl(authorizerId string, proslId string, params map[string]model.Object) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_CheckAndCommitProsl{
+				CheckAndCommitProsl: &proskenion.CheckAndCommitProsl{Variables: ProslObjectMapsFromObjectMaps(params)},
+			},
+			TargetId:     proslId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) AppendCommand(cmd model.Command) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands, cmd.(*Command).Command)
 	return t

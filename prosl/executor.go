@@ -527,7 +527,7 @@ func ExecutePolynomiaValueOperator(op GetOpser, f func(model.Object, model.Objec
 		ret = f(ret, state.ReturnObject, state.Fc)
 	}
 	if ret == nil {
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, "symbol: %s, %s", symbol, op.String())
 	}
 	return ReturnProslStateValue(state, ret)
 }
@@ -752,7 +752,7 @@ func ExecutePolynomialCondOperator(op GetOpser, f func(model.Object, model.Objec
 		}
 		ret := f(pr, state.ReturnObject, state.Fc)
 		if ret == nil {
-			return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, "symbol: %s, %s", symbol, op.String())
 		}
 		if !ret.GetBoolean() {
 			return ReturnProslStateValue(state, ret)
@@ -762,11 +762,11 @@ func ExecutePolynomialCondOperator(op GetOpser, f func(model.Object, model.Objec
 }
 
 func ExecuteProslOrFormula(op *proskenion.OrFormula, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomiaValueOperator(op, ExecuteCondOr, "or", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteCondOr, "cond-or", state)
 }
 
 func ExecuteProslAndFormula(op *proskenion.AndFormula, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomiaValueOperator(op, ExecuteCondAnd, "and", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteCondAnd, "cond-and", state)
 }
 
 func ExecuteProslNotFormula(op *proskenion.NotFormula, state *ProslStateValue) *ProslStateValue {

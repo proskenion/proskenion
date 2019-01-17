@@ -101,6 +101,8 @@ func ExecuteOr(a model.Object, b model.Object, fc model.ModelFactory) model.Obje
 	}
 	builder := fc.NewObjectBuilder()
 	switch a.GetType() {
+	case model.BoolObjectCode:
+		return builder.Bool(a.GetBoolean() || b.GetBoolean())
 	case model.Int32ObjectCode:
 		return builder.Int32(a.GetI32() | b.GetI32())
 	case model.Int64ObjectCode:
@@ -118,6 +120,8 @@ func ExecuteAnd(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 	}
 	builder := fc.NewObjectBuilder()
 	switch a.GetType() {
+	case model.BoolObjectCode:
+		return builder.Bool(a.GetBoolean() && b.GetBoolean())
 	case model.Int32ObjectCode:
 		return builder.Int32(a.GetI32() & b.GetI32())
 	case model.Int64ObjectCode:
@@ -156,6 +160,8 @@ func ExecuteConcat(a model.Object, b model.Object, fc model.ModelFactory) model.
 	switch a.GetType() {
 	case model.StringObjectCode:
 		return builder.Str(a.GetStr() + b.GetStr())
+	case model.AddressObjectCode:
+		return builder.Address(a.GetAddress() + b.GetAddress())
 	case model.ListObjectCode:
 		return builder.List(append(a.GetList(), b.GetList()...))
 	}
