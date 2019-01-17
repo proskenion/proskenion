@@ -1,11 +1,11 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Block struct {
@@ -49,6 +49,26 @@ func (b *Block) Sign(pubKey model.PublicKey, privKey model.PrivateKey) error {
 		return errors.Wrapf(core.ErrCryptorSign, err.Error())
 	}
 	b.Signature = &proskenion.Signature{PublicKey: pubKey, Signature: signature}
+	return nil
+}
+
+func (b *Block) GetFromKey(key string) model.Object {
+	switch key {
+	case "height":
+		return Int64Object(b.GetPayload().GetHeight(), b.cryptor)
+	case "pre_block_hash", "pre_block":
+		return BytesObject(b.GetPayload().GetPreBlockHash(), b.cryptor)
+	case "created_time", "created_at", "time", "at":
+		return Int64Object(b.GetPayload().GetCreatedTime(), b.cryptor)
+	case "wsv_hash", "wsv":
+		return BytesObject(b.GetPayload().GetWSVHash(), b.cryptor)
+	case "tx_history_hash", "tx_history":
+		return BytesObject(b.GetPayload().GetTxHistoryHash(), b.cryptor)
+	case "txs_hash", "txs":
+		return BytesObject(b.GetPayload().GetTxsHash(), b.cryptor)
+	case "round":
+		return Int32Object(b.GetPayload().GetRound(), b.cryptor)
+	}
 	return nil
 }
 

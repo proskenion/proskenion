@@ -3,7 +3,6 @@ package repository
 import (
 	"bytes"
 	"github.com/pkg/errors"
-	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
@@ -18,7 +17,7 @@ type WSV struct {
 
 var WSV_ROOT_KEY byte = 0
 
-func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV, error) {
+func NewWSV(tx core.DBATx, cryptor core.Cryptor, fc model.ObjectFactory, rootHash model.Hash) (core.WSV, error) {
 	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
 	if err != nil {
 		return nil, err
@@ -26,7 +25,7 @@ func NewWSV(tx core.DBATx, cryptor core.Cryptor, rootHash model.Hash) (core.WSV,
 	return &WSV{
 		tx:   tx,
 		tree: tree,
-		fc:   convertor.NewObjectFactory(cryptor),
+		fc:   fc,
 	}, nil
 }
 

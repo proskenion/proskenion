@@ -4,7 +4,21 @@ package proskenion;
 import "objects.proto";
 
 enum ErrCode {
-    AnythingErrCode = 0;
+    NoErr = 0;
+    Anything = 1;
+    Internal = 2;
+    Sentence = 3;
+    UnImplemented = 4;
+    Assertation = 5;
+    QueryVerify = 6;
+    QueryValidate = 7;
+    Type = 8;
+    NotEnoughArgument = 9;
+    FailedOperate = 10;
+    UnExpectedReturnValue = 11;
+    OutOfRange = 12;
+    Undefined = 13;
+    CastType = 14;
 }
 
 message Prosl {
@@ -21,8 +35,7 @@ message ProslOperator {
         ErrCatchOperator errOp = 5;
         RequireOperator requireOp = 6;
         AssertOperator assertOp = 7;
-        VerifyOperator verifyOp = 8;
-        ReturnOperator returnOp = 9;
+        ReturnOperator returnOp = 8;
     }
 }
 
@@ -58,10 +71,6 @@ message AssertOperator {
     ConditionalFormula op = 1;
 }
 
-message VerifyOperator {
-    ValueOperator op = 1;
-}
-
 message ReturnOperator {
     ValueOperator op = 1;
 }
@@ -70,6 +79,13 @@ message VariableOperator {
     string variableName = 1;
 }
 
+message IsDefinedOperator {
+    string variableName = 1;
+}
+
+message VerifyOperator {
+    ValueOperator op = 1;
+}
 
 // === ValueOperator ===
 message ValueOperator {
@@ -77,22 +93,28 @@ message ValueOperator {
         QueryOperator queryOp = 1;
         TxOperator txOp = 2;
         CommandOperator cmdOp = 3;
-        PlusOperator plusOp = 4;
-        MinusOperator minusOp = 5;
+        StorageOperator storageOp = 4;
 
-        MultipleOperator mulOp = 6;
-        DivisionOperator divOp = 7;
-        ModOperator modOp = 8;
-        OrOperator orOp = 9;
-        AndOperator andOp = 10;
-        XorOperator xorOp = 11;
-        ConcatOperator concatOp = 12;
+        PlusOperator plusOp = 10;
+        MinusOperator minusOp = 11;
+        MultipleOperator mulOp = 12;
+        DivisionOperator divOp = 13;
+        ModOperator modOp = 14;
+        OrOperator orOp = 15;
+        AndOperator andOp = 16;
+        XorOperator xorOp = 17;
+        ConcatOperator concatOp = 18;
 
-        ValuedOperator valuedOp = 13;
-        IndexedOperator indexedOp = 14;
+        ValuedOperator valuedOp = 20;
+        IndexedOperator indexedOp = 21;
+        VariableOperator variableOp = 22;
+        Object object = 23;
+        ListOperator listOp = 24;
+        MapOperator mapOp = 25;
+        CastOperator castOp = 26;
 
-        VariableOperator variableOp = 15;
-        Object object = 16;
+        IsDefinedOperator isDefinedOp = 30;
+        VerifyOperator verifyOp = 31;
     }
 }
 
@@ -105,11 +127,11 @@ message QueryOperator {
         string key = 1;
         Order order = 2;
     }
-    string authorizerId = 1;
+    ValueOperator authorizerId = 1;
     string select = 2;
     ObjectCode type = 3;
-    string from = 4;
-    ConditionalFormula where = 5;
+    ValueOperator from = 4;
+    ValueOperator where = 5;
     OrderBy orderBy = 6;
     int32 limit = 7;
 }
@@ -120,7 +142,11 @@ message CommandOperator {
 }
 
 message TxOperator {
-    repeated CommandOperator commands = 1;
+    repeated ValueOperator commands = 1;
+}
+
+message StorageOperator {
+    MapOperator object = 1;
 }
 
 message PlusOperator {
@@ -171,6 +197,19 @@ message IndexedOperator {
     int32 index = 3;
 }
 
+message ListOperator {
+    repeated ValueOperator object = 1;
+}
+
+message MapOperator {
+    map<string, ValueOperator> object = 1;
+}
+
+message CastOperator {
+    ObjectCode type = 1;
+    ValueOperator object = 2;
+}
+
 // === CodntionalFormula ====
 message ConditionalFormula {
     oneof op {
@@ -203,30 +242,21 @@ message EqFormula {
 }
 
 message NeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message GtFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message GeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message LtFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
+    repeated ValueOperator ops = 1;
 }
 
 message LeFormula {
-    ValueOperator lop = 1;
-    ValueOperator rop = 2;
-}
-
-message IsDefinedFormula {
-    string variableName = 1;
+    repeated ValueOperator ops = 1;
 }

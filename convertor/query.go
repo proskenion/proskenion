@@ -1,11 +1,11 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Query struct {
@@ -74,14 +74,6 @@ func (p *QueryPaylaod) GetRequestCode() model.ObjectCode {
 	return model.ObjectCode(p.RequstCode)
 }
 
-func (p *QueryPaylaod) GetWhere() []byte {
-	if p.Query_Payload == nil {
-		return nil
-	}
-	ret, _ := proto.Marshal(p.Where)
-	return ret
-}
-
 func (p *QueryPaylaod) GetOrderBy() model.OrderBy {
 	if p.Query_Payload == nil {
 		return &OrderBy{&proskenion.Query_OrderBy{}}
@@ -118,7 +110,7 @@ func (q *QueryResponse) GetObject() model.Object {
 	if q.Object == nil {
 		return &Object{}
 	}
-	return &Object{q.cryptor, q.QueryResponse.GetObject()}
+	return &Object{q.cryptor, nil, nil, q.QueryResponse.GetObject()}
 }
 
 func (q *QueryResponse) GetSignature() model.Signature {

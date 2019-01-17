@@ -1,7 +1,7 @@
 syntax = "proto3";
 package proskenion;
 
-import "block.proto";
+import "objects.proto";
 
 // Error は GRPC Error Code で返す
 message SyncRequest {
@@ -14,4 +14,3 @@ message SyncRequest {
 service SyncGate {
     rpc Sync (SyncRequest) returns (stream Block);
 }
-

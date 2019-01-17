@@ -17,6 +17,7 @@ var (
 type Block interface {
 	GetPayload() BlockPayload
 	GetSignature() Signature
+	GetFromKey(key string) Object
 	Modelor
 	Verify() error
 	Sign(PublicKey, PrivateKey) error

@@ -1,5 +1,5 @@
-hash: 0491a5f45888f12465c083c8b59f6da4c3391cd7d79027284cf1842549c2ee1b
-updated: 2019-01-07T19:03:33.57361+09:00
+hash: 65a1b07e0979b08a69814635f36b240cf1e6e140ecf0f80a401882d99a6d3afc
+updated: 2019-01-14T00:56:57.171612+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
@@ -30,6 +30,8 @@ imports:
   - validator
 - name: github.com/inconshreveable/log15
   version: 67afb5ed74ec82fd7ac8f49d27c509ac6f991970
+- name: github.com/jessevdk/go-flags
+  version: c0795c8afcf41dd1d786bebce68636c199b3bb45
 - name: github.com/jmoiron/sqlx
   version: 82935fac6c1a317907c8f43ed3f7f85ea844a78b
   subpackages:
@@ -41,7 +43,7 @@ imports:
 - name: github.com/lann/ps
   version: 62de8c46ede02a7675c4c79c84883eb164cb71e3
 - name: github.com/Masterminds/squirrel
-  version: b56af2301db7bc17c0b561554a71e97b492dd172
+  version: fa735ea14f09f8685fcf5e75db091feb5a410730
 - name: github.com/mattn/go-colorable
   version: efa589957cd060542a26d2dd7832fd6a6c6c3ade
 - name: github.com/mattn/go-isatty

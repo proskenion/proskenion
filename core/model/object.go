@@ -24,7 +24,55 @@ const (
 	ListObjectCode
 	DictObjectCode
 	StorageObjectCode
+	MegaStorageObjectCode
+	CommandObjectCode
+	TransactionObjectCode
+	BlockObjectCode
 )
+
+func (o ObjectCode) String() string {
+	switch o {
+	case AnythingObjectCode:
+		return "Anything"
+	case BoolObjectCode:
+		return "Bool"
+	case Int32ObjectCode:
+		return "Int32"
+	case Int64ObjectCode:
+		return "Int64"
+	case Uint32ObjectCode:
+		return "Uint32"
+	case Uint64ObjectCode:
+		return "Uint64"
+	case StringObjectCode:
+		return "String"
+	case BytesObjectCode:
+		return "Bytes"
+	case AddressObjectCode:
+		return "Address"
+	case SignatureObjectCode:
+		return "Signature"
+	case AccountObjectCode:
+		return "Account"
+	case PeerObjectCode:
+		return "Peer"
+	case ListObjectCode:
+		return "List"
+	case DictObjectCode:
+		return "Dict"
+	case StorageObjectCode:
+		return "Storage"
+	case MegaStorageObjectCode:
+		return "MegaStorage"
+	case CommandObjectCode:
+		return "Command"
+	case TransactionObjectCode:
+		return "Transaction"
+	case BlockObjectCode:
+		return "Block"
+	}
+	return "UnexpectedType"
+}
 
 type Account interface {
 	GetAccountId() string
@@ -33,6 +81,7 @@ type Account interface {
 	GetBalance() int64
 	GetQuorum() int32
 	GetDelegatePeerId() string
+	GetFromKey(key string) Object
 	Modelor
 }
 
@@ -40,6 +89,7 @@ type Peer interface {
 	GetPeerId() string
 	GetAddress() string
 	GetPublicKey() PublicKey
+	GetFromKey(key string) Object
 	Modelor
 }
 
@@ -53,6 +103,7 @@ func HasherEqual(a, b Hasher) bool {
 
 type Object interface {
 	GetType() ObjectCode
+	GetBoolean() bool
 	GetI32() int32
 	GetI64() int64
 	GetU32() uint32
@@ -66,7 +117,20 @@ type Object interface {
 	GetList() []Object
 	GetDict() map[string]Object
 	GetStorage() Storage
+	GetCommand() Command
+	GetTransaction() Transaction
+	GetBlock() Block
+	Cast(code ObjectCode) (Object, bool)
 	Modelor
+}
+
+func ObjectEq(a, b Object) bool {
+	if a == nil && b == nil {
+		return true
+	} else if a == nil || b == nil {
+		return false
+	}
+	return bytes.Equal(a.Hash(), b.Hash())
 }
 
 // a < b
@@ -114,8 +178,8 @@ func ObjectLess(a, b Object) bool {
 				return len(a.GetDict()) < len(b.GetDict())
 			}
 		}
-	case StorageObjectCode:
-		return HasherLess(a.GetStorage(), b.GetStorage())
+	default:
+		return HasherLess(a, b)
 	}
 	return true
 }
@@ -152,8 +216,6 @@ func NewAddress(id string) (Address, error) {
 		t = WallettAddressType
 	} else if regexp.GetRegexp().VerifyAccountId.MatchString(id) {
 		t = AccountAddressType
-	} else if regexp.GetRegexp().VerifyDomainId.MatchString(id) {
-		t = DomainAddressType
 	} else if regexp.GetRegexp().VerifyStorageId.MatchString(id) {
 		t = StorageAddressType
 	}

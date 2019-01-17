@@ -129,15 +129,17 @@ func (c *RemovePublicKeys) GetPublicKeys() []model.PublicKey {
 
 type DefineStorage struct {
 	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
 	*proskenion.DefineStorage
 }
 
 func (c *DefineStorage) GetStorage() model.Storage {
-	return &Storage{c.c, c.Storage}
+	return &Storage{c.c, c.e, c.v, c.Storage}
 }
 
 func (c *Command) GetDefineStorage() model.DefineStorage {
-	return &DefineStorage{c.cryptor, c.Command.GetDefineStorage()}
+	return &DefineStorage{c.cryptor, c.executor, c.validator, c.Command.GetDefineStorage()}
 }
 
 func (c *Command) GetCreateStorage() model.CreateStorage {
@@ -146,41 +148,47 @@ func (c *Command) GetCreateStorage() model.CreateStorage {
 
 type UpdateObject struct {
 	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
 	*proskenion.UpdateObject
 }
 
 func (c *UpdateObject) GetObject() model.Object {
-	return &Object{c.c, c.Object}
+	return &Object{c.c, c.e, c.v, c.Object}
 }
 
 func (c *Command) GetUpdateObject() model.UpdateObject {
-	return &UpdateObject{c.cryptor, c.Command.GetUpdateObject()}
+	return &UpdateObject{c.cryptor, c.executor, c.validator, c.Command.GetUpdateObject()}
 }
 
 type AddObject struct {
 	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
 	*proskenion.AddObject
 }
 
 func (c *AddObject) GetObject() model.Object {
-	return &Object{c.c, c.AddObject.Object}
+	return &Object{c.c, c.e, c.v, c.AddObject.Object}
 }
 
 func (c *Command) GetAddObject() model.AddObject {
-	return &AddObject{c.cryptor, c.Command.GetAddObject()}
+	return &AddObject{c.cryptor, c.executor, c.validator, c.Command.GetAddObject()}
 }
 
 type TransferObject struct {
 	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
 	*proskenion.TransferObject
 }
 
 func (c *TransferObject) GetObject() model.Object {
-	return &Object{c.c, c.TransferObject.Object}
+	return &Object{c.c, c.e, c.v, c.TransferObject.Object}
 }
 
 func (c *Command) GetTransferObject() model.TransferObject {
-	return &TransferObject{c.cryptor, c.Command.GetTransferObject()}
+	return &TransferObject{c.cryptor, c.executor, c.validator, c.Command.GetTransferObject()}
 }
 
 func (c *Command) GetAddPeer() model.AddPeer {

@@ -1,14 +1,16 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Storage struct {
 	cryptor core.Cryptor
+	e       core.CommandExecutor
+	v       core.CommandValidator
 	*proskenion.Storage
 }
 
@@ -35,11 +37,15 @@ func (s *Storage) GetObject() map[string]model.Object {
 	dict := make(map[string]model.Object)
 	for k, v := range s.Storage.GetObject() {
 		dict[k] = &Object{
-			s.cryptor,
+			s.cryptor, s.e, s.v,
 			v,
 		}
 	}
 	return dict
+}
+
+func (s *Storage) GetFromKey(key string) model.Object {
+	return s.GetObject()[key]
 }
 
 func (s *Storage) Marshal() ([]byte, error) {

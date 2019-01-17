@@ -58,6 +58,10 @@ func RandomQueue() core.ProposalTxQueue {
 	return queue
 }
 
+func EmptyTxList() core.TxList {
+	return repository.NewTxList(RandomCryptor())
+}
+
 func RandomTxList() core.TxList {
 	txList := repository.NewTxList(RandomCryptor())
 	for _, tx := range RandomTxs() {

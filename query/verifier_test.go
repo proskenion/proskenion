@@ -34,7 +34,7 @@ func TestNewQueryVerifier(t *testing.T) {
 		},
 		{
 			"case 3 peer",
-			"peer1:50051",
+			"com/peer",
 			"authorizer@com",
 			model.PeerObjectCode,
 			nil,

@@ -40,24 +40,29 @@ type ModelFactory interface {
 }
 
 type ObjectBuilder interface {
-	Int32(value int32) ObjectBuilder
-	Int64(value int64) ObjectBuilder
-	Uint32(value uint32) ObjectBuilder
-	Uint64(value uint64) ObjectBuilder
-	Str(value string) ObjectBuilder
-	Data(value []byte) ObjectBuilder
-	Address(value string) ObjectBuilder
-	Sig(value Signature) ObjectBuilder
-	Account(value Account) ObjectBuilder
-	Peer(value Peer) ObjectBuilder
-	List(value []Object) ObjectBuilder
-	Dict(value map[string]Object) ObjectBuilder
-	Storage(value Storage) ObjectBuilder
+	Bool(value bool) Object
+	Int32(value int32) Object
+	Int64(value int64) Object
+	Uint32(value uint32) Object
+	Uint64(value uint64) Object
+	Str(value string) Object
+	Data(value []byte) Object
+	Address(value string) Object
+	Sig(value Signature) Object
+	Account(value Account) Object
+	Peer(value Peer) Object
+	List(value []Object) Object
+	Dict(value map[string]Object) Object
+	Storage(value Storage) Object
+	Command(value Command) Object
+	Transaction(value Transaction) Object
+	Block(block Block) Object
 	Build() Object
 }
 
 type StorageBuilder interface {
 	From(Storage) StorageBuilder
+	FromMap(map[string]Object) StorageBuilder
 	Int32(key string, value int32) StorageBuilder
 	Int64(key string, value int64) StorageBuilder
 	Uint32(key string, value uint32) StorageBuilder
@@ -98,9 +103,9 @@ type BlockBuilder interface {
 
 type TxBuilder interface {
 	CreatedTime(int64) TxBuilder
-	TransferBalance(srcAccountId string, destAccountId string, amount int64) TxBuilder
+	TransferBalance(authorizerId string, srcAccountId string, destAccountId string, amount int64) TxBuilder
 	CreateAccount(authorizerId string, accountId string, publicKeys []PublicKey, quorum int32) TxBuilder
-	AddBalance(accountId string, amount int64) TxBuilder
+	AddBalance(authorizerId string, accountId string, amount int64) TxBuilder
 	AddPublicKeys(authorizerId string, accountId string, pubkeys []PublicKey) TxBuilder
 	RemovePublicKeys(authorizerId string, accountId string, pubkeys []PublicKey) TxBuilder
 	SetQuorum(authorizerId string, accountId string, quorum int32) TxBuilder
@@ -111,6 +116,7 @@ type TxBuilder interface {
 	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder
 	AddPeer(authorizerId string, peerId string, address string, pubkey PublicKey) TxBuilder
 	Consign(authorizerId string, accountId string, peerId string) TxBuilder
+	AppendCommand(cmd Command) TxBuilder
 	Build() Transaction
 }
 
@@ -118,7 +124,7 @@ type QueryBuilder interface {
 	AuthorizerId(string) QueryBuilder
 	Select(string) QueryBuilder
 	FromId(string) QueryBuilder
-	Where([]byte) QueryBuilder
+	Where(string) QueryBuilder
 	OrderBy(key string, order OrderCode) QueryBuilder
 	Limit(int32) QueryBuilder
 	CreatedTime(int64) QueryBuilder

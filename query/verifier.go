@@ -18,6 +18,7 @@ var (
 	ErrQueryVerifyAccountTargetIdNotAccountId = fmt.Errorf("Failed Query Verify targetId is not accountId when get account object")
 	ErrQueryVerifyPeerTargetIdNotPeerAddress  = fmt.Errorf("Failed Query Verify targetId is not PeerAddress when get peer object")
 	ErrQueryVerifyAuthorizerIdNotAccountId    = fmt.Errorf("Failed Query Verify authorizerId is not accountId")
+	ErrQueryVerifyFromIdNotIdFormat           = fmt.Errorf("Failed Query Verify fromId is not valid format")
 )
 
 func (q *QueryVerifier) Verify(query model.Query) error {
@@ -26,6 +27,10 @@ func (q *QueryVerifier) Verify(query model.Query) error {
 	if ok := GetRegexp().VerifyAccountId.MatchString(qp.GetAuthorizerId()); !ok {
 		return errors.Wrapf(ErrQueryVerifyAuthorizerIdNotAccountId,
 			"authorizerId : %s, must be : %s", qp.GetAuthorizerId(), GetRegexp().VerifyAccountId.String())
+	}
+	if _, err := model.NewAddress(qp.GetFromId()); err != nil {
+		return errors.Wrapf(ErrQueryVerifyFromIdNotIdFormat,
+			"fromId : %s, not invalid id format", qp.GetFromId())
 	}
 
 	/*

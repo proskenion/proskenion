@@ -1,18 +1,19 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 )
 
 type ObjectFactory struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 }
 
-func NewObjectFactory(cryptor core.Cryptor) model.ObjectFactory {
-	return &ObjectFactory{cryptor}
+func NewObjectFactory(cryptor core.Cryptor, executor core.CommandExecutor, validator core.CommandValidator) model.ObjectFactory {
+	return &ObjectFactory{cryptor, executor, validator}
 }
 
 func (f *ObjectFactory) NewEmptySignature() model.Signature {
@@ -77,152 +78,197 @@ func (f *ObjectFactory) NewPeer(peerId string, address string, pubkey model.Publ
 }
 
 func (f *ObjectFactory) NewObjectBuilder() model.ObjectBuilder {
-	return &ObjectBuilder{f.cryptor, &proskenion.Object{}}
+	return &ObjectBuilder{f.cryptor, f.executor, f.validator, &proskenion.Object{}}
 }
 
 func (f *ObjectFactory) NewStorageBuilder() model.StorageBuilder {
 	return &StorageBuilder{
 		f.cryptor,
+		f.executor,
+		f.validator,
 		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
 	}
 }
 
 func (f *ObjectFactory) NewEmptyStorage() model.Storage {
 	return &Storage{
-		f.cryptor,
+		f.cryptor, f.executor, f.validator,
 		&proskenion.Storage{Object: make(map[string]*proskenion.Object)},
 	}
 }
 
 func (f *ObjectFactory) NewEmptyObject() model.Object {
 	return &Object{
-		f.cryptor,
+		f.cryptor, f.executor, f.validator,
 		&proskenion.Object{},
 	}
 }
 
 type ObjectBuilder struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 	*proskenion.Object
 }
 
-func (f *ObjectBuilder) Int32(value int32) model.ObjectBuilder {
+func (f *ObjectBuilder) Bool(value bool) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_BoolObjectCode,
+		Object: &proskenion.Object_Boolean{Boolean: value},
+	}
+	return f.Build()
+}
+
+func (f *ObjectBuilder) Int32(value int32) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Int32ObjectCode,
 		Object: &proskenion.Object_I32{I32: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Int64(value int64) model.ObjectBuilder {
+func (f *ObjectBuilder) Int64(value int64) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Int64ObjectCode,
 		Object: &proskenion.Object_I64{I64: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Uint32(value uint32) model.ObjectBuilder {
+func (f *ObjectBuilder) Uint32(value uint32) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Uint32ObjectCode,
 		Object: &proskenion.Object_U32{U32: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Uint64(value uint64) model.ObjectBuilder {
+func (f *ObjectBuilder) Uint64(value uint64) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_Uint64ObjectCode,
 		Object: &proskenion.Object_U64{U64: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Str(value string) model.ObjectBuilder {
+func (f *ObjectBuilder) Str(value string) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_StringObjectCode,
 		Object: &proskenion.Object_Str{Str: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Data(value []byte) model.ObjectBuilder {
+func (f *ObjectBuilder) Data(value []byte) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_BytesObjectCode,
 		Object: &proskenion.Object_Data{Data: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Address(value string) model.ObjectBuilder {
+func (f *ObjectBuilder) Address(value string) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_AddressObjectCode,
 		Object: &proskenion.Object_Address{Address: value},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Sig(value model.Signature) model.ObjectBuilder {
+func (f *ObjectBuilder) Sig(value model.Signature) model.Object {
 	f.Object = &proskenion.Object{
 		Type: proskenion.ObjectCode_SignatureObjectCode,
 		Object: &proskenion.Object_Sig{Sig: &proskenion.Signature{
 			PublicKey: value.GetPublicKey(),
 			Signature: value.GetSignature()}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Account(value model.Account) model.ObjectBuilder {
+func (f *ObjectBuilder) Account(value model.Account) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_AccountObjectCode,
 		Object: &proskenion.Object_Account{Account: value.(*Account).Account},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Peer(value model.Peer) model.ObjectBuilder {
+func (f *ObjectBuilder) Peer(value model.Peer) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_PeerObjectCode,
 		Object: &proskenion.Object_Peer{Peer: value.(*Peer).Peer},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) List(value []model.Object) model.ObjectBuilder {
+func (f *ObjectBuilder) List(value []model.Object) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_ListObjectCode,
 		Object: &proskenion.Object_List{List: &proskenion.ObjectList{List: ProslObjectListFromObjectList(value)}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Dict(value map[string]model.Object) model.ObjectBuilder {
+func (f *ObjectBuilder) Dict(value map[string]model.Object) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_DictObjectCode,
 		Object: &proskenion.Object_Dict{Dict: &proskenion.ObjectDict{Dict: ProslObjectMapsFromObjectMaps(value)}},
 	}
-	return f
+	return f.Build()
 }
 
-func (f *ObjectBuilder) Storage(value model.Storage) model.ObjectBuilder {
+func (f *ObjectBuilder) Storage(value model.Storage) model.Object {
 	f.Object = &proskenion.Object{
 		Type:   proskenion.ObjectCode_StorageObjectCode,
 		Object: &proskenion.Object_Storage{Storage: value.(*Storage).Storage},
 	}
-	return f
+	return f.Build()
+}
+
+func (f *ObjectBuilder) Command(value model.Command) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_CommandObjectCode,
+		Object: &proskenion.Object_Command{Command: value.(*Command).Command},
+	}
+	return f.Build()
+}
+
+func (f *ObjectBuilder) Transaction(value model.Transaction) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_TransactionObjectCode,
+		Object: &proskenion.Object_Transaction{Transaction: value.(*Transaction).Transaction},
+	}
+	return f.Build()
+}
+
+func (f *ObjectBuilder) Block(value model.Block) model.Object {
+	f.Object = &proskenion.Object{
+		Type:   proskenion.ObjectCode_BlockObjectCode,
+		Object: &proskenion.Object_Block{Block: value.(*Block).Block},
+	}
+	return f.Build()
 }
 
 func (f *ObjectBuilder) Build() model.Object {
-	return &Object{f.cryptor, f.Object}
+	return &Object{f.cryptor, f.executor, f.validator, f.Object}
 }
 
 type StorageBuilder struct {
-	cryptor core.Cryptor
+	cryptor   core.Cryptor
+	executor  core.CommandExecutor
+	validator core.CommandValidator
 	*proskenion.Storage
 }
 
 func (b *StorageBuilder) From(s model.Storage) model.StorageBuilder {
 	b.Storage = s.(*Storage).Storage
+	return b
+}
+
+func (b *StorageBuilder) FromMap(s map[string]model.Object) model.StorageBuilder {
+	for key, value := range s {
+		b.Storage.Object[key] = value.(*Object).Object
+	}
 	return b
 }
 
@@ -334,6 +380,8 @@ func (b *StorageBuilder) Set(key string, value model.Object) model.StorageBuilde
 func (b *StorageBuilder) Build() model.Storage {
 	return &Storage{
 		b.cryptor,
+		b.executor,
+		b.validator,
 		b.Storage,
 	}
 }
@@ -404,7 +452,8 @@ func NewModelFactory(cryptor core.Cryptor,
 	executor core.CommandExecutor,
 	cmdValidator core.CommandValidator,
 	queryVerifier core.QueryVerifier) model.ModelFactory {
-	factory := &ModelFactory{NewObjectFactory(cryptor), cryptor, executor, cmdValidator, queryVerifier}
+	factory := &ModelFactory{NewObjectFactory(cryptor, executor, cmdValidator),
+		cryptor, executor, cmdValidator, queryVerifier}
 	executor.SetFactory(factory)
 	cmdValidator.SetFactory(factory)
 	return factory
@@ -526,7 +575,7 @@ func (t *TxBuilder) CreatedTime(time int64) model.TxBuilder {
 	return t
 }
 
-func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) TransferBalance(authorizerId, srcAccountId string, destAccountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_TransferBalance{
@@ -536,7 +585,7 @@ func (t *TxBuilder) TransferBalance(srcAccountId string, destAccountId string, b
 				},
 			},
 			TargetId:     srcAccountId,
-			AuthorizerId: srcAccountId,
+			AuthorizerId: authorizerId,
 		})
 	return t
 }
@@ -556,7 +605,7 @@ func (t *TxBuilder) CreateAccount(authorizerId string, accountId string, publicK
 	return t
 }
 
-func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder {
+func (t *TxBuilder) AddBalance(authorizerId string, accountId string, balance int64) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
 			Command: &proskenion.Command_AddBalance{
@@ -565,7 +614,7 @@ func (t *TxBuilder) AddBalance(accountId string, balance int64) model.TxBuilder 
 				},
 			},
 			TargetId:     accountId,
-			AuthorizerId: accountId,
+			AuthorizerId: authorizerId,
 		})
 	return t
 }
@@ -711,6 +760,11 @@ func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string
 	return t
 }
 
+func (t *TxBuilder) AppendCommand(cmd model.Command) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands, cmd.(*Command).Command)
+	return t
+}
+
 func (t *TxBuilder) Build() model.Transaction {
 	return &Transaction{t.Transaction,
 		t.cryptor, t.executor, t.validator}
@@ -737,10 +791,8 @@ func (q *QueryBuilder) FromId(fromId string) model.QueryBuilder {
 	return q
 }
 
-func (q *QueryBuilder) Where(where []byte) model.QueryBuilder {
-	cond := &proskenion.ConditionalFormula{}
-	proto.Unmarshal(where, cond)
-	q.Payload.Where = cond
+func (q *QueryBuilder) Where(where string) model.QueryBuilder {
+	q.Payload.Where = where
 	return q
 }
 

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package proskenion;
 
-import "transaction.proto";
+import "objects.proto";
 import "query.proto";
 
 // Error は GRPC Error Code で返す
