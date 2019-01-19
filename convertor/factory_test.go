@@ -1,7 +1,6 @@
 package convertor_test
 
 import (
-	"fmt"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -240,7 +239,6 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
 
 		// check and commit prosl
-		fmt.Println("prosl: ",tx.GetPayload().GetCommands()[15])
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[15].GetAuthorizerId())
 		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[15].GetTargetId())
 		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[15].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())

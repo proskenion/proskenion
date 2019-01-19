@@ -78,13 +78,16 @@ func (c *CommandValidator) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model
 	return nil
 }
 
-func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) bool {
+func containsPublicKeyInSignaturesForQuorum(sigs []model.Signature, key model.PublicKey, quorum int32) bool {
 	for _, sig := range sigs {
-		if bytes.Equal(sig.GetPublicKey(), key) {
+		if quorum == 0 {
 			return true
 		}
+		if bytes.Equal(sig.GetPublicKey(), key) {
+			quorum--
+		}
 	}
-	return false
+	return quorum == 0
 }
 
 // Transaction 全体の Stateful Validate
@@ -107,7 +110,7 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 		}
 		// TODO : sort すれば全体一致判定をO(nlogn)
 		for _, key := range ac.GetPublicKeys() {
-			if !containsPublicKeyInSignatures(tx.GetSignatures(), key) {
+			if !containsPublicKeyInSignaturesForQuorum(tx.GetSignatures(), key, ac.GetQuorum()) {
 				return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
 					"authorizer : %s, expect key : %x",
 					cmd.GetAuthorizerId(), key)

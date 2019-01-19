@@ -81,13 +81,11 @@ func (r *Repository) executeProslIncentive(wsv core.WSV, txHistory core.TxHistor
 	// 1. get prosl
 	proSt := r.fc.NewEmptyStorage()
 	if err := wsv.Query(model.MustAddress(r.conf.Prosl.Incentive.Id), proSt); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	pr := prosl.NewProsl(r.fc, r, r.cryptor, r.conf)
 	proslByte := proSt.GetFromKey(core.ProslKey).GetData()
 	if err := pr.Unmarshal(proslByte); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	// 2. execute incentive prosl

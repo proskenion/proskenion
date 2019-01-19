@@ -9,7 +9,6 @@ import (
 )
 
 func TestScenario(t *testing.T) {
-	return 
 	// Boot Server
 	conf := config.NewConfig("config.yaml")
 	server := RandomServer()
@@ -26,11 +25,11 @@ func TestScenario(t *testing.T) {
 	am.SetAuthorizer(t)
 
 	acs := []*AccountWithPri{
-		NewAccountWithPri("target1@com"),
-		NewAccountWithPri("target2@com"),
-		NewAccountWithPri("target3@com"),
-		NewAccountWithPri("target4@com"),
-		NewAccountWithPri("target5@com"),
+		NewAccountWithPri("target1@pr"),
+		NewAccountWithPri("target2@pr"),
+		NewAccountWithPri("target3@pr"),
+		NewAccountWithPri("target4@pr"),
+		NewAccountWithPri("target5@pr"),
 	}
 
 	// Scenario 1 ====== Create 5 Accounts ===================
@@ -39,7 +38,7 @@ func TestScenario(t *testing.T) {
 			am.CreateAccount(t, ac)
 		}(ac)
 	}
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 2)
 	ams := []*AccountManager{
 		NewAccountManager(t, serverPeer),
 		NewAccountManager(t, serverPeer),

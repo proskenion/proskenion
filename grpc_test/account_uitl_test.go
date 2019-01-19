@@ -22,7 +22,7 @@ func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 	require.NoError(t, err)
 	return &AccountManager{
 		c,
-		NewAccountWithPri("authorizer@com"),
+		NewAccountWithPri("authorizer@pr"),
 		fc,
 	}
 }
@@ -30,6 +30,7 @@ func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 func (am *AccountManager) SetAuthorizer(t *testing.T) {
 	tx := am.fc.NewTxBuilder().
 		AddPublicKeys(am.authorizer.AccountId, am.authorizer.AccountId, []model.PublicKey{am.authorizer.Pubkey}).
+		SetQuorum(am.authorizer.AccountId, am.authorizer.AccountId, 1).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))

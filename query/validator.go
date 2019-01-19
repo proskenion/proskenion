@@ -54,5 +54,5 @@ func (q *QueryValidator) Validate(query model.Query) error {
 			"authorizer : %s, expect key : %x",
 			query.GetPayload().GetAuthorizerId(), query.GetSignature().GetPublicKey())
 	}
-	return nil
+	return rtx.Commit()
 }
