@@ -1,0 +1,39 @@
+- set:
+    - tx
+    - transaction:
+        commands:
+          - add_peer:
+              authorizer_id: root@com
+              peer_id: root@peer
+              address: 127.0.0.1:50055
+              public_key: 0x3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+          - create_account:
+              authorizer_id: root@com
+              account_id: authorizer@com
+              public_keys:
+                list: nil
+              quorum: 0
+          - create_account:
+              authoirzer_id: root@com
+              account_id: incentive@com
+              public_keys:
+                list: nil
+              quorum: 0
+          - define_storage:
+              authorizer_id: root@root
+              storage_id: /degraders
+              storage:
+                storage:
+                  acs:
+                    list: nil
+          - create_storage:
+              authorizer_id: root@root
+              wallet_id: root@root/degraders
+          - define_storage:
+              authorizer_id: root@root
+              storage_id: /prflag
+              storage:
+                storage:
+                  prosl_type: "none"
+- return:
+    variable: tx

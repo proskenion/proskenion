@@ -15,7 +15,7 @@ import (
 func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri) {
 	txList := repository.NewTxList(RandomCryptor())
 	require.NoError(t, txList.Push(
-		NewTestFactory().NewTxBuilder().
+		RandomFactory().NewTxBuilder().
 			CreateAccount("root@/root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).
 			CreateAccount("root@/root", "target0@com", []model.PublicKey{}, 0).
 			CreateAccount("root@/root", "target1@com", []model.PublicKey{}, 0).
@@ -32,14 +32,14 @@ func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri)
 
 // TODO 不十分
 func TestQueryProcessor_Query(t *testing.T) {
-	fc := NewTestFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	fc := RandomFactory()
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 
 	// GenesisCommit
 	authorizer := NewAccountWithPri("authorizer@com/account")
 	genesisCommit(t, rp, authorizer)
 
-	qp := NewQueryProcessor(rp, fc, NewTestConfig())
+	qp := NewQueryProcessor(rp, fc, RandomConfig())
 
 	query := GetAccountQuery(t, authorizer, "target0@com/account")
 	res, err := qp.Query(query)

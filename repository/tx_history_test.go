@@ -60,7 +60,7 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 
 	tx, err := dba.Begin()
 	require.NoError(t, err)
-	txFirstHistory, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), firstHash)
+	txFirstHistory, err := repository.NewTxHistory(tx, RandomFactory(), RandomCryptor(), firstHash)
 
 	for _, tx := range txs2 {
 		test_TxHistory_Upserts(t, txFirstHistory, tx)
@@ -70,7 +70,7 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 	secondHash2 := txFirstHistory.Hash()
 	assert.Equal(t, secondHash, secondHash2)
 
-	txFirstHistory2, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), firstHash)
+	txFirstHistory2, err := repository.NewTxHistory(tx, RandomFactory(), RandomCryptor(), firstHash)
 	for _, tx := range txs3 {
 		test_TxHistory_Upserts(t, txFirstHistory2, tx)
 	}
@@ -93,7 +93,7 @@ func TestTxHistory(t *testing.T) {
 	dba := RandomDBA()
 	tx, err := dba.Begin()
 	require.NoError(t, err)
-	TxHistory, err := repository.NewTxHistory(tx, NewTestFactory(), RandomCryptor(), model.Hash(nil))
+	TxHistory, err := repository.NewTxHistory(tx, RandomFactory(), RandomCryptor(), model.Hash(nil))
 	require.NoError(t, err)
 	test_TxHistory(t, dba, TxHistory)
 }

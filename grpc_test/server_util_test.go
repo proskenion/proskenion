@@ -13,12 +13,11 @@ import (
 	"github.com/proskenion/proskenion/consensus"
 	"github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
-	"github.com/proskenion/proskenion/core"
-	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/p2p"
+	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
@@ -42,13 +41,18 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	cryptor := crypto.NewEd25519Sha256Cryptor()
 
 	db := dba.NewDBSQLite(conf)
-	cmdExecutor := command.NewCommandExecutor()
-	cmdValidator := command.NewCommandValidator()
+	cmdExecutor := command.NewCommandExecutor(conf)
+	cmdValidator := command.NewCommandValidator(conf)
 	qVerifier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
 
-	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc)
+	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
+
+	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+
+	cmdExecutor.SetField(fc, pr)
+	cmdValidator.SetField(fc, pr)
 
 	qp := query.NewQueryProcessor(rp, fc, conf)
 	qv := query.NewQueryValidator(rp, fc, conf)
@@ -59,19 +63,17 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
-	consensus := consensus.NewConsensus(cc, cs, gossip, logger)
+	css := consensus.NewConsensus(cc, cs, gossip, logger)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genesisTxList := func() core.TxList {
-		txList := repository.NewTxList(cryptor)
-		txList.Push(fc.NewTxBuilder().
-			CreateAccount("root", "root@com", []model.PublicKey{conf.Peer.PublicKeyBytes()}, 1).
-			CreateAccount("root", "authorizer@com", []model.PublicKey{}, 0).
-			Build())
-		return txList
+	genTxList, err := repository.NewTxListFromConf(cryptor, pr, conf)
+	if err != nil {
+		panic(err)
 	}
-	require.NoError(t, rp.GenesisCommit(genesisTxList()))
+	if err := rp.GenesisCommit(genTxList); err != nil {
+		panic(err)
+	}
 
 	// ==================== gate =======================
 	logger.Info("================= Gate Boot =================")
@@ -83,7 +85,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {
-		consensus.Boot()
+		css.Boot()
 	}()
 
 	if err := s.Serve(l); err != nil {
@@ -91,7 +93,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	}
 }
 
-func NewTestServer() *grpc.Server {
+func RandomServer() *grpc.Server {
 	return grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),

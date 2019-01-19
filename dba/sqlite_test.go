@@ -7,13 +7,13 @@ import (
 )
 
 func TestDBASQLite_StoreAndLoad(t *testing.T) {
-	conf := NewTestConfig()
+	conf := RandomConfig()
 	db := NewDBSQLite(conf)
 	testDBA_Store_Load(t, db.DBA("test"))
 }
 
 func TestDBASQLiteTx_StoreAndLoad(t *testing.T) {
-	conf := NewTestConfig()
+	conf := RandomConfig()
 	db := NewDBSQLite(conf)
 	testDBATx_Store_Load(t, db.DBA("test"))
 }

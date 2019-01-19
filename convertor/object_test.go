@@ -14,7 +14,7 @@ func TestAccount_GetFromKey(t *testing.T) {
 		RandomPublicKey(),
 	}
 	exKeys := PublicKeysToListObject(keys, RandomCryptor())
-	a := NewTestFactory().NewAccountBuilder().
+	a := RandomFactory().NewAccountBuilder().
 		AccountId("account@domain").
 		AccountName("account").
 		PublicKeys(keys).
@@ -42,7 +42,7 @@ func TestAccount_GetFromKey(t *testing.T) {
 
 func TestPeer_GetFromKey(t *testing.T) {
 	key := RandomPublicKey()
-	p := NewTestFactory().NewPeer("peer@domain", "1.1.1.1:0000", key)
+	p := RandomFactory().NewPeer("peer@domain", "1.1.1.1:0000", key)
 
 	assert.Equal(t, "peer@domain", p.GetFromKey("id").GetAddress())
 	assert.Equal(t, "peer@domain", p.GetFromKey("peer_id").GetAddress())
@@ -55,7 +55,7 @@ func TestPeer_GetFromKey(t *testing.T) {
 }
 
 func TestStorage_GetFromKey(t *testing.T) {
-	st := NewTestFactory().
+	st := RandomFactory().
 		NewStorageBuilder().
 		Address("address", "account@com").
 		Str("str", "mojimoji").
@@ -67,4 +67,12 @@ func TestStorage_GetFromKey(t *testing.T) {
 	assert.Equal(t, "mojimoji", st.GetFromKey("str").GetStr())
 
 	assert.Equal(t, int64(111), st.GetFromKey("int64").GetI64())
+}
+
+func TestMapConvertor(t *testing.T) {
+	binary := ConvertYamlFileToProtoBinary(t, RandomConfig().Prosl.Incentive.Path)
+	for i := 0; i < 10; i++ {
+		binary2 := ConvertYamlFileToProtoBinary(t, RandomConfig().Prosl.Incentive.Path)
+		assert.Equal(t, binary, binary2)
+	}
 }

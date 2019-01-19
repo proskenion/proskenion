@@ -109,6 +109,11 @@ func ProslParsePrimitiveObject(value interface{}) (*proskenion.Object, error) {
 			Type:   proskenion.ObjectCode_StringObjectCode,
 			Object: &proskenion.Object_Str{s},
 		}, nil
+	case bool:
+		return &proskenion.Object{
+			Type:   proskenion.ObjectCode_BoolObjectCode,
+			Object: &proskenion.Object_Boolean{s},
+		}, nil
 	}
 	return nil, ProslParseUnknownCastError(value, value)
 }
@@ -464,7 +469,7 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_XorOp{op}}, nil
-			case "cocnat":
+			case "concat":
 				op, err := ParseConcatOperator(value)
 				if err != nil {
 					return nil, err

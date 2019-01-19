@@ -4,20 +4,24 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type CommandExecutor struct {
 	factory model.ModelFactory
+	prosl   core.Prosl
+	conf    *config.Config
 }
 
-func NewCommandExecutor() core.CommandExecutor {
-	return &CommandExecutor{}
+func NewCommandExecutor(conf *config.Config) core.CommandExecutor {
+	return &CommandExecutor{conf: conf}
 }
 
-func (c *CommandExecutor) SetFactory(factory model.ModelFactory) {
+func (c *CommandExecutor) SetField(factory model.ModelFactory, prosl core.Prosl) {
 	c.factory = factory
+	c.prosl = prosl
 }
 
 func (c *CommandExecutor) TransferBalance(wsv model.ObjectFinder, cmd model.Command) error {
@@ -62,6 +66,7 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 		Quorum(cmd.GetCreateAccount().GetQuorum()).
 		Build()
 
+	/*
 	ac := c.factory.NewEmptyAccount()
 	if err := wsv.Query(id, ac); err == nil {
 		if ac.GetAccountId() == cmd.GetTargetId() {
@@ -69,6 +74,7 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 				fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
 		}
 	}
+	*/
 	if err := wsv.Append(id, newAccount); err != nil {
 		return err
 	}
@@ -281,6 +287,54 @@ func (c *CommandExecutor) Consign(wsv model.ObjectFinder, cmd model.Command) err
 		DelegatePeerId(cc.GetPeerId()).
 		Build()
 	if err := wsv.Append(id, newAc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.Command) error {
+	cc := cmd.GetCheckAndCommitProsl()
+	targetId := model.MustAddress(cmd.GetTargetId())
+
+	// 1. get update prosl
+	updateId := model.MustAddress(c.conf.Prosl.Update.Id)
+	updateSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(updateId, updateSt); err != nil {
+		return err
+	}
+	buf := updateSt.GetFromKey(core.ProslKey).GetData()
+	if err := c.prosl.Unmarshal(buf); err != nil {
+		return err
+	}
+
+	// 2. update prosl execute with prams + ["target_id"] = target_id
+	params := cc.GetVariables()
+	params[core.TargetIdKey] = c.factory.NewObjectBuilder().Address(cmd.GetTargetId())
+	if check, variables, err := c.prosl.ExecuteWithParams(params); err != nil {
+		return errors.Errorf("variales: %+v, error: %s", variables, err.Error())
+	} else if !check.GetBoolean() {
+		return errors.Wrapf(core.ErrCommandExecutorCheckAndCommitProslInvalid,
+			"variables: %+v", variables)
+	}
+
+	// 3. if true, targetId 's prosl setting to dest incentive or consensus or update
+	proSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(targetId, proSt); err != nil {
+		return errors.Wrap(core.ErrCommandExecutorCheckAndCommitProslNotFound, err.Error())
+	}
+	t := proSt.GetFromKey(core.ProslTypeKey).GetStr()
+	var destId model.Address
+	switch t {
+	case core.IncentiveKey:
+		destId = model.MustAddress(c.conf.Prosl.Incentive.Id)
+	case core.ConsensusKey:
+		destId = model.MustAddress(c.conf.Prosl.Consensus.Id)
+	case core.UpdateKey:
+		destId = model.MustAddress(c.conf.Prosl.Update.Id)
+	default:
+		return errors.Errorf("not found key %s, or unexpected value: %s", core.ProslKey, t)
+	}
+	if err := wsv.Append(destId, proSt); err != nil {
 		return err
 	}
 	return nil

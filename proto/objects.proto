@@ -95,7 +95,8 @@ message Command {
         TransferObject transferObject = 13;
         AddPeer addPeer = 14;
         Consign consign = 15;
-    }
+        CheckAndCommitProsl checkAndCommitProsl = 16;
+   }
 }
 
 /**
@@ -196,6 +197,16 @@ message AddPeer {
  **/
 message Consign {
     string peerId = 1;
+}
+
+/**
+ * CheckAndCommitProsl は target_id で指定した prosl を
+ *  variables に引数列を渡して change_update prosl が true を返した時
+ *  incentive or consensus or change_update として再定義する。
+ *
+ **/
+message CheckAndCommitProsl {
+    map<string, Object> variables = 2;
 }
 
 /**

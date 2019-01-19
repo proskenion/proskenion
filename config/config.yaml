@@ -1,12 +1,27 @@
 # config.yaml default
 db:
- path: database
- kind: sqlite3
- name: db
+  path: database
+  kind: sqlite3
+  name: db
 proposal_txs_limits: 1000
 commit:
- num_tx_in_block: 1000
+  num_tx_in_block: 1000
 peer:
- public_key: 0
- private_key: 0
- port: 50023
+  public_key: 0
+  private_key: 0
+  port: 50023
+prosl:
+  id: "/prosl"
+  genesis:
+    path: ./grpc_test/genesis.yaml
+  incentive:
+    path: ./grpc_test/incentive.yaml
+    id: incentive/prosl
+  consensus:
+    path: ./grpc_test/consensus.yaml
+    id: consensus/prosl
+  update:
+    path: ./grpc_test/update.yaml
+    id: update/prosl
+root:
+  id: root@com

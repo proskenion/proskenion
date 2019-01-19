@@ -17,6 +17,7 @@ type Command interface {
 	GetTransferObject() TransferObject
 	GetAddPeer() AddPeer
 	GetConsign() Consign
+	GetCheckAndCommitProsl() CheckAndCommitProsl
 
 	Execute(ObjectFinder) error
 	Validate(ObjectFinder) error
@@ -78,4 +79,8 @@ type AddPeer interface {
 
 type Consign interface {
 	GetPeerId() string
+}
+
+type CheckAndCommitProsl interface {
+	GetVariables() map[string]Object
 }

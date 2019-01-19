@@ -22,6 +22,14 @@ func ProslObjectMapsFromObjectMaps(objects map[string]model.Object) map[string]*
 	return ret
 }
 
+func ObjectMapsFromProslObjectMaps(c core.Cryptor, e core.CommandExecutor, v core.CommandValidator, objects map[string]*proskenion.Object) map[string]model.Object {
+	ret := make(map[string]model.Object)
+	for key, value := range objects {
+		ret[key] = &Object{c, e, v, value}
+	}
+	return ret
+}
+
 func ProslObjectListFromObjectList(objects []model.Object) []*proskenion.Object {
 	ret := make([]*proskenion.Object, 0)
 	for _, value := range objects {
@@ -45,7 +53,11 @@ func (s *Storage) GetObject() map[string]model.Object {
 }
 
 func (s *Storage) GetFromKey(key string) model.Object {
-	return s.GetObject()[key]
+	if ret, ok := s.GetObject()[key]; ok {
+		return ret
+	} else {
+		return &Object{nil, nil, nil, &proskenion.Object{}}
+	}
 }
 
 func (s *Storage) Marshal() ([]byte, error) {

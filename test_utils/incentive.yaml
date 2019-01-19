@@ -1,0 +1,7 @@
+- return:
+    transaction:
+      commands:
+        - add_balance:
+            authorizer_id: root@com
+            target_id: incentive@com
+            balance: 10000ll

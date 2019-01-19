@@ -454,8 +454,6 @@ func NewModelFactory(cryptor core.Cryptor,
 	queryVerifier core.QueryVerifier) model.ModelFactory {
 	factory := &ModelFactory{NewObjectFactory(cryptor, executor, cmdValidator),
 		cryptor, executor, cmdValidator, queryVerifier}
-	executor.SetFactory(factory)
-	cmdValidator.SetFactory(factory)
 	return factory
 }
 
@@ -755,6 +753,18 @@ func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string
 				Consign: &proskenion.Consign{PeerId: peerId},
 			},
 			TargetId:     accountId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) CheckAndCommitProsl(authorizerId string, proslId string, params map[string]model.Object) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_CheckAndCommitProsl{
+				CheckAndCommitProsl: &proskenion.CheckAndCommitProsl{Variables: ProslObjectMapsFromObjectMaps(params)},
+			},
+			TargetId:     proslId,
 			AuthorizerId: authorizerId,
 		})
 	return t

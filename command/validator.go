@@ -2,21 +2,26 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 )
 
 type CommandValidator struct {
-	fc model.ModelFactory
+	fc    model.ModelFactory
+	prosl core.Prosl
+	conf  *config.Config
 }
 
-func NewCommandValidator() core.CommandValidator {
-	return &CommandValidator{}
+func NewCommandValidator(conf *config.Config) core.CommandValidator {
+	return &CommandValidator{conf: conf}
 }
 
-func (c *CommandValidator) SetFactory(factory model.ModelFactory) {
+func (c *CommandValidator) SetField(factory model.ModelFactory, prosl core.Prosl) {
 	c.fc = factory
+	c.prosl = prosl
 }
 
 func (c *CommandValidator) TransferBalance(wsv model.ObjectFinder, cmd model.Command) error {
@@ -24,6 +29,12 @@ func (c *CommandValidator) TransferBalance(wsv model.ObjectFinder, cmd model.Com
 }
 
 func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	ac := c.fc.NewEmptyAccount()
+	if err := wsv.Query(id, ac); err == nil {
+		return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
+			fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
+	}
 	return nil
 }
 
@@ -63,13 +74,20 @@ func (c *CommandValidator) Consign(wsv model.ObjectFinder, cmd model.Command) er
 	return nil
 }
 
-func containsPublicKeyInSignatures(sigs []model.Signature, key model.PublicKey) bool {
+func (c *CommandValidator) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.Command) error {
+	return nil
+}
+
+func containsPublicKeyInSignaturesForQuorum(sigs []model.Signature, key model.PublicKey, quorum int32) bool {
 	for _, sig := range sigs {
-		if bytes.Equal(sig.GetPublicKey(), key) {
+		if quorum == 0 {
 			return true
 		}
+		if bytes.Equal(sig.GetPublicKey(), key) {
+			quorum--
+		}
 	}
-	return false
+	return quorum == 0
 }
 
 // Transaction 全体の Stateful Validate
@@ -92,7 +110,7 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 		}
 		// TODO : sort すれば全体一致判定をO(nlogn)
 		for _, key := range ac.GetPublicKeys() {
-			if !containsPublicKeyInSignatures(tx.GetSignatures(), key) {
+			if !containsPublicKeyInSignaturesForQuorum(tx.GetSignatures(), key, ac.GetQuorum()) {
 				return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
 					"authorizer : %s, expect key : %x",
 					cmd.GetAuthorizerId(), key)

@@ -12,6 +12,8 @@ type Config struct {
 	ProposalTxsLimits int          `yaml:"proposal_txs_limits"`
 	Commit            CommitConfig `yaml:"commit"`
 	Peer              PeerConfig   `yaml:"peer"`
+	Prosl             ProslConfig  `yaml:"prosl"`
+	Root              RootConfig   `yaml:"root"`
 }
 
 type DBConfig struct {
@@ -28,6 +30,23 @@ type PeerConfig struct {
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
 	Port       string `yaml:"port"`
+}
+
+type ProslConfig struct {
+	Id        string             `yaml:"id"`
+	Genesis   DefaultProslConfig `yaml:genesis`
+	Incentive DefaultProslConfig `yaml:"incentive"`
+	Consensus DefaultProslConfig `yaml:"consensus"`
+	Update    DefaultProslConfig `yaml:"update"`
+}
+
+type DefaultProslConfig struct {
+	Path string `yaml:"path"`
+	Id   string `yaml:"id"`
+}
+
+type RootConfig struct {
+	Id string `yaml:"id" default:"root@root"`
 }
 
 func (c PeerConfig) PublicKeyBytes() model.PublicKey {
@@ -52,7 +71,7 @@ func NewConfig(configPath string) *Config {
 		panic(err)
 	}
 
-	config := &Config{}
+	config := &Config{Root: RootConfig{Id: "root@root"}}
 	err = yaml.Unmarshal(buf, &config)
 	if err != nil {
 		panic(err)

@@ -77,6 +77,34 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 	}
 }
 
+func InitProslStateValueWithPrams(fc model.ModelFactory, rp core.Repository, conf *config.Config, params map[string]model.Object) *ProslStateValue {
+	qc := struct {
+		core.QueryProcessor
+		core.QueryValidator
+		core.QueryVerifier
+	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
+	top, _ := rp.Top()
+	variables := make(map[string]model.Object)
+	// params setting
+	for key, value := range params {
+		variables[key] = value
+	}
+	if top != nil {
+		variables["top"] = fc.NewObjectBuilder().Block(top)
+	}
+	return &ProslStateValue{
+		ProslConstState: &ProslConstState{
+			Fc:        fc,
+			Qc:        qc,
+			Variables: variables,
+		},
+		ReturnObject: nil,
+		St:           AnotherOperator_State,
+		ErrCode:      proskenion.ErrCode_NoErr,
+		Err:          nil,
+	}
+}
+
 func ReturnOpProslStateValue(state *ProslStateValue, st OperatorState) *ProslStateValue {
 	if state.St == ReturnOperator_State {
 		return state
@@ -428,6 +456,7 @@ func ExecuteProslTxOperator(op *proskenion.TxOperator, state *ProslStateValue) *
 		}
 		builder = builder.AppendCommand(state.ReturnObject.GetCommand())
 	}
+	builder = builder.CreatedTime(0)
 	return ReturnTxProslStateValue(state, builder.Build())
 }
 
@@ -499,7 +528,7 @@ func ExecutePolynomiaValueOperator(op GetOpser, f func(model.Object, model.Objec
 		ret = f(ret, state.ReturnObject, state.Fc)
 	}
 	if ret == nil {
-		return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, "symbol: %s, %s", symbol, op.String())
 	}
 	return ReturnProslStateValue(state, ret)
 }
@@ -724,7 +753,7 @@ func ExecutePolynomialCondOperator(op GetOpser, f func(model.Object, model.Objec
 		}
 		ret := f(pr, state.ReturnObject, state.Fc)
 		if ret == nil {
-			return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, op.String())
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_FailedOperate, "symbol: %s, %s", symbol, op.String())
 		}
 		if !ret.GetBoolean() {
 			return ReturnProslStateValue(state, ret)
@@ -734,11 +763,11 @@ func ExecutePolynomialCondOperator(op GetOpser, f func(model.Object, model.Objec
 }
 
 func ExecuteProslOrFormula(op *proskenion.OrFormula, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomiaValueOperator(op, ExecuteCondOr, "or", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteCondOr, "cond-or", state)
 }
 
 func ExecuteProslAndFormula(op *proskenion.AndFormula, state *ProslStateValue) *ProslStateValue {
-	return ExecutePolynomiaValueOperator(op, ExecuteCondAnd, "and", state)
+	return ExecutePolynomiaValueOperator(op, ExecuteCondAnd, "cond-and", state)
 }
 
 func ExecuteProslNotFormula(op *proskenion.NotFormula, state *ProslStateValue) *ProslStateValue {

@@ -41,7 +41,7 @@ func TestNewQueryVerifier(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			query := NewTestFactory().NewQueryBuilder().
+			query := RandomFactory().NewQueryBuilder().
 				FromId(c.targetId).
 				AuthorizerId(c.authorizerId).
 				CreatedTime(RandomNow()).

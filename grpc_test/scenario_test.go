@@ -9,16 +9,15 @@ import (
 )
 
 func TestScenario(t *testing.T) {
-
 	// Boot Server
 	conf := config.NewConfig("config.yaml")
-	server := NewTestServer()
+	server := RandomServer()
 	go func() {
 		SetUpTestServer(t, conf, server)
 	}()
 	time.Sleep(time.Second * 2)
 
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	serverPeer := fc.NewPeer(RandomStr(), ":50023", conf.Peer.PublicKeyBytes())
 	am := NewAccountManager(t, serverPeer)
 
@@ -26,11 +25,11 @@ func TestScenario(t *testing.T) {
 	am.SetAuthorizer(t)
 
 	acs := []*AccountWithPri{
-		NewAccountWithPri("target1@com"),
-		NewAccountWithPri("target2@com"),
-		NewAccountWithPri("target3@com"),
-		NewAccountWithPri("target4@com"),
-		NewAccountWithPri("target5@com"),
+		NewAccountWithPri("target1@pr"),
+		NewAccountWithPri("target2@pr"),
+		NewAccountWithPri("target3@pr"),
+		NewAccountWithPri("target4@pr"),
+		NewAccountWithPri("target5@pr"),
 	}
 
 	// Scenario 1 ====== Create 5 Accounts ===================

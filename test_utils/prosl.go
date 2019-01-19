@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"testing"
 )
 
@@ -69,4 +70,19 @@ func CommitTxWrapBlock(t *testing.T, rp core.Repository, fc model.ModelFactory, 
 	// repository の Top を Height を返す。
 	rp.(*repository.Repository).TopBlock = block
 	rp.(*repository.Repository).Height = block.GetPayload().GetHeight()
+}
+
+func RandomProsl() core.Prosl {
+	_, _, _, _, _, pr, _ := NewTestFactories()
+	return pr
+}
+
+func ConvertYamlFileToProtoBinary(t *testing.T, filename string) []byte {
+	buf, err := ioutil.ReadFile(filename)
+	require.NoError(t, err)
+	pr := RandomProsl()
+	require.NoError(t, pr.ConvertFromYaml(buf))
+	ret, err := pr.Marshal()
+	require.NoError(t, err)
+	return ret
 }

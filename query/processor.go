@@ -92,7 +92,7 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	if err := q.signedResponse(ret); err != nil {
 		return nil, err
 	}
-	return ret, nil
+	return ret, rtx.Commit()
 }
 
 func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.Account, error) {

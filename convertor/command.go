@@ -38,6 +38,8 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.AddPeer(wsv, c)
 	case *proskenion.Command_Consign:
 		return c.executor.Consign(wsv, c)
+	case *proskenion.Command_CheckAndCommitProsl:
+		return c.executor.CheckAndCommitProsl(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -65,6 +67,9 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.AddPeer(wsv, c)
 	case *proskenion.Command_Consign:
 		return c.validator.Consign(wsv, c)
+	case *proskenion.Command_CheckAndCommitProsl:
+		return c.validator.CheckAndCommitProsl(wsv, c)
+
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -197,4 +202,19 @@ func (c *Command) GetAddPeer() model.AddPeer {
 
 func (c *Command) GetConsign() model.Consign {
 	return c.Command.GetConsign()
+}
+
+type CheckAndCommitProsl struct {
+	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
+	*proskenion.CheckAndCommitProsl
+}
+
+func (c *Command) GetCheckAndCommitProsl() model.CheckAndCommitProsl {
+	return &CheckAndCommitProsl{c.cryptor, c.executor, c.validator, c.Command.GetCheckAndCommitProsl()}
+}
+
+func (c *CheckAndCommitProsl) GetVariables() map[string]model.Object {
+	return ObjectMapsFromProslObjectMaps(c.c, c.e, c.v, c.CheckAndCommitProsl.Variables)
 }

@@ -1,0 +1,33 @@
+# default variables: target_id, account_id
+- if:
+    - not:
+        and:
+          - is_defined: target_id
+          - is_defined: account_id
+    - return: False
+- set:
+    - prflag
+    - query:
+        authorizer: root@com
+        select: "prosl_type"
+        type: string
+        from:
+          concat:
+            - cast:
+                - address
+                - variable: account_id
+            - "/prflag"
+- set:
+    - prtype
+    - query:
+        authorizer: root@com
+        select: "prosl_type"
+        type: string
+        from:
+          variable: target_id
+- if:
+    - eq:
+        - variable: prflag
+        - variable: prtype
+    - return: True
+- return: False

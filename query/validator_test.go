@@ -13,14 +13,14 @@ import (
 
 // TODO 不十分
 func TestQueryValidator_Query(t *testing.T) {
-	fc := NewTestFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	fc := RandomFactory()
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 
 	// GenesisCommit
 	authorizer := NewAccountWithPri("authorizer@com")
 	genesisCommit(t, rp, authorizer)
 
-	qv := NewQueryValidator(rp, fc, NewTestConfig())
+	qv := NewQueryValidator(rp, fc, RandomConfig())
 
 	query := GetAccountQuery(t, authorizer, "target@com")
 	err := qv.Validate(query)

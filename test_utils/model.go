@@ -2,10 +2,14 @@ package test_utils
 
 import (
 	"github.com/proskenion/proskenion/command"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/convertor"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
+	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/query"
+	"github.com/proskenion/proskenion/repository"
 	"github.com/stretchr/testify/require"
 	"math/rand"
 	"strconv"
@@ -17,13 +21,27 @@ type PeerWithPri struct {
 	model.PrivateKey
 }
 
-func NewTestFactory() model.ModelFactory {
-	return convertor.NewModelFactory(
-		crypto.NewEd25519Sha256Cryptor(),
-		command.NewCommandExecutor(),
-		command.NewCommandValidator(),
+func NewTestFactories() (model.ModelFactory,
+	core.CommandExecutor, core.CommandValidator,
+	core.Cryptor, core.Repository, core.Prosl, *config.Config) {
+	cf := RandomConfig()
+	ex := command.NewCommandExecutor(cf)
+	vl := command.NewCommandValidator(cf)
+	c := crypto.NewEd25519Sha256Cryptor()
+	fc := convertor.NewModelFactory(
+		c, ex, vl,
 		query.NewQueryVerifier(),
 	)
+	rp := repository.NewRepository(RandomDBA(), c, fc, cf)
+	pr := prosl.NewProsl(fc, rp, c, cf)
+	ex.SetField(fc, pr)
+	vl.SetField(fc, pr)
+	return fc, ex, vl, c, rp, pr ,cf
+}
+
+func RandomFactory() model.ModelFactory {
+	fc, _, _, _, _, _ ,_:= NewTestFactories()
+	return fc
 }
 
 func RandomStr() string {
@@ -41,11 +59,11 @@ func RandomByte() []byte {
 
 func RandomInvalidSig() model.Signature {
 	pub, sig := RandomKeyPairs()
-	return NewTestFactory().NewSignature(pub, sig)
+	return RandomFactory().NewSignature(pub, sig)
 }
 
 func RandomTx() model.Transaction {
-	tx := NewTestFactory().NewTxBuilder().
+	tx := RandomFactory().NewTxBuilder().
 		CreatedTime(rand.Int63()).
 		CreateAccount(RandomAccountId(), RandomAccountId(), []model.PublicKey{}, 1).
 		Build()
@@ -89,17 +107,17 @@ func RandomTxs() []model.Transaction {
 }
 
 func RandomAccount() model.Account {
-	return NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
+	return RandomFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
 
 }
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
-	return NewTestFactory().NewPeer(RandomStr(), RandomStr(), pub)
+	return RandomFactory().NewPeer(RandomStr(), RandomStr(), pub)
 }
 
 func RandomBlock() model.Block {
-	return NewTestFactory().NewBlockBuilder().
+	return RandomFactory().NewBlockBuilder().
 		Height(rand.Int63()).
 		Round(0).
 		WSVHash(RandomByte()).
@@ -119,7 +137,7 @@ func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []mod
 }
 
 func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) model.Query {
-	q := NewTestFactory().NewQueryBuilder().
+	q := RandomFactory().NewQueryBuilder().
 		AuthorizerId(authorizer.AccountId).
 		FromId(model.MustAddress(target).AccountId()).
 		RequestCode(model.AccountObjectCode).
@@ -129,7 +147,7 @@ func GetAccountQuery(t *testing.T, authorizer *AccountWithPri, target string) mo
 }
 
 func GetAccountListQuery(t *testing.T, authorizer *AccountWithPri, from string, key string, order model.OrderCode, limit int32) model.Query {
-	q := NewTestFactory().NewQueryBuilder().
+	q := RandomFactory().NewQueryBuilder().
 		AuthorizerId(authorizer.AccountId).
 		FromId(from).
 		Select("*").
@@ -142,7 +160,7 @@ func GetAccountListQuery(t *testing.T, authorizer *AccountWithPri, from string, 
 }
 
 func CreateAccountTx(t *testing.T, authorizer *AccountWithPri, target string) model.Transaction {
-	tx := NewTestFactory().NewTxBuilder().
+	tx := RandomFactory().NewTxBuilder().
 		CreateAccount(authorizer.AccountId, target, []model.PublicKey{}, 0).
 		Build()
 	require.NoError(t, tx.Sign(authorizer.Pubkey, authorizer.Prikey))

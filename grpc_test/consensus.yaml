@@ -1,0 +1,13 @@
+- set:
+    - acs
+    - query:
+        authorizer: root@root
+        select: "*"
+        type: List
+        from: pr/account
+        order_by:
+          - balance
+          - DESC
+        limit: 20
+- return:
+    variable: acs

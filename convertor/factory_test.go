@@ -61,7 +61,7 @@ func TestBlockFactory(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			block := NewTestFactory().
+			block := RandomFactory().
 				NewBlockBuilder().
 				Height(c.expectedHeight).
 				PreBlockHash(c.expectedPreBlockHash).
@@ -125,7 +125,7 @@ func TestSignatureFactory(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			sig := NewTestFactory().NewSignature(c.expectedPub, c.expectedSig)
+			sig := RandomFactory().NewSignature(c.expectedPub, c.expectedSig)
 			assert.Equal(t, c.expectedPub, sig.GetPublicKey())
 			assert.Equal(t, c.expectedSig, sig.GetSignature())
 		})
@@ -134,7 +134,7 @@ func TestSignatureFactory(t *testing.T) {
 
 func TestTxModelBuilder(t *testing.T) {
 	t.Run("case transfer", func(t *testing.T) {
-		txBuilder := NewTestFactory().NewTxBuilder()
+		txBuilder := RandomFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
 			TransferBalance("au", "a", "b", 10).                                           // [0]
 			CreateAccount("x", "y", []model.PublicKey{[]byte{1, 2, 3}}, 1).                // [1]
@@ -145,13 +145,15 @@ func TestTxModelBuilder(t *testing.T) {
 			RemovePublicKeys("authorizer", "account", []model.PublicKey{[]byte{4, 5, 6}}). // [6]
 			SetQuorum("authorizer", "account", 2).                                         // [7]
 			DefineStorage("authorizer", "account",
-															NewTestFactory().NewStorageBuilder().Int32("int", 32).Build()). // [8]
-			CreateStorage("authorizer", "wallet_id").                                                    // [9]
-			UpdateObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).           // [10]
-			AddObject("authorizer", "wallet_id", "key", NewTestFactory().NewEmptyObject()).              // [11]
-			TransferObject("authorizer", "wallet_id", "dest", "key", NewTestFactory().NewEmptyObject()). // [12]
-			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                     // [13]
-			Consign("authorizer", "account", "peer").                                                    // [14]
+															RandomFactory().NewStorageBuilder().Int32("int", 32).Build()). // [8]
+			CreateStorage("authorizer", "wallet_id").                                                   // [9]
+			UpdateObject("authorizer", "wallet_id", "key", RandomFactory().NewEmptyObject()).           // [10]
+			AddObject("authorizer", "wallet_id", "key", RandomFactory().NewEmptyObject()).              // [11]
+			TransferObject("authorizer", "wallet_id", "dest", "key", RandomFactory().NewEmptyObject()). // [12]
+			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                    // [13]
+			Consign("authorizer", "account", "peer").                                                   // [14]
+			CheckAndCommitProsl("authorizer", "a@c/p",
+				map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[15]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
@@ -211,19 +213,19 @@ func TestTxModelBuilder(t *testing.T) {
 		// update object
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[10].GetAuthorizerId())
 		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[10].GetTargetId())
-		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[10].GetUpdateObject().GetObject().GetType())
+		assert.Equal(t, RandomFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[10].GetUpdateObject().GetObject().GetType())
 
 		// add object
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[11].GetAuthorizerId())
 		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[11].GetTargetId())
-		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[11].GetAddObject().GetObject().GetType())
+		assert.Equal(t, RandomFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[11].GetAddObject().GetObject().GetType())
 
 		// transferObject
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[12].GetAuthorizerId())
 		assert.Equal(t, "wallet_id", tx.GetPayload().GetCommands()[12].GetTargetId())
 		assert.Equal(t, "dest", tx.GetPayload().GetCommands()[12].GetTransferObject().GetDestAccountId())
 		assert.Equal(t, "key", tx.GetPayload().GetCommands()[12].GetTransferObject().GetKey())
-		assert.Equal(t, NewTestFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[12].GetTransferObject().GetObject().GetType())
+		assert.Equal(t, RandomFactory().NewEmptyObject().GetType(), tx.GetPayload().GetCommands()[12].GetTransferObject().GetObject().GetType())
 
 		// add peer
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[13].GetAuthorizerId())
@@ -235,6 +237,11 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[14].GetAuthorizerId())
 		assert.Equal(t, "account", tx.GetPayload().GetCommands()[14].GetTargetId())
 		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
+
+		// check and commit prosl
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[15].GetAuthorizerId())
+		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[15].GetTargetId())
+		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[15].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())
 	})
 }
 
@@ -292,7 +299,7 @@ func TestNewAccount(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			ac := NewTestFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.quorum, c.amount, c.peerId)
+			ac := RandomFactory().NewAccount(c.accountId, c.accountName, c.pubkeys, c.quorum, c.amount, c.peerId)
 			assert.Equal(t, c.accountId, ac.GetAccountId())
 			assert.Equal(t, c.accountName, ac.GetAccountName())
 			assert.Equal(t, c.pubkeys, ac.GetPublicKeys())
@@ -300,7 +307,7 @@ func TestNewAccount(t *testing.T) {
 			assert.Equal(t, c.amount, ac.GetBalance())
 			assert.Equal(t, c.peerId, ac.GetDelegatePeerId())
 
-			ac2 := NewTestFactory().NewAccountBuilder().From(ac).Build()
+			ac2 := RandomFactory().NewAccountBuilder().From(ac).Build()
 			assert.Equal(t, c.accountId, ac2.GetAccountId())
 			assert.Equal(t, c.accountName, ac2.GetAccountName())
 			assert.Equal(t, c.pubkeys, ac2.GetPublicKeys())
@@ -308,7 +315,7 @@ func TestNewAccount(t *testing.T) {
 			assert.Equal(t, c.amount, ac2.GetBalance())
 			assert.Equal(t, c.peerId, ac2.GetDelegatePeerId())
 
-			ac3 := NewTestFactory().NewAccountBuilder().
+			ac3 := RandomFactory().NewAccountBuilder().
 				AccountId(c.accountId).
 				AccountName(c.accountName).
 				Balance(c.amount).
@@ -360,7 +367,7 @@ func TestNewPeer(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			peer := NewTestFactory().NewPeer(c.id, c.address, c.pubkey)
+			peer := RandomFactory().NewPeer(c.id, c.address, c.pubkey)
 			assert.Equal(t, c.address, peer.GetAddress())
 			assert.Equal(t, c.pubkey, peer.GetPublicKey())
 		})
@@ -369,7 +376,7 @@ func TestNewPeer(t *testing.T) {
 
 func TestModelFactory_NewQueryBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
-		builder := NewTestFactory().NewQueryBuilder()
+		builder := RandomFactory().NewQueryBuilder()
 		query := builder.CreatedTime(1).
 			FromId("a").
 			AuthorizerId("b").
@@ -393,8 +400,8 @@ func TestModelFactory_NewQueryBuilder(t *testing.T) {
 
 func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 	t.Run("case 1 account query", func(t *testing.T) {
-		expAc := NewTestFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
-		builder := NewTestFactory().NewQueryResponseBuilder()
+		expAc := RandomFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte(), RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
+		builder := RandomFactory().NewQueryResponseBuilder()
 		res := builder.Account(expAc).Build()
 		actAc := res.GetObject().GetAccount()
 		assert.Equal(t, expAc.GetAccountId(), actAc.GetAccountId())
@@ -405,8 +412,8 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 
 	t.Run("case 2 peer query", func(t *testing.T) {
 		pub, _ := RandomCryptor().NewKeyPairs()
-		expPeer := NewTestFactory().NewPeer(RandomStr(), "address:50051", pub)
-		res := NewTestFactory().NewQueryResponseBuilder().
+		expPeer := RandomFactory().NewPeer(RandomStr(), "address:50051", pub)
+		res := RandomFactory().NewQueryResponseBuilder().
 			Peer(expPeer).
 			Build()
 		actPeer := res.GetObject().GetPeer()
@@ -417,7 +424,7 @@ func TestModelFactory_NewQueryResponseBuilder(t *testing.T) {
 }
 
 func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	t.Run("case 1 object builder", func(t *testing.T) {
 		dict := fc.NewObjectBuilder().Dict(map[string]model.Object{"key": fc.NewEmptyObject()})
 		list := fc.NewObjectBuilder().List([]model.Object{fc.NewEmptyObject(), fc.NewEmptyObject()})
@@ -437,7 +444,7 @@ func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
 		cmd := fc.NewObjectBuilder().Command(expTx.GetPayload().GetCommands()[0])
 		tx := fc.NewObjectBuilder().Transaction(expTx)
 
-		storage := fc.NewObjectBuilder().Storage(NewTestFactory().NewStorageBuilder().Int32("int32", 1).Build())
+		storage := fc.NewObjectBuilder().Storage(RandomFactory().NewStorageBuilder().Int32("int32", 1).Build())
 
 		assert.Equal(t, map[string]model.Object{"key": fc.NewEmptyObject()}, dict.GetDict())
 		assert.Equal(t, model.DictObjectCode, dict.GetType())
@@ -475,7 +482,7 @@ func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
 		assert.Equal(t, uint64(2), u64.GetU64())
 		assert.Equal(t, model.Uint64ObjectCode, u64.GetType())
 
-		assert.Equal(t, NewTestFactory().NewStorageBuilder().Int32("int32", 1).Build(), storage.GetStorage())
+		assert.Equal(t, RandomFactory().NewStorageBuilder().Int32("int32", 1).Build().Hash(), storage.GetStorage().Hash())
 		assert.Equal(t, model.StorageObjectCode, storage.GetType())
 
 		assert.Equal(t, true, b.GetBoolean())
@@ -491,7 +498,7 @@ func TestNewObjectFactory_NewObjectBuilder(t *testing.T) {
 }
 
 func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
-	fc := NewTestFactory()
+	fc := RandomFactory()
 	t.Run("case 1 storage builder", func(t *testing.T) {
 		builder := fc.NewStorageBuilder()
 		storage := builder.Dict("dict", map[string]model.Object{"key": fc.NewObjectBuilder().Int32(1)}).

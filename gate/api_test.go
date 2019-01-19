@@ -17,12 +17,12 @@ import (
 )
 
 func TestAPIGate_WriteAndRead(t *testing.T) {
-	fc := NewTestFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
-	queue := repository.NewProposalTxQueueOnMemory(NewTestConfig())
+	fc := RandomFactory()
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
+	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc, NewTestConfig())
-	qv := query.NewQueryValidator(rp, fc, NewTestConfig())
+	qp := query.NewQueryProcessor(rp, fc, RandomConfig())
+	qv := query.NewQueryValidator(rp, fc, RandomConfig())
 	api := NewAPIGate(queue, qp, qv, logger)
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
 

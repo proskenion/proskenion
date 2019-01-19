@@ -26,7 +26,7 @@ func test_Blockchain(t *testing.T, dba core.DBA) {
 	tx, err := dba.Begin()
 	require.NoError(t, err)
 
-	bc, err := NewBlockchainFromTopBlock(tx, NewTestFactory(), RandomCryptor(), model.Hash(nil))
+	bc, err := NewBlockchainFromTopBlock(tx, RandomFactory(), RandomCryptor(), model.Hash(nil))
 	require.NoError(t, err)
 
 	b1 := RandomBlock()
@@ -42,7 +42,7 @@ func test_Blockchain(t *testing.T, dba core.DBA) {
 
 	tx, err = dba.Begin()
 	require.NoError(t, err)
-	bcFirstHistory, err := NewBlockchainFromTopBlock(tx, NewTestFactory(), RandomCryptor(), MustHash(b1))
+	bcFirstHistory, err := NewBlockchainFromTopBlock(tx, RandomFactory(), RandomCryptor(), MustHash(b1))
 	require.NoError(t, err)
 
 	test_Blockchain_Upserts(t, bcFirstHistory, b3)
@@ -51,9 +51,9 @@ func test_Blockchain(t *testing.T, dba core.DBA) {
 
 	tx, err = dba.Begin()
 	require.NoError(t, err)
-	bcSecondHistory, err := NewBlockchainFromTopBlock(tx, NewTestFactory(), RandomCryptor(), MustHash(b2))
+	bcSecondHistory, err := NewBlockchainFromTopBlock(tx, RandomFactory(), RandomCryptor(), MustHash(b2))
 	require.NoError(t, err)
-	bcThirdHistory, err := NewBlockchainFromTopBlock(tx, NewTestFactory(), RandomCryptor(), MustHash(b3))
+	bcThirdHistory, err := NewBlockchainFromTopBlock(tx, RandomFactory(), RandomCryptor(), MustHash(b3))
 	require.NoError(t, err)
 
 	test_Blockchain_Upserts(t, bcSecondHistory, b4)
