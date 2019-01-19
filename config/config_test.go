@@ -21,5 +21,5 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, conf.Prosl.Id, "/prosl")
 	assert.Equal(t, conf.Prosl.Incentive.Id, "incentive/prosl")
 	assert.Equal(t, conf.Prosl.Consensus.Id, "consensus/prosl")
-	assert.Equal(t, conf.Prosl.Rule.Id, "rule/prosl")
+	assert.Equal(t, conf.Prosl.Update.Id, "update/prosl")
 }

@@ -81,7 +81,7 @@ const (
 	ProslTypeKey  = "prosl_type"
 	IncentiveKey  = "incentive"
 	ConsensusKey  = "consensus"
-	ChangeRuleLey = "rule"
+	UpdateKey = "update"
 )
 
 type CommandExecutor interface {

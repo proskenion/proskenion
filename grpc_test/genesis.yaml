@@ -1,0 +1,63 @@
+- set:
+    - tx
+    - transaction:
+        commands:
+          - add_peer:
+              authorizer_id: root@root
+              peer_id: root@peer
+              address: 127.0.0.1:50055
+              public_key: 0x3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+          - create_account:
+              authorizer_id: root@root
+              account_id: authorizer@pr
+              public_keys:
+                - 0xbc20d843bd1a51ccb1137e32d04bfe3ffe417fd9540a784d4a659b3de6df9afa
+              quorum: 1
+          - create_account:
+              authorizer_id: root@root
+              account_id: account1@pr
+              public_keys:
+                - 0x7ae0937f747fff11760db2f1a08d2e1892a25fdc7adb39714fb596081478d0a7
+              quorum: 1
+          - create_account:
+              authorizer_id: root@root
+              account_id: account2@pr
+              public_keys:
+                - 0xf7dc24e3ac16779f071cc0bcc4971f0bc9d2ca3bf78047282796a0dcb9da7278
+              quorum: 1
+          - create_account:
+              authorizer_id: root@root
+              account_id: account3@pr
+              public_keys:
+                - 0xb3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635
+              quorum: 1
+          - add_balance:
+              authorizer_id: root@root
+              account_id: account1@pr
+              balance: 10000ll
+          - add_balance:
+              authorizer_id: root@root
+              account_id: account2@pr
+              balance: 20000ll
+          - add_balance:
+              authorizer_id: root@root
+              account_id: account3@pr
+              balance: 30000LL
+          - define_storage:
+              authorizer_id: root@root
+              storage_id: /degraders
+              storage:
+                storage:
+                  acs:
+                    list: nil
+          - create_storage:
+              authorizer_id: root@root
+              wallet_id: root@root/degraders
+          - define_storage:
+              authorizer_id: root@root
+              storage_id: /prflag
+              storage:
+                storage:
+                  prosl_type: "none"
+- return:
+    variable: tx

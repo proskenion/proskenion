@@ -10,3 +10,18 @@ peer:
   public_key: 3ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
   private_key: 820d31b8bbfaaa835de50fd82ee5f40a80e1dd681498efc119bae23de2af9ed73ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
   port: 50023
+prosl:
+  id: "/prosl"
+  genesis:
+    path: genesis.yaml
+  incentive:
+    path: incentive.yaml
+    id: incentive/prosl
+  consensus:
+    path: consensus.yaml
+    id: consensus/prosl
+  update:
+    path: update.yaml
+    id: update/prosl
+root:
+  id: root@root

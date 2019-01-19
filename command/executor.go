@@ -66,6 +66,7 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 		Quorum(cmd.GetCreateAccount().GetQuorum()).
 		Build()
 
+	/*
 	ac := c.factory.NewEmptyAccount()
 	if err := wsv.Query(id, ac); err == nil {
 		if ac.GetAccountId() == cmd.GetTargetId() {
@@ -73,6 +74,7 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 				fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
 		}
 	}
+	*/
 	if err := wsv.Append(id, newAccount); err != nil {
 		return err
 	}
@@ -294,18 +296,18 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	cc := cmd.GetCheckAndCommitProsl()
 	targetId := model.MustAddress(cmd.GetTargetId())
 
-	// 1. get rule prosl
-	ruleId := model.MustAddress(c.conf.Prosl.Rule.Id)
-	ruleSt := c.factory.NewEmptyStorage()
-	if err := wsv.Query(ruleId, ruleSt); err != nil {
+	// 1. get update prosl
+	updateId := model.MustAddress(c.conf.Prosl.Update.Id)
+	updateSt := c.factory.NewEmptyStorage()
+	if err := wsv.Query(updateId, updateSt); err != nil {
 		return err
 	}
-	buf := ruleSt.GetFromKey(core.ProslKey).GetData()
+	buf := updateSt.GetFromKey(core.ProslKey).GetData()
 	if err := c.prosl.Unmarshal(buf); err != nil {
 		return err
 	}
 
-	// 2. rule prosl execute with prams + ["target_id"] = target_id
+	// 2. update prosl execute with prams + ["target_id"] = target_id
 	params := cc.GetVariables()
 	params[core.TargetIdKey] = c.factory.NewObjectBuilder().Address(cmd.GetTargetId())
 	if check, variables, err := c.prosl.ExecuteWithParams(params); err != nil {
@@ -315,7 +317,7 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 			"variables: %+v", variables)
 	}
 
-	// 3. if true, targetId 's prosl setting to dest incentive or consensus or rule
+	// 3. if true, targetId 's prosl setting to dest incentive or consensus or update
 	proSt := c.factory.NewEmptyStorage()
 	if err := wsv.Query(targetId, proSt); err != nil {
 		return errors.Wrap(core.ErrCommandExecutorCheckAndCommitProslNotFound, err.Error())
@@ -327,8 +329,8 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 		destId = model.MustAddress(c.conf.Prosl.Incentive.Id)
 	case core.ConsensusKey:
 		destId = model.MustAddress(c.conf.Prosl.Consensus.Id)
-	case core.ChangeRuleLey:
-		destId = model.MustAddress(c.conf.Prosl.Rule.Id)
+	case core.UpdateKey:
+		destId = model.MustAddress(c.conf.Prosl.Update.Id)
 	default:
 		return errors.Errorf("not found key %s, or unexpected value: %s", core.ProslKey, t)
 	}

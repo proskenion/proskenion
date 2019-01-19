@@ -18,7 +18,7 @@ import (
 
 func TestAPIGate_WriteAndRead(t *testing.T) {
 	fc := RandomFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(rp, fc, RandomConfig())

@@ -23,7 +23,7 @@ import (
 func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIGateServer) {
 	fc := RandomFactory()
 	conf := RandomConfig()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, conf)
 	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(rp, fc, RandomConfig())

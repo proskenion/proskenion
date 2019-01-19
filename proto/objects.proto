@@ -201,8 +201,8 @@ message Consign {
 
 /**
  * CheckAndCommitProsl は target_id で指定した prosl を
- *  variables に引数列を渡して change_rule prosl が true を返した時
- *  incentive or consensus or change_rule として再定義する。
+ *  variables に引数列を渡して change_update prosl が true を返した時
+ *  incentive or consensus or change_update として再定義する。
  *
  **/
 message CheckAndCommitProsl {

@@ -68,3 +68,11 @@ func TestStorage_GetFromKey(t *testing.T) {
 
 	assert.Equal(t, int64(111), st.GetFromKey("int64").GetI64())
 }
+
+func TestMapConvertor(t *testing.T) {
+	binary := ConvertYamlFileToProtoBinary(t, RandomConfig().Prosl.Incentive.Path)
+	for i := 0; i < 10; i++ {
+		binary2 := ConvertYamlFileToProtoBinary(t, RandomConfig().Prosl.Incentive.Path)
+		assert.Equal(t, binary, binary2)
+	}
+}

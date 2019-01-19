@@ -33,7 +33,7 @@ func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri)
 // TODO 不十分
 func TestQueryProcessor_Query(t *testing.T) {
 	fc := RandomFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 
 	// GenesisCommit
 	authorizer := NewAccountWithPri("authorizer@com/account")

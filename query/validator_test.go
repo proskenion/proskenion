@@ -14,7 +14,7 @@ import (
 // TODO 不十分
 func TestQueryValidator_Query(t *testing.T) {
 	fc := RandomFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 
 	// GenesisCommit
 	authorizer := NewAccountWithPri("authorizer@com")

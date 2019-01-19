@@ -14,7 +14,8 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	cryptor := RandomCryptor()
 	queue := RandomQueue()
 	cconf := RandomCommitProperty()
-	rp := repository.NewRepository(RandomDBA(), cryptor, fc)
+	rp := repository.NewRepository(RandomDBA(), cryptor, fc, RandomConfig())
+	require.NoError(t,rp.GenesisCommit(RandomGenesisTxList(t)))
 
 	cs := NewCommitSystem(fc, cryptor, queue, cconf, rp)
 	block, txList, err := cs.CreateBlock()
@@ -24,7 +25,8 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	assert.Error(t, err)
 
 	queue2 := RandomQueue()
-	rp2 := repository.NewRepository(RandomDBA(), cryptor, fc)
+	rp2 := repository.NewRepository(RandomDBA(), cryptor, fc, RandomConfig())
+	require.NoError(t,rp2.GenesisCommit(RandomGenesisTxList(t)))
 	cs2 := NewCommitSystem(fc, cryptor, queue2, cconf, rp2)
 
 	assert.NoError(t, cs2.VerifyCommit(block, txList))

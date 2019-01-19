@@ -13,7 +13,8 @@ func RandomConfig() *config.Config {
 	config.Peer.PrivateKey = hex.EncodeToString(pri)
 
 	config.DB.Path = "../database"
-	config.Prosl.Rule.Path = "../test_utils/rule.yaml"
+	config.Prosl.Genesis.Path = "../test_utils/genesis.yaml"
+	config.Prosl.Update.Path = "../test_utils/update.yaml"
 	config.Prosl.Incentive.Path = "../test_utils/incentive.yaml"
 	config.Prosl.Consensus.Path = "../test_utils/consensus.yaml"
 	return config

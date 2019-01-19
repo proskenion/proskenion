@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -9,36 +10,47 @@ import (
 	"testing"
 )
 
-func TestRepository_Commit(t *testing.T) {
-	dba := RandomDBA()
-	cryptor := RandomCryptor()
-	fc := RandomFactory()
-
-	rp := NewRepository(dba, cryptor, fc)
-
-	txList := RandomTxList()
-	txList.Push(
-		fc.NewTxBuilder().
-			CreateAccount("authorizer@com", "authorizer@com", []model.PublicKey{}, 0).
-			Build())
-	require.NoError(t, rp.GenesisCommit(txList))
-
-	top, ok := rp.Top()
-	require.True(t, ok)
-
-	block, txList := RandomCommitableBlock(t, top, rp)
-	assert.NoError(t, rp.Commit(block, txList))
-
+func sameRepositoryTop(t *testing.T, rp core.Repository, block model.Block) {
 	topBlock, ok := rp.Top()
 	require.True(t, ok)
 	assert.Equal(t, block, topBlock)
 
 	rtx, err := rp.Begin()
 	require.NoError(t, err)
-	bc, err := rtx.Blockchain(MustHash(topBlock))
+	bc, err := rtx.Blockchain(topBlock.Hash())
 	require.NoError(t, err)
 
-	topBlock2, err := bc.Get(MustHash(topBlock))
+	topBlock2, err := bc.Get(topBlock.Hash())
 	require.NoError(t, err)
-	assert.Equal(t, MustHash(block), MustHash(topBlock2))
+	assert.Equal(t, block.Hash(), topBlock2.Hash())
+}
+
+func TestRepository_Commit(t *testing.T) {
+	rp := NewRepository(RandomDBA(), RandomCryptor(), RandomFactory(), RandomConfig())
+	_, ok := rp.Top()
+	assert.False(t, ok)
+	require.NoError(t, rp.GenesisCommit(RandomGenesisTxList(t)))
+
+	top, ok := rp.Top()
+	assert.True(t, ok)
+
+	tx := RandomFactory().NewTxBuilder().
+		CreateAccount("authorizer@com", RandomStr()+"@com", []model.PublicKey{}, 0).
+		CreatedTime(RandomNow()).Build()
+
+	queue := RandomQueue()
+	require.NoError(t, queue.Push(tx))
+	newBlock, newTxList, err := rp.CreateBlock(queue, RandomNow())
+	require.NoError(t, err)
+	require.Equal(t, tx.Hash(), newTxList.List()[0].Hash())
+	sameRepositoryTop(t, rp, newBlock)
+
+	// second == same result
+	rp2 := NewRepository(RandomDBA(), RandomCryptor(), RandomFactory(), RandomConfig())
+	require.NoError(t, rp2.GenesisCommit(RandomGenesisTxList(t)))
+	top2, ok := rp2.Top()
+	assert.True(t, ok)
+	assert.Equal(t, top.Hash(), top2.Hash())
+	require.NoError(t, rp2.Commit(newBlock, newTxList))
+	sameRepositoryTop(t, rp2, newBlock)
 }

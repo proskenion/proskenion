@@ -2,8 +2,10 @@ package command_test
 
 import (
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +15,7 @@ import (
 
 func TestCommandValidator_Tx(t *testing.T) {
 	fc := RandomFactory()
-	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc)
+	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 
 	acs := []*AccountWithPri{
 		NewAccountWithPri("authorizer@com"),
@@ -63,5 +65,53 @@ func TestCommandValidator_Tx(t *testing.T) {
 			}
 		})
 	}
+}
 
+func prePareCommandValidator(t *testing.T) (model.ModelFactory, core.CommandValidator, core.Repository) {
+	fc, _, val, _, rp, _, _ := NewTestFactories()
+	return fc, val, rp
+}
+
+func TestCommandValidator_CreateAccount(t *testing.T) {
+	fc, val, rp := prePareCommandValidator(t)
+	prePareCreateAccounts(t, fc, rp)
+
+	_, wsv := prePareGetDtxWSV(t, rp)
+
+	for _, c := range []struct {
+		name           string
+		exAuthoirzerId string
+		exTargetId     string
+		exErr          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"target1@com",
+			nil,
+		},
+		{
+			"case 2 : duplicate error",
+			authorizerId,
+			"account1@com",
+			core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := &convertor.Command{
+				Command: &proskenion.Command{
+					Command: &proskenion.Command_CreateAccount{
+						CreateAccount: &proskenion.CreateAccount{},
+					},
+					TargetId:     c.exTargetId,
+					AuthorizerId: c.exAuthoirzerId,
+				}}
+			err := val.CreateAccount(wsv, cmd)
+			if c.exErr != nil {
+				assert.EqualError(t, errors.Cause(err), c.exErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

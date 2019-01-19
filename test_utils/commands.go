@@ -25,11 +25,12 @@ type AccountWithPri struct {
 }
 
 func GenesisCommitFromAccounts(t *testing.T, rp core.Repository, acs []*AccountWithPri) {
-	txList := repository.NewTxList(RandomCryptor())
+	txList, err := repository.NewTxListFromConf(RandomCryptor(), RandomProsl(), RandomConfig())
+	require.NoError(t, err)
 
 	builder := RandomFactory().NewTxBuilder()
 	for _, ac := range acs {
-		builder = builder.CreateAccount("root", ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
+		builder = builder.CreateAccount("root@com", ac.AccountId, []model.PublicKey{ac.Pubkey}, 1)
 	}
 	tx := builder.Build()
 	require.NoError(t, txList.Push(tx))

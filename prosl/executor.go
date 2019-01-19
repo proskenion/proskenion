@@ -456,6 +456,7 @@ func ExecuteProslTxOperator(op *proskenion.TxOperator, state *ProslStateValue) *
 		}
 		builder = builder.AppendCommand(state.ReturnObject.GetCommand())
 	}
+	builder = builder.CreatedTime(0)
 	return ReturnTxProslStateValue(state, builder.Build())
 }
 

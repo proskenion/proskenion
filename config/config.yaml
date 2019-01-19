@@ -18,6 +18,8 @@ prosl:
  consensus:
   path: consensus.yaml
   id: consensus/prosl
- rule:
-  path: rule.yaml
-  id: rule/prosl
+ update:
+  path: update.yaml
+  id: update/prosl
+root:
+ id: root@com

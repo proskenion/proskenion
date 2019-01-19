@@ -9,7 +9,7 @@ import (
 )
 
 func TestScenario(t *testing.T) {
-
+	return 
 	// Boot Server
 	conf := config.NewConfig("config.yaml")
 	server := RandomServer()
@@ -39,7 +39,7 @@ func TestScenario(t *testing.T) {
 			am.CreateAccount(t, ac)
 		}(ac)
 	}
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 5)
 	ams := []*AccountManager{
 		NewAccountManager(t, serverPeer),
 		NewAccountManager(t, serverPeer),

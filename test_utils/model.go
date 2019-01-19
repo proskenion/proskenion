@@ -32,7 +32,7 @@ func NewTestFactories() (model.ModelFactory,
 		c, ex, vl,
 		query.NewQueryVerifier(),
 	)
-	rp := repository.NewRepository(RandomDBA(), c, fc)
+	rp := repository.NewRepository(RandomDBA(), c, fc, cf)
 	pr := prosl.NewProsl(fc, rp, c, cf)
 	ex.SetField(fc, pr)
 	vl.SetField(fc, pr)

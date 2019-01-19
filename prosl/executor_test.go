@@ -21,8 +21,8 @@ func Initalize() (core.Repository, model.ModelFactory, *config.Config) {
 	dba := RandomDBA()
 	cryptor := RandomCryptor()
 	fc := RandomFactory()
-	rp := repository.NewRepository(dba, cryptor, fc)
 	conf := RandomConfig()
+	rp := repository.NewRepository(dba, cryptor, fc, conf)
 	return rp, fc, conf
 }
 

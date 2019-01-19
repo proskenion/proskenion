@@ -133,6 +133,7 @@ type Repository interface {
 	Top() (Block, bool)
 	Commit(Block, TxList) error
 	GenesisCommit(TxList) error
+	CreateBlock(queue ProposalTxQueue, now int64) (Block, TxList, error)
 }
 
 type RepositoryTx interface {

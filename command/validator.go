@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -28,6 +29,12 @@ func (c *CommandValidator) TransferBalance(wsv model.ObjectFinder, cmd model.Com
 }
 
 func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	ac := c.fc.NewEmptyAccount()
+	if err := wsv.Query(id, ac); err == nil {
+		return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
+			fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
+	}
 	return nil
 }
 
