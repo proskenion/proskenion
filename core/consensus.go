@@ -6,5 +6,6 @@ type Consensus interface {
 
 type ConsensusCustomize interface {
 	WaitUntilComeNextBlock()
+	WaitUntilComeNextRound()
 	IsBlockCreator() bool
 }

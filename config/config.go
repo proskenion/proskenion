@@ -23,10 +23,12 @@ type DBConfig struct {
 }
 
 type CommitConfig struct {
+	WaitInterval int `yaml:"wait_interval"`
 	NumTxInBlock int `yaml:"num_tx_in_block"`
 }
 
 type PeerConfig struct {
+	Id         string `yaml:"id"`
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
 	Port       string `yaml:"port"`
@@ -34,7 +36,7 @@ type PeerConfig struct {
 
 type ProslConfig struct {
 	Id        string             `yaml:"id"`
-	Genesis   DefaultProslConfig `yaml:genesis`
+	Genesis   DefaultProslConfig `yaml:"genesis"`
 	Incentive DefaultProslConfig `yaml:"incentive"`
 	Consensus DefaultProslConfig `yaml:"consensus"`
 	Update    DefaultProslConfig `yaml:"update"`

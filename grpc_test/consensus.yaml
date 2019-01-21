@@ -4,7 +4,7 @@
         authorizer: root@root
         select: "*"
         type: List
-        from: pr/account
+        from: creator/account
         order_by:
           - balance
           - DESC

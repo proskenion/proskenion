@@ -5,8 +5,10 @@ db:
   name: testdb
 proposal_txs_limits: 1000
 commit:
+  wait_interval: 1000
   num_tx_in_block: 99
 peer:
+  id: root@peer
   public_key: 3ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
   private_key: 820d31b8bbfaaa835de50fd82ee5f40a80e1dd681498efc119bae23de2af9ed73ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
   port: 50023

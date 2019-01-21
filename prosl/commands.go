@@ -449,7 +449,7 @@ func ExecuteProslConsign(params map[string]*proskenion.ValueOperator, state *Pro
 			if state.Err != nil {
 				return state
 			}
-			peerId = state.ReturnObject.GetStr()
+			peerId = state.ReturnObject.GetAddress()
 		}
 	}
 	return ReturnCmdProslStateValue(state,

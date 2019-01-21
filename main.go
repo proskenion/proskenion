@@ -64,11 +64,10 @@ func main() {
 
 	commitChan := make(chan interface{})
 	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
-	cc := consensus.NewMockCustomize(rp, commitChan)
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
-	csc := consensus.NewConsensus(cc, cs, gossip, logger)
+	csc := consensus.NewConsensus(rp, cs, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")

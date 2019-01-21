@@ -54,6 +54,45 @@ func (r *Repository) Top() (model.Block, bool) {
 	return r.TopBlock, true
 }
 
+func (r *Repository) GetDelegatedAccounts() ([]model.Account, error) {
+	top, ok := r.Top()
+	if !ok {
+		panic("Failed Repository error empty top")
+	}
+	rtx, err := r.Begin()
+	if err != nil {
+		return nil, err
+	}
+	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
+	if err != nil {
+		return nil, err
+	}
+	st := ProslStorage(r.fc, r.conf)
+	id := model.MustAddress(r.conf.Prosl.Consensus.Id)
+	if err := wsv.Query(id, st); err != nil {
+		return nil, err
+	}
+	if err := commitTx(rtx); err != nil {
+		return nil, err
+	}
+
+	prData := st.GetFromKey(core.ProslKey).GetData()
+	pr := prosl.NewProsl(r.fc, r, r.cryptor, r.conf)
+	if err := pr.Unmarshal(prData); err != nil {
+		return nil, err
+	}
+	ret, vars, err := pr.Execute()
+	if err != nil {
+		return nil, fmt.Errorf("errors: %s\nvariables: %+v\n", err.Error(), vars)
+	}
+	list := ret.GetList()
+	acs := make([]model.Account, 0, len(list))
+	for _, ac := range list {
+		acs = append(acs, ac.GetAccount())
+	}
+	return acs, nil
+}
+
 func (r *Repository) loadMPTrees(dtx core.RepositoryTx, preBlock model.Block, preBlockHash model.Hash) (core.Blockchain, core.WSV, core.TxHistory, model.Block, error) {
 	bc, err := dtx.Blockchain(preBlockHash)
 	if err != nil {
@@ -136,6 +175,11 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, now int64) (model.B
 		return nil, nil, err
 	}
 
+	// execute incentive prosl transaction. (fource execute)
+	if err := r.executeProslIncentive(wsv, txHistory); err != nil {
+		return nil, nil, rollBackTx(dtx, err)
+	}
+
 	txList := NewTxList(r.cryptor)
 	// ProposalTxQueue から valid な Tx をとってきて hoge る
 	for txList.Size() < r.conf.Commit.NumTxInBlock {
@@ -165,10 +209,6 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, now int64) (model.B
 		}
 
 	txskip:
-	}
-	// execute incentive prosl transaction. (fource execute)
-	if err := r.executeProslIncentive(wsv, txHistory); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
 	}
 
 	newBlock := r.fc.NewBlockBuilder().
