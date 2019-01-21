@@ -134,7 +134,7 @@ type Repository interface {
 	GetDelegatedAccounts() ([]Account, error)
 	Commit(Block, TxList) error
 	GenesisCommit(TxList) error
-	CreateBlock(queue ProposalTxQueue, now int64) (Block, TxList, error)
+	CreateBlock(queue ProposalTxQueue, round int32, now int64) (Block, TxList, error)
 }
 
 type RepositoryTx interface {

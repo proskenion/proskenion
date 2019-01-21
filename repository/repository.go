@@ -160,7 +160,7 @@ func (r *Repository) appendAndUpdateBlock(bc core.Blockchain, block model.Block)
 	return nil
 }
 
-func (r *Repository) CreateBlock(queue core.ProposalTxQueue, now int64) (model.Block, core.TxList, error) {
+func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now int64) (model.Block, core.TxList, error) {
 	dtx, err := r.Begin()
 	if err != nil {
 		return nil, nil, err
@@ -212,7 +212,7 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, now int64) (model.B
 	}
 
 	newBlock := r.fc.NewBlockBuilder().
-		Round(0).
+		Round(round).
 		TxsHash(txList.Top()).
 		TxHistoryHash(txHistory.Hash()).
 		WSVHash(wsv.Hash()).

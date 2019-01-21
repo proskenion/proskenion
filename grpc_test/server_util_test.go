@@ -58,7 +58,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	qv := query.NewQueryValidator(rp, fc, conf)
 
 	commitChan := make(chan interface{})
-	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
+	cs := commit.NewCommitSystem(fc, cryptor, queue, rp, conf)
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}

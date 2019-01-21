@@ -77,7 +77,7 @@ func (c *Consensus) Boot() {
 			if c.isBlockCreator(round) {
 				c.logger.Info("============= Create Block =============")
 				// 2. block を生成
-				block, txList, err := c.cs.CreateBlock()
+				block, txList, err := c.cs.CreateBlock(int32(round))
 				if err != nil {
 					c.logger.Error(err.Error())
 					continue

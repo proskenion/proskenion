@@ -41,7 +41,7 @@ func TestRepository_Commit(t *testing.T) {
 
 	queue := RandomQueue()
 	require.NoError(t, queue.Push(tx))
-	newBlock, newTxList, err := rp.CreateBlock(queue, RandomNow())
+	newBlock, newTxList, err := rp.CreateBlock(queue, 0, RandomNow())
 	require.NoError(t, err)
 	require.Equal(t, tx.Hash(), newTxList.List()[0].Hash())
 	sameRepositoryTop(t, rp, newBlock)
