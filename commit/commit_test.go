@@ -30,6 +30,7 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	cs2 := NewCommitSystem(fc, cryptor, queue2,  rp2, conf)
 
 	assert.NoError(t, cs2.VerifyCommit(block, txList))
+	assert.NoError(t, cs2.ValidateCommit(block, txList))
 	assert.NoError(t, cs2.Commit(block, txList))
 
 	rtx, err := rp.Begin()
