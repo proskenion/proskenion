@@ -8,12 +8,17 @@ import (
 )
 
 type Config struct {
-	DB                DBConfig     `yaml:"db"`
-	ProposalTxsLimits int          `yaml:"proposal_txs_limits"`
-	Commit            CommitConfig `yaml:"commit"`
-	Peer              PeerConfig   `yaml:"peer"`
-	Prosl             ProslConfig  `yaml:"prosl"`
-	Root              RootConfig   `yaml:"root"`
+	DB     DBConfig     `yaml:"db"`
+	Queue  QueueConfig  `yaml:"queue"`
+	Commit CommitConfig `yaml:"commit"`
+	Peer   PeerConfig   `yaml:"peer"`
+	Prosl  ProslConfig  `yaml:"prosl"`
+	Root   RootConfig   `yaml:"root"`
+}
+
+type QueueConfig struct {
+	TxsLimits   int `yaml:"txs_limits"`
+	BlockLimits int `yaml:"block_limits"`
 }
 
 type DBConfig struct {

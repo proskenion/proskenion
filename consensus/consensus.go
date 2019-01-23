@@ -16,13 +16,13 @@ type Consensus struct {
 	pr     core.Prosl
 	conf   *config.Config
 
-	commitChan chan interface{}
+	commitChan chan struct{}
 	// 前回の Commit から次の Commit までの間隔の最大値
 	WaitngInterval time.Duration
 }
 
 func NewConsensus(rp core.Repository, cs core.CommitSystem, gossip core.Gossip, pr core.Prosl,
-	logger log15.Logger, conf *config.Config, commitChan chan interface{}) core.Consensus {
+	logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
 	return &Consensus{rp, cs, gossip, logger, pr, conf,
 		commitChan, time.Duration(conf.Commit.WaitInterval) * time.Millisecond}
 }
@@ -93,4 +93,13 @@ func (c *Consensus) Boot() {
 			}
 		}
 	}
+}
+
+func (c *Consensus) Receiver() {
+	/*
+		for {
+			// TODO : queue
+
+		}
+	*/
 }

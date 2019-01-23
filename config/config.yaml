@@ -3,7 +3,9 @@ db:
   path: database
   kind: sqlite3
   name: db
-proposal_txs_limits: 1000
+queue:
+  txs_limits: 1000
+  block_limits: 30
 commit:
   wait_interval: 1000
   num_tx_in_block: 1000

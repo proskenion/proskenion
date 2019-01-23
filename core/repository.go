@@ -113,6 +113,12 @@ type TxHistory interface {
 	Rollback() error
 }
 
+type ProposalQueue interface {
+	Push(hasher Hasher) error
+	Erase(hash Hash) error
+	Pop() (Hasher, bool)
+}
+
 // BlockChain
 type Blockchain interface {
 	// blockHash を指定して Block を取得
@@ -126,6 +132,13 @@ type ProposalTxQueue interface {
 	Push(tx Transaction) error
 	Erase(hash Hash) error
 	Pop() (Transaction, bool)
+}
+
+type ProposalBlockQueue interface {
+	Push(block Block) error
+	Erase(hash Hash) error
+	Pop() (Block, bool)
+	WaitPush() struct{}
 }
 
 type Repository interface {

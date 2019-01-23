@@ -20,6 +20,13 @@ type APIGate interface {
 	Read(query Query) (QueryResponse, error)
 }
 
+// Consensus
+var (
+	ErrConsensusGatePropagateTxVerifyError = fmt.Errorf("Failed ConsensusGate PropagateTx Verify error")
+
+
+)
+
 type ConsensusGate interface {
 	PropagateTx(tx Transaction) error
 	PropagateBlock(block Block) error

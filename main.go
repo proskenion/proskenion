@@ -62,7 +62,7 @@ func main() {
 	qp := query.NewQueryProcessor(rp, fc, conf)
 	qv := query.NewQueryValidator(rp, fc, conf)
 
-	commitChan := make(chan interface{})
+	commitChan := make(chan struct{})
 	cs := commit.NewCommitSystem(fc, cryptor, queue, rp, conf)
 
 	// WIP : mock

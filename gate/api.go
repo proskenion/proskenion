@@ -24,10 +24,10 @@ func (a *APIGate) Write(tx model.Transaction) error {
 		return errors.Wrap(core.ErrAPIGateWriteVerifyError, err.Error())
 	}
 	if err := a.queue.Push(tx); err != nil {
-		if errors.Cause(err) == repository.ErrProposalTxQueueAlreadyExistTx {
+		if errors.Cause(err) == repository.ErrProposalQueueAlreadyExist {
 			return errors.Wrap(core.ErrAPIGateWriteTxAlreadyExist, err.Error())
 		}
-		return repository.ErrProposalTxQueuePush
+		return errors.Wrapf(repository.ErrProposalTxQueuePush, err.Error())
 	}
 	return nil
 }
