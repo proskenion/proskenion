@@ -52,6 +52,7 @@ func main() {
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
+	bq := repository.NewProposalBlockQueueOnMemory(conf)
 
 	pr := prosl.NewProsl(fc, rp, cryptor, conf)
 
@@ -67,7 +68,7 @@ func main() {
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
-	csc := consensus.NewConsensus(rp, cs, gossip, pr, logger, conf, commitChan)
+	csc := consensus.NewConsensus(rp, cs,bq,gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")

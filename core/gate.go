@@ -24,14 +24,15 @@ type APIGate interface {
 var (
 	ErrConsensusGatePropagateTxVerifyError = fmt.Errorf("Failed ConsensusGate PropagateTx Verify error")
 
-
+	ErrConsensusGatePropagateBlockVerifyError  = fmt.Errorf("Failed ConsensusGate PropagateBlock Verify error")
+	ErrConsensusGatePropagateBlockAlreadyExist = fmt.Errorf("Failed ConsensusGate PropagateBlock block is already exists")
 )
 
 type ConsensusGate interface {
 	PropagateTx(tx Transaction) error
 	PropagateBlock(block Block) error
 	// chan が Stream の返り値
-	CollectTx(blockHash Hash, txChan chan Transaction) error
+	CollectTx(blockHash Hash, txChan chan Transaction, errChan chan error) error
 }
 
 type SyncGate interface {
