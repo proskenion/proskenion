@@ -213,7 +213,7 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 
 	newBlock := r.fc.NewBlockBuilder().
 		Round(round).
-		TxsHash(txList.Top()).
+		TxsHash(txList.Hash()).
 		TxHistoryHash(txHistory.Hash()).
 		WSVHash(wsv.Hash()).
 		CreatedTime(now).
@@ -391,7 +391,7 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 	}
 	genesisBlock := r.fc.NewBlockBuilder().
 		CreatedTime(0).
-		TxsHash(txList.Top()).
+		TxsHash(txList.Hash()).
 		PreBlockHash(nil).
 		TxHistoryHash(txHistoryHash).
 		WSVHash(wsvHash).

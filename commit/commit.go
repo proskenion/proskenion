@@ -34,9 +34,9 @@ func (c *CommitSystem) VerifyCommit(block model.Block, txList core.TxList) error
 	if err := block.Verify(); err != nil {
 		return errors.Wrapf(core.ErrCommitSystemVerifyCommitBlockVerify, err.Error())
 	}
-	if !bytes.Equal(block.GetPayload().GetTxsHash(), txList.Top()) {
+	if !bytes.Equal(block.GetPayload().GetTxsHash(), txList.Hash()) {
 		return errors.Wrapf(core.ErrCommitSystemVerifyCommitNotMatchedTxsHash,
-			"block.txsHash:%x, actual txsHash:%x", block.GetPayload().GetTxsHash(), txList.Top())
+			"block.txsHash:%x, actual txsHash:%x", block.GetPayload().GetTxsHash(), txList.Hash())
 	}
 	for _, tx := range txList.List() {
 		if err := tx.Verify(); err != nil {

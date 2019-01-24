@@ -37,7 +37,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 
 	t.Run("Failed, nil block push", func(t *testing.T) {
 		err := queue.Push(nil)
-		assert.EqualError(t, errors.Cause(err), ErrProposalQueuePushNil.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueuePushNil.Error())
 	})
 
 	t.Run("Empty pop, return nil", func(t *testing.T) {
@@ -88,7 +88,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 		}
 
 		err := queue.Push(RandomBlock())
-		assert.EqualError(t, errors.Cause(err), ErrProposalQueueLimits.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueLimits.Error())
 
 		for i := 0; i < limit; i++ {
 			front, ok := queue.Pop()
@@ -107,7 +107,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 		queue.WaitPush()
 
 		err = queue.Push(block)
-		assert.EqualError(t, errors.Cause(err), ErrProposalQueueAlreadyExist.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueAlreadyExist.Error())
 
 		exBlock, ok := queue.Pop()
 		require.True(t, ok)
@@ -125,7 +125,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 		}
 
 		err := queue.Push(RandomBlock())
-		assert.EqualError(t, errors.Cause(err), ErrProposalQueueLimits.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueLimits.Error())
 
 		for i := 0; i < limit; i += 2 {
 			blocks2 = append(blocks2, RandomBlock())
@@ -155,7 +155,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 
 		block2 := RandomBlock()
 		err := queue.Erase(block2.Hash())
-		assert.EqualError(t, ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
+		assert.EqualError(t, core.ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
 
 		require.NoError(t, queue.Push(block2))
 		queue.WaitPush()
@@ -166,7 +166,7 @@ func testProposalBlockQueue(t *testing.T, queue core.ProposalBlockQueue) {
 		assert.Equal(t, block, exBlock)
 
 		err = queue.Erase(block.Hash())
-		assert.EqualError(t, ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
+		assert.EqualError(t, core.ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
 
 		_, ok = queue.Pop()
 		assert.False(t, ok)

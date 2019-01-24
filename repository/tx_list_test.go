@@ -20,7 +20,7 @@ func testTxList_PushAndTop(t *testing.T, list core.TxList) {
 		RandomTx(),
 	}
 
-	assert.Equal(t, model.Hash(nil), list.Top())
+	assert.Equal(t, model.Hash(nil), list.Hash())
 	for _, tx := range txs {
 		err := list.Push(tx)
 		require.NoError(t, err)

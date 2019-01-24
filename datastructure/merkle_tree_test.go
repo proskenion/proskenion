@@ -1,10 +1,10 @@
-package repository_test
+package datastructure_test
 
 import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
-	. "github.com/proskenion/proskenion/repository"
+	. "github.com/proskenion/proskenion/datastructure"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,11 +26,11 @@ func testMerkleTree_PushAndTop(t *testing.T, tree core.MerkleTree) {
 		DecodeMustString(t, "a31011ebbb39ad3ee003c575d4fbd2e475345d3417c6c814e3bc7c583f1b8049"),
 	}
 
-	assert.Equal(t, model.Hash(nil), tree.Top())
+	assert.Equal(t, model.Hash(nil), tree.Hash())
 	for i, hasher := range hashers {
 		err := tree.Push(hasher)
 		require.NoError(t, err)
-		assert.Equal(t, expTop[i], tree.Top())
+		assert.Equal(t, expTop[i], tree.Hash())
 	}
 }
 

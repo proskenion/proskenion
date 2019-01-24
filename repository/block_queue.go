@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 var (
@@ -17,7 +18,7 @@ type ProposalBlockQueueOnMemory struct {
 }
 
 func NewProposalBlockQueueOnMemory(conf *config.Config) core.ProposalBlockQueue {
-	return &ProposalBlockQueueOnMemory{NewProposalQueueOnMemory(conf.Queue.BlockLimits),
+	return &ProposalBlockQueueOnMemory{datastructure.NewProposalQueueOnMemory(conf.Queue.BlockLimits),
 		make(chan struct{}, conf.Queue.BlockLimits)}
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 var (
@@ -16,7 +17,7 @@ type ProposalTxQueueOnMemory struct {
 }
 
 func NewProposalTxQueueOnMemory(conf *config.Config) core.ProposalTxQueue {
-	return &ProposalTxQueueOnMemory{NewProposalQueueOnMemory(conf.Queue.TxsLimits)}
+	return &ProposalTxQueueOnMemory{datastructure.NewProposalQueueOnMemory(conf.Queue.TxsLimits)}
 }
 
 func (q *ProposalTxQueueOnMemory) Push(tx model.Transaction) error {

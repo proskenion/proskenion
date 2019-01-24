@@ -1,18 +1,10 @@
-package repository
+package datastructure
 
 import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"sync"
-)
-
-var (
-	ErrProposalQueueLimits       = errors.Errorf("PropposalQueue run limit reached")
-	ErrProposalQueueAlreadyExist = errors.Errorf("Failed Push Already Exist ")
-	ErrProposalQueuePush         = errors.Errorf("Failed ProposalQueue Push")
-	ErrProposalQueuePushNil      = errors.Errorf("Failed ProposalQueue Push nil hasher")
-	ErrProposalQueueEraseUnexist = errors.Errorf("Faield Erase Unexist Hash")
 )
 
 type ProposalQueueOnMemory struct {
@@ -42,12 +34,12 @@ func (q *ProposalQueueOnMemory) Push(hasher model.Hasher) error {
 	defer q.mutex.Unlock()
 
 	if hasher == nil {
-		return errors.Wrapf(ErrProposalQueuePushNil, "push object is nil")
+		return errors.Wrapf(core.ErrProposalQueuePushNil, "push object is nil")
 	}
 
 	hash := hasher.Hash()
 	if _, ok := q.find[string(hash)]; ok {
-		return errors.Wrapf(ErrProposalQueueAlreadyExist, "already hasher : %x, push to proposal hasher queue", hash)
+		return errors.Wrapf(core.ErrProposalQueueAlreadyExist, "already hasher : %x, push to proposal hasher queue", hash)
 	}
 	if q.tail-q.head-q.middle < uint64(q.limit) {
 		q.find[string(hash)] = q.tail
@@ -55,7 +47,7 @@ func (q *ProposalQueueOnMemory) Push(hasher model.Hasher) error {
 		q.tail++
 	} else {
 		//log.Print(ErrProposalQueueLimits, "queue's max length: %d", q.limit)
-		return errors.Wrapf(ErrProposalQueueLimits, "queue's max length: %d", q.limit)
+		return errors.Wrapf(core.ErrProposalQueueLimits, "queue's max length: %d", q.limit)
 	}
 	return nil
 }
@@ -88,7 +80,7 @@ func (q *ProposalQueueOnMemory) Erase(hash model.Hash) error {
 		delete(q.find, string(hash))
 		q.middle++
 	} else {
-		return errors.Wrapf(ErrProposalQueueEraseUnexist, "unexist hasher's hash %x", hash)
+		return errors.Wrapf(core.ErrProposalQueueEraseUnexist, "unexist hasher's hash %x", hash)
 	}
 	return nil
 }

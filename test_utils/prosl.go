@@ -52,7 +52,7 @@ func CommitTxWrapBlock(t *testing.T, rp core.Repository, fc model.ModelFactory, 
 	require.NoError(t, err)
 	block := fc.NewBlockBuilder().
 		CreatedTime(RandomNow()).
-		TxsHash(txList.Top()).
+		TxsHash(txList.Hash()).
 		PreBlockHash(topHash).
 		TxHistoryHash(txHistoryHash).
 		WSVHash(wsvHash).

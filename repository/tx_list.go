@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 	"io/ioutil"
 )
 
@@ -37,7 +38,7 @@ func NewTxListFromConf(cryptor core.Cryptor, pr core.Prosl, conf *config.Config)
 }
 
 func NewTxList(cryptor core.Cryptor) core.TxList {
-	return &TxList{NewAccumulateHash(cryptor), make([]model.Transaction, 0)}
+	return &TxList{datastructure.NewAccumulateHash(cryptor), make([]model.Transaction, 0)}
 }
 
 func (t *TxList) Push(tx model.Transaction) error {
@@ -45,8 +46,8 @@ func (t *TxList) Push(tx model.Transaction) error {
 	return t.tree.Push(tx)
 }
 
-func (t *TxList) Top() model.Hash {
-	return t.tree.Top()
+func (t *TxList) Hash() model.Hash {
+	return t.tree.Hash()
 }
 
 func (t *TxList) List() []model.Transaction {

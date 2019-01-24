@@ -2,7 +2,6 @@ package core
 
 import (
 	"github.com/pkg/errors"
-	. "github.com/proskenion/proskenion/core/model"
 )
 
 var (
@@ -10,11 +9,6 @@ var (
 	ErrDBANotFoundLoad   = errors.Errorf("Failed DBA Load not found")
 	ErrDBABeginErr       = errors.Errorf("Failed DBA BeignTx Error")
 )
-
-type KeyValueStore interface {
-	Load(key Hash, value Unmarshaler) error // value = Load(key)
-	Store(key Hash, value Marshaler) error  // Duplicate Insert error
-}
 
 type DB interface {
 	DBA(table string) DBA

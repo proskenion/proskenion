@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 type TxHistory struct {
@@ -15,7 +16,7 @@ type TxHistory struct {
 var TX_HISTORY_ROOT_KEY byte = 1
 
 func NewTxHistory(tx core.DBATx, factory model.ModelFactory, cryptor core.Cryptor, rootHash model.Hash) (core.TxHistory, error) {
-	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, TX_HISTORY_ROOT_KEY)
+	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, TX_HISTORY_ROOT_KEY)
 	if err != nil {
 		return nil, err
 	}

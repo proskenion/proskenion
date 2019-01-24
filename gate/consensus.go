@@ -24,7 +24,7 @@ func (c *ConsensusGate) PropagateTx(tx model.Transaction) error {
 		return errors.Wrap(core.ErrConsensusGatePropagateTxVerifyError, err.Error())
 	}
 	if err := c.txQueue.Push(tx); err != nil {
-		if errors.Cause(err) == repository.ErrProposalQueueAlreadyExist {
+		if errors.Cause(err) == core.ErrProposalQueueAlreadyExist {
 			return nil // already exist no error.
 		}
 		return errors.Wrapf(repository.ErrProposalTxQueuePush, err.Error())
@@ -37,7 +37,7 @@ func (c *ConsensusGate) PropagateBlock(block model.Block) error {
 		return errors.Wrap(core.ErrConsensusGatePropagateBlockVerifyError, err.Error())
 	}
 	if err := c.blockQueue.Push(block); err != nil {
-		if errors.Cause(err) == repository.ErrProposalQueueAlreadyExist {
+		if errors.Cause(err) == core.ErrProposalQueueAlreadyExist {
 			return errors.Wrapf(core.ErrConsensusGatePropagateBlockAlreadyExist, err.Error())
 		}
 		return errors.Wrapf(repository.ErrProposalBlockQueuePush, err.Error())

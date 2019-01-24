@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 type Blockchain struct {
@@ -36,7 +37,7 @@ func NewBlockchainFromTopBlock(tx core.DBATx, factory model.ModelFactory, crypto
 		}
 		rootHash = bw.B
 	}
-	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, BLOCKCHAIN_ROOT_KEY)
+	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, BLOCKCHAIN_ROOT_KEY)
 	if err != nil {
 		return nil, err
 	}

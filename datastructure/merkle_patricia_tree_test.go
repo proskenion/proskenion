@@ -1,11 +1,11 @@
-package repository_test
+package datastructure_test
 
 import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
-	"github.com/proskenion/proskenion/repository"
+	. "github.com/proskenion/proskenion/datastructure"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -160,9 +160,9 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 
 func TestMerklePatriciaTree(t *testing.T) {
 	cryptor := RandomCryptor()
-	tree1, err := repository.NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
+	tree1, err := NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
 	require.NoError(t, err)
-	tree2, err := repository.NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
+	tree2, err := NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
 	require.NoError(t, err)
 	testMerklePatriciaTree(t, tree1, tree2)
 }
