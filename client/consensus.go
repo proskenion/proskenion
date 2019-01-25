@@ -14,9 +14,10 @@ import (
 type ConsensusGateClient struct {
 	proskenion.ConsensusGateClient
 	fc model.ModelFactory
+	c  core.Cryptor
 }
 
-func NewConsensusGateClient(peer model.Peer, fc model.ModelFactory) (core.ConsensusGateClient, error) {
+func NewConsensusGateClient(peer model.Peer, fc model.ModelFactory, c core.Cryptor) (core.ConsensusGateClient, error) {
 	gc, err := grpc.Dial(peer.GetAddress(), grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -24,6 +25,7 @@ func NewConsensusGateClient(peer model.Peer, fc model.ModelFactory) (core.Consen
 	return &ConsensusGateClient{
 		proskenion.NewConsensusGateClient(gc),
 		fc,
+		c,
 	}, nil
 }
 
@@ -33,10 +35,35 @@ func (c *ConsensusGateClient) PropagateTx(in model.Transaction) error {
 	return err
 }
 
-func (c *ConsensusGateClient) PropagateBlock(in model.Block) error {
-	tx := in.(*convertor.Block).Block
-	_, err := c.ConsensusGateClient.PropagateBlock(context.TODO(), tx)
-	return err
+func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList core.TxList) error {
+	stream, err := c.ConsensusGateClient.PropagateBlock(context.TODO())
+	defer stream.CloseSend()
+	if err != nil {
+		return err
+	}
+	req := &proskenion.PropagagateBlockRequest{
+		Req: &proskenion.PropagagateBlockRequest_Block{Block: block.(*convertor.Block).Block},
+	}
+
+	if err := stream.Send(req); err != nil {
+		return err
+	}
+	res, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+	if err := c.c.Verify(res.GetSignature().GetPublicKey(), block, res.GetSignature().GetSignature()); err != nil {
+		return err
+	}
+
+	for _, tx := range txList.List() {
+		err := stream.Send(&proskenion.PropagagateBlockRequest{
+			Req: &proskenion.PropagagateBlockRequest_Transaction{Transaction: tx.(*convertor.Transaction).Transaction}})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *ConsensusGateClient) CollectTx(blockHash model.Hash, txChan chan model.Transaction) error {

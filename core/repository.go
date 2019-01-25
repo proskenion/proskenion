@@ -11,12 +11,17 @@ const (
 )
 
 var (
-	ErrWSVNotFound              = errors.Errorf("Failed WSV Query Not Found")
-	ErrWSVQueryUnmarshal        = errors.Errorf("Failed WSV Query Unmarshal")
-	ErrTxHistoryNotFound        = errors.Errorf("Failed TxHistory Query Not Found")
-	ErrTxHistoryQueryUnmarshal  = errors.Errorf("Failed TxHistory Query Unmarshal")
+	ErrWSVNotFound       = errors.Errorf("Failed WSV Query Not Found")
+	ErrWSVQueryUnmarshal = errors.Errorf("Failed WSV Query Unmarshal")
+
+	ErrTxHistoryNotFound       = errors.Errorf("Failed TxHistory Query Not Found")
+	ErrTxHistoryQueryUnmarshal = errors.Errorf("Failed TxHistory Query Unmarshal")
+
 	ErrBlockchainNotFound       = errors.Errorf("Failed Blockchain Get Not Found")
 	ErrBlockchainQueryUnmarshal = errors.Errorf("Failed Blocchain Get Unmarshal")
+
+	ErrProposalBlockQueuePush = errors.Errorf("Failed ProposalBlockQueue Push")
+	ErrProposalTxListCacheSet = errors.Errorf("Failed ProposalTXListCache Set")
 
 	ErrRepositoryCommitLoadPreBlock  = errors.Errorf("Failed Repository Commit Load PreBlockchain")
 	ErrRepositoryCommitLoadWSV       = errors.Errorf("Failed Repository Commit Load WSV")
@@ -29,6 +34,11 @@ type TxList interface {
 	List() []Transaction
 	Size() int
 	Hasher
+}
+
+type TxListCache interface {
+	Set(txList TxList) error
+	Get(hash Hash) (TxList, bool)
 }
 
 // WSV (MerklePatriciaTree で管理)

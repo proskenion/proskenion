@@ -1,15 +1,10 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/datastructure"
-)
-
-var (
-	ErrProposalBlockQueuePush = fmt.Errorf("Failed ProposalBlockQueue Push")
 )
 
 type ProposalBlockQueueOnMemory struct {

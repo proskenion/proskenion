@@ -11,7 +11,7 @@ type APIGateClient interface {
 
 type ConsensusGateClient interface {
 	PropagateTx(tx Transaction) error
-	PropagateBlock(block Block) error
+	PropagateBlockStreamTx(block Block, txLit TxList) error
 	// chan が Stream の返り値
 	CollectTx(blockHash Hash, txChan chan Transaction) error
 }

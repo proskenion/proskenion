@@ -1,22 +1,28 @@
 package gate
 
 import (
+	"bytes"
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
+	"io"
 )
 
 type ConsensusGate struct {
-	cc         core.CommitSystem
-	txQueue    core.ProposalTxQueue
-	blockQueue core.ProposalBlockQueue
-	logger     log15.Logger
+	fc          model.ModelFactory
+	c           core.Cryptor
+	txQueue     core.ProposalTxQueue
+	txListCache core.TxListCache
+	blockQueue  core.ProposalBlockQueue
+	logger      log15.Logger
+	conf        *config.Config
 }
 
-func NewConsensusGate(cc core.CommitSystem, txQueue core.ProposalTxQueue, blockQueue core.ProposalBlockQueue, logger log15.Logger) core.ConsensusGate {
-	return &ConsensusGate{cc, txQueue, blockQueue, logger}
+func NewConsensusGate(fc model.ModelFactory, c core.Cryptor, txQueue core.ProposalTxQueue, txListCache core.TxListCache, blockQueue core.ProposalBlockQueue, logger log15.Logger, conf *config.Config) core.ConsensusGate {
+	return &ConsensusGate{fc, c, txQueue, txListCache, blockQueue, logger, conf}
 }
 
 func (c *ConsensusGate) PropagateTx(tx model.Transaction) error {
@@ -40,7 +46,45 @@ func (c *ConsensusGate) PropagateBlock(block model.Block) error {
 		if errors.Cause(err) == core.ErrProposalQueueAlreadyExist {
 			return errors.Wrapf(core.ErrConsensusGatePropagateBlockAlreadyExist, err.Error())
 		}
-		return errors.Wrapf(repository.ErrProposalBlockQueuePush, err.Error())
+		return errors.Wrapf(core.ErrProposalBlockQueuePush, err.Error())
+	}
+	return nil
+}
+
+func (c *ConsensusGate) PropagateBlockAck(block model.Block) (model.Signature, error) {
+	if err := block.Verify(); err != nil {
+		return nil, errors.Wrap(core.ErrConsensusGatePropagateBlockVerifyError, err.Error())
+	}
+	// TODO err ceheck : public key は存在する Peer のものか。
+	signature, err := c.c.Sign(block, c.conf.Peer.PrivateKeyBytes())
+	if err != nil {
+		return nil, err
+	}
+	ret := c.fc.NewSignature(c.conf.Peer.PublicKeyBytes(), signature)
+	return ret, nil
+}
+
+func (c *ConsensusGate) PropagateBlockStreamTx(block model.Block, txChan chan model.Transaction, errChan chan error) error {
+
+	txList := repository.NewTxList(c.c)
+	for tx := range txChan {
+		txList.Push(tx)
+	}
+	if err := <-errChan; err != nil && err != io.EOF {
+		return err
+	}
+
+	if !bytes.Equal(block.GetPayload().GetTxsHash(), txList.Hash()) {
+		return errors.Wrapf(core.ErrConsensusGatePropagateBlockDifferentHash,
+			"txsHash: %x, txListHash: %x",
+			block.GetPayload().GetTxsHash(), txList.Hash())
+	}
+
+	if err := c.txListCache.Set(txList); err != nil {
+		return errors.Wrapf(core.ErrProposalTxListCacheSet, err.Error())
+	}
+	if err := c.blockQueue.Push(block); err != nil {
+		return errors.Wrapf(core.ErrProposalBlockQueuePush, err.Error())
 	}
 	return nil
 }
@@ -49,7 +93,7 @@ func (c *ConsensusGate) PropagateBlock(block model.Block) error {
 func (c *ConsensusGate) CollectTx(blockHash model.Hash, txChan chan model.Transaction, errChan chan error) error {
 	for _, tx := range []model.Transaction{} { // TODO
 		txChan <- tx
-		if err := <- errChan; err != nil {
+		if err := <-errChan; err != nil {
 			return err
 		}
 	}
