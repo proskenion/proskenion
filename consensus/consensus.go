@@ -12,6 +12,7 @@ type Consensus struct {
 	rp     core.Repository
 	cs     core.CommitSystem
 	bq     core.ProposalBlockQueue
+
 	gossip core.Gossip
 	logger log15.Logger
 	pr     core.Prosl
@@ -103,5 +104,6 @@ func (c *Consensus) Receiver() {
 		if !ok {
 			continue
 		}
+
 	}
 }

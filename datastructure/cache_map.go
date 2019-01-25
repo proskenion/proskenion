@@ -23,7 +23,11 @@ type CacheMap struct {
 }
 
 func NewCacheMap(limit int) core.CacheMap {
-	return &CacheMap{new(sync.Mutex), limit, 0, make(map[string]*HasherAndInd), make([]map[string]struct{}, 3)}
+	index := make([]map[string]struct{}, CacheStageNum)
+	for i, _ := range index {
+		index[i] = make(map[string]struct{})
+	}
+	return &CacheMap{new(sync.Mutex), limit, 0, make(map[string]*HasherAndInd), index}
 }
 
 func nextCacheStage(oldestId int) int {
