@@ -33,7 +33,7 @@ type ConsensusGate interface {
 	PropagateTx(tx Transaction) error
 
 	PropagateBlockAck(block Block) (Signature, error)
-	PropagateBlockStreamTx(block Block, txChan chan Transaction, errChan chan error) error
+	PropagateBlockStreamTx( block Block, txChan chan Transaction, errChan chan error) error
 
 	// chan が Stream の返り値
 	CollectTx(blockHash Hash, txChan chan Transaction, errChan chan error) error

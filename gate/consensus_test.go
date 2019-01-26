@@ -9,6 +9,7 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
 	"testing"
 )
 
@@ -43,15 +44,15 @@ func TestConsensusGate_PropagateBlockStreamTx(t *testing.T) {
 		fmt.Println(txList.Size())
 		txChan := make(chan model.Transaction)
 		errChan := make(chan error)
-		defer close(errChan)
 
 		go func(txList core.TxList) {
 			defer close(txChan)
+			defer close(errChan)
 
 			for _, tx := range txList.List() {
 				txChan <- tx
 			}
-			errChan <- nil
+			errChan <- io.EOF
 		}(txList)
 
 		err := cg.PropagateBlockStreamTx(block, txChan, errChan)
@@ -64,11 +65,10 @@ func TestConsensusGate_PropagateBlockStreamTx(t *testing.T) {
 
 		txChan := make(chan model.Transaction)
 		errChan := make(chan error)
-		defer close(errChan)
 
 		go func(txList core.TxList) {
 			defer close(txChan)
-
+			defer close(errChan)
 			for _, tx := range txList.List() {
 				txChan <- tx
 			}
@@ -85,11 +85,10 @@ func TestConsensusGate_PropagateBlockStreamTx(t *testing.T) {
 
 		txChan := make(chan model.Transaction)
 		errChan := make(chan error)
-		defer close(errChan)
 
 		go func(txList core.TxList) {
 			defer close(txChan)
-
+			defer close(errChan)
 			for i, tx := range txList.List() {
 				if i == 10 {
 					errChan <- fmt.Errorf("expected error")
@@ -102,4 +101,5 @@ func TestConsensusGate_PropagateBlockStreamTx(t *testing.T) {
 		err := cg.PropagateBlockStreamTx(block, txChan, errChan)
 		assert.Error(t, errors.Cause(err), "expected error")
 	})
+
 }

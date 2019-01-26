@@ -65,14 +65,19 @@ func (c *ConsensusGate) PropagateBlockAck(block model.Block) (model.Signature, e
 }
 
 func (c *ConsensusGate) PropagateBlockStreamTx(block model.Block, txChan chan model.Transaction, errChan chan error) error {
-
 	txList := repository.NewTxList(c.c)
-	for tx := range txChan {
-		txList.Push(tx)
+	for {
+		select {
+		case tx := <-txChan:
+			txList.Push(tx)
+		case err := <-errChan:
+			if err != nil && err != io.EOF {
+				return err
+			}
+			goto afterFor
+		}
 	}
-	if err := <-errChan; err != nil && err != io.EOF {
-		return err
-	}
+afterFor:
 
 	if !bytes.Equal(block.GetPayload().GetTxsHash(), txList.Hash()) {
 		return errors.Wrapf(core.ErrConsensusGatePropagateBlockDifferentHash,
