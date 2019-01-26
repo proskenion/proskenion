@@ -70,6 +70,13 @@ func RandomTx() model.Transaction {
 	return tx
 }
 
+func RandomSignedTx(t *testing.T) model.Transaction {
+	validPub, validPriv := RandomKeyPairs()
+	tx := RandomTx()
+	require.NoError(t, tx.Sign(validPub, validPriv))
+	return tx
+}
+
 func RandomValidTx() model.Transaction {
 	validPub, validPriv := RandomKeyPairs()
 	tx := RandomTx()

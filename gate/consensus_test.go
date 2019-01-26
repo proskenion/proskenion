@@ -20,6 +20,20 @@ func newRandomConsensusGate(t *testing.T) core.ConsensusGate {
 		repository.NewProposalBlockQueueOnMemory(conf), RandomLogger(), conf)
 }
 
+func TestConsensusGate_PropagateTx(t *testing.T) {
+	cg := newRandomConsensusGate(t)
+	t.Run("case 1 : correct", func(t *testing.T) {
+		tx := RandomSignedTx(t)
+		assert.NoError(t, cg.PropagateTx(tx))
+	})
+
+	t.Run("case 2 : err verify", func(t *testing.T) {
+		tx := RandomTx()
+		err := cg.PropagateTx(tx)
+		assert.EqualError(t, errors.Cause(err), core.ErrConsensusGatePropagateTxVerifyError.Error())
+	})
+}
+
 func TestConsensusGate_PropagateBlockAck(t *testing.T) {
 	cg := newRandomConsensusGate(t)
 	t.Run("case 1 : correct", func(t *testing.T) {
