@@ -18,6 +18,8 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, conf.Queue.TxsLimits, 1000)
 	assert.Equal(t, conf.Queue.BlockLimits, 30)
 
+	assert.Equal(t, conf.Cache.TxListLimits, 100)
+
 	assert.Equal(t, conf.Peer.Port, "50023")
 
 	assert.Equal(t, conf.Prosl.Id, "/prosl")

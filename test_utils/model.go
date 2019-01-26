@@ -36,11 +36,11 @@ func NewTestFactories() (model.ModelFactory,
 	pr := prosl.NewProsl(fc, rp, c, cf)
 	ex.SetField(fc, pr)
 	vl.SetField(fc, pr)
-	return fc, ex, vl, c, rp, pr ,cf
+	return fc, ex, vl, c, rp, pr, cf
 }
 
 func RandomFactory() model.ModelFactory {
-	fc, _, _, _, _, _ ,_:= NewTestFactories()
+	fc, _, _, _, _, _, _ := NewTestFactories()
 	return fc
 }
 
@@ -126,6 +126,21 @@ func RandomBlock() model.Block {
 		CreatedTime(rand.Int63()).
 		TxsHash(RandomByte()).
 		Build()
+}
+
+func RandomSignedBlock(t *testing.T) model.Block {
+	pub, pri := RandomKeyPairs()
+	ret := RandomFactory().NewBlockBuilder().
+		Height(rand.Int63()).
+		Round(0).
+		WSVHash(RandomByte()).
+		TxHistoryHash(RandomByte()).
+		PreBlockHash(RandomByte()).
+		CreatedTime(rand.Int63()).
+		TxsHash(RandomByte()).
+		Build()
+	require.NoError(t, ret.Sign(pub, pri))
+	return ret
 }
 
 func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []model.PrivateKey) model.Transaction {

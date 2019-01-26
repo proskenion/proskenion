@@ -41,8 +41,8 @@ func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList c
 	if err != nil {
 		return err
 	}
-	req := &proskenion.PropagagateBlockRequest{
-		Req: &proskenion.PropagagateBlockRequest_Block{Block: block.(*convertor.Block).Block},
+	req := &proskenion.PropagateBlockRequest{
+		Req: &proskenion.PropagateBlockRequest_Block{Block: block.(*convertor.Block).Block},
 	}
 
 	if err := stream.Send(req); err != nil {
@@ -57,8 +57,8 @@ func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList c
 	}
 
 	for _, tx := range txList.List() {
-		err := stream.Send(&proskenion.PropagagateBlockRequest{
-			Req: &proskenion.PropagagateBlockRequest_Transaction{Transaction: tx.(*convertor.Transaction).Transaction}})
+		err := stream.Send(&proskenion.PropagateBlockRequest{
+			Req: &proskenion.PropagateBlockRequest_Transaction{Transaction: tx.(*convertor.Transaction).Transaction}})
 		if err != nil {
 			return err
 		}

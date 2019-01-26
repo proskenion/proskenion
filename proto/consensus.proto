@@ -9,7 +9,7 @@ message ConsensusResponse {}
 message CollectTxRequest {
     bytes blockHash = 1;
 }
-message PropagagateBlockRequest {
+message PropagateBlockRequest {
     oneof req {
         Block block = 1;
         Transaction transaction = 2;
@@ -43,7 +43,7 @@ service ConsensusGate {
      * PropagateBlock は Commit する block を自分以外の Peer に伝搬させる。
      * Context には送信者の署名をつける。
      **/
-    rpc PropagateBlock(stream PropagagateBlockRequest) returns (stream PropopagateBlockResponse);
+    rpc PropagateBlock(stream PropagateBlockRequest) returns (stream PropopagateBlockResponse);
 
     /**
      * CollectTx は blockHash をもとにその block に含まれる Transaction を取得する。

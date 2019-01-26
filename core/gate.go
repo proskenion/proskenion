@@ -31,7 +31,6 @@ var (
 
 type ConsensusGate interface {
 	PropagateTx(tx Transaction) error
-	PropagateBlock(block Block) error
 
 	PropagateBlockAck(block Block) (Signature, error)
 	PropagateBlockStreamTx(block Block, txChan chan Transaction, errChan chan error) error

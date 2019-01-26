@@ -10,6 +10,7 @@ import (
 type Config struct {
 	DB     DBConfig     `yaml:"db"`
 	Queue  QueueConfig  `yaml:"queue"`
+	Cache  CacheConfig  `yaml:"cache"`
 	Commit CommitConfig `yaml:"commit"`
 	Peer   PeerConfig   `yaml:"peer"`
 	Prosl  ProslConfig  `yaml:"prosl"`
@@ -19,6 +20,10 @@ type Config struct {
 type QueueConfig struct {
 	TxsLimits   int `yaml:"txs_limits"`
 	BlockLimits int `yaml:"block_limits"`
+}
+
+type CacheConfig struct {
+	TxListLimits int `yaml:"tx_list_limits"`
 }
 
 type DBConfig struct {

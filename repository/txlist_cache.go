@@ -1,12 +1,18 @@
 package repository
 
 import (
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 type TxListCache struct {
 	core.CacheMap
+}
+
+func NewTxListCache(conf *config.Config) core.TxListCache {
+	return &TxListCache{datastructure.NewCacheMap(conf.Cache.TxListLimits)}
 }
 
 func (c *TxListCache) Set(txList core.TxList) error {
