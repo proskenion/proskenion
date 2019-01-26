@@ -76,7 +76,7 @@ func (s *ConsensusGateServer) PropagateBlock(stream proskenion.ConsensusGate_Pro
 		return s.internalError(err)
 	}
 	// send signature
-	if err := stream.Send(&proskenion.PropopagateBlockResponse{
+	if err := stream.Send(&proskenion.PropagateBlockResponse{
 		Signature: &proskenion.Signature{
 			PublicKey: signature.GetPublicKey(),
 			Signature: signature.GetSignature(),
@@ -120,24 +120,6 @@ func (s *ConsensusGateServer) PropagateBlock(stream proskenion.ConsensusGate_Pro
 			return status.Error(codes.InvalidArgument, err.Error())
 		}
 		return s.internalError(err)
-	}
-	return nil
-}
-
-func (s *ConsensusGateServer) CollectTx(req *proskenion.CollectTxRequest, stream proskenion.ConsensusGate_CollectTxServer) error {
-	txChan := make(chan model.Transaction)
-	errChan := make(chan error)
-	defer close(errChan)
-	defer close(txChan)
-
-	go func(errChan chan error) {
-		for tx := range txChan {
-			errChan <- stream.Send(tx.(*convertor.Transaction).Transaction)
-		}
-	}(errChan)
-	if err := s.cg.CollectTx(req.GetBlockHash(), txChan, errChan); err != nil {
-		s.logger.Error(err.Error())
-		return status.Error(codes.Internal, err.Error())
 	}
 	return nil
 }

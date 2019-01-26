@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func newRandomConsensusGate(t *testing.T) core.ConsensusGate {
+func newRandomConsensusGate() core.ConsensusGate {
 	fc, _, _, c, _, _, conf := NewTestFactories()
 	return NewConsensusGate(fc, c,
 		repository.NewProposalTxQueueOnMemory(conf), repository.NewTxListCache(conf),
@@ -21,7 +21,7 @@ func newRandomConsensusGate(t *testing.T) core.ConsensusGate {
 }
 
 func TestConsensusGate_PropagateTx(t *testing.T) {
-	cg := newRandomConsensusGate(t)
+	cg := newRandomConsensusGate()
 	t.Run("case 1 : correct", func(t *testing.T) {
 		tx := RandomSignedTx(t)
 		assert.NoError(t, cg.PropagateTx(tx))
@@ -35,7 +35,7 @@ func TestConsensusGate_PropagateTx(t *testing.T) {
 }
 
 func TestConsensusGate_PropagateBlockAck(t *testing.T) {
-	cg := newRandomConsensusGate(t)
+	cg := newRandomConsensusGate()
 	t.Run("case 1 : correct", func(t *testing.T) {
 		block := RandomSignedBlock(t)
 		sig, err := cg.PropagateBlockAck(block)
@@ -50,7 +50,7 @@ func TestConsensusGate_PropagateBlockAck(t *testing.T) {
 }
 
 func TestConsensusGate_PropagateBlockStreamTx(t *testing.T) {
-	cg := newRandomConsensusGate(t)
+	cg := newRandomConsensusGate()
 	t.Run("case 1 : correct", func(t *testing.T) {
 		txList := RandomTxList()
 		block := RandomFactory().NewBlockBuilder().TxsHash(txList.Hash()).Build()

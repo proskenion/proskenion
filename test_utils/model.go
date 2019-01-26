@@ -150,6 +150,22 @@ func RandomSignedBlock(t *testing.T) model.Block {
 	return ret
 }
 
+func RandomValidSignedBlockAndTxList(t *testing.T) (model.Block, core.TxList) {
+	pub, pri := RandomKeyPairs()
+	txList := RandomTxList()
+	ret := RandomFactory().NewBlockBuilder().
+		Height(rand.Int63()).
+		Round(0).
+		WSVHash(RandomByte()).
+		TxHistoryHash(RandomByte()).
+		PreBlockHash(RandomByte()).
+		CreatedTime(rand.Int63()).
+		TxsHash(txList.Hash()).
+		Build()
+	require.NoError(t, ret.Sign(pub, pri))
+	return ret, txList
+}
+
 func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []model.PrivateKey) model.Transaction {
 	require.Equal(t, len(pub), len(pri))
 	for i, _ := range pub {

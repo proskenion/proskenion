@@ -93,14 +93,3 @@ afterFor:
 	}
 	return nil
 }
-
-// chan が Stream の返り値
-func (c *ConsensusGate) CollectTx(blockHash model.Hash, txChan chan model.Transaction, errChan chan error) error {
-	for _, tx := range []model.Transaction{} { // TODO
-		txChan <- tx
-		if err := <-errChan; err != nil {
-			return err
-		}
-	}
-	return nil
-}
