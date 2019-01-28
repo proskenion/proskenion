@@ -23,6 +23,7 @@ type QueueConfig struct {
 }
 
 type CacheConfig struct {
+	ClientLimits int `yaml:"client_limits"`
 	TxListLimits int `yaml:"tx_list_limits"`
 }
 

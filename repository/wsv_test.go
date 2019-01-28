@@ -35,20 +35,8 @@ func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id model.Address, peer mo
 	assert.Equal(t, peer.Hash(), unmarshaler.Hash())
 }
 
-type AccountUnmarshalerFactory struct {
-	fc model.ModelFactory
-}
-
-func (f *AccountUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
-	return f.fc.NewEmptyAccount()
-}
-
-func NewAccountUnmarshalerFactory() *AccountUnmarshalerFactory {
-	return &AccountUnmarshalerFactory{RandomFactory()}
-}
-
 func testWSV_QueryAll(t *testing.T, wsv core.WSV, acs []model.Account, id model.Address) {
-	res, err := wsv.QueryAll(id, NewAccountUnmarshalerFactory())
+	res, err := wsv.QueryAll(id, model.NewAccountUnmarshalerFactory(RandomFactory()))
 	assert.NoError(t, err)
 	resAc := make([]model.Account, 0)
 	for _, xxx := range res {
@@ -80,8 +68,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 	testWSV_QueryAll(t, wsv, acs, model.MustAddress("/account"))
 	testWSV_QueryAll(t, wsv, acs[3:], model.MustAddress("b/account"))
 
-	peerRootAddress := model.MustAddress("/peer")
-	_, err := wsv.PeerService(peerRootAddress)
+	_, err := wsv.PeerService()
 	assert.Error(t, err)
 
 	ps := []model.Peer{
@@ -102,7 +89,7 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 	}
 	require.NoError(t, wsv.Commit())
 
-	peerService, err := wsv.PeerService(peerRootAddress)
+	peerService, err := wsv.PeerService()
 	assert.NoError(t, err)
 	assert.Equal(t, len(peerService.List()), 4)
 	AssertSetEqual(t, peerService.List(), ps)

@@ -9,11 +9,10 @@ import (
 )
 
 type WSV struct {
-	tx     core.DBATx
-	tree   core.MerklePatriciaTree
-	fc     model.ObjectFactory
-	ps     core.PeerService
-	psHash model.Hash
+	tx   core.DBATx
+	tree core.MerklePatriciaTree
+	fc   model.ObjectFactory
+	ps   core.PeerService
 }
 
 var WsvRootKey byte = 0
@@ -27,6 +26,7 @@ func NewWSV(tx core.DBATx, cryptor core.Cryptor, fc model.ObjectFactory, rootHas
 		tx:   tx,
 		tree: tree,
 		fc:   fc,
+		ps:   NewPeerService(cryptor),
 	}, nil
 }
 
@@ -77,17 +77,15 @@ func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]mo
 }
 
 // PeerService gets value from targetId
-func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
-	peerRoot, err := w.tree.Search(makeWSVId(peerRootId))
+func (w *WSV) PeerService() (core.PeerService, error) {
+	peerRoot, err := w.tree.Search(makeWSVId(model.MustAddress("/" + model.PeerStorageName)))
 	if err != nil {
 		return nil, err
 	}
 	peerRootHash := peerRoot.Hash()
-	if len(w.psHash) != 0 {
-		// キャッシュがあったら再利用
-		if bytes.Equal(w.psHash, peerRootHash) {
-			return w.ps, nil
-		}
+	// キャッシュがあったら再利用
+	if bytes.Equal(w.ps.Hash(), peerRootHash) {
+		return w.ps, nil
 	}
 
 	leafs, err := peerRoot.SubLeafs()
@@ -104,9 +102,8 @@ func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
 		}
 		peers = append(peers, peer)
 	}
-	w.ps = NewPeerService(peers)
-	w.psHash = peerRootHash
-	return NewPeerService(peers), nil
+	w.ps.Set(peers)
+	return w.ps, nil //TODO
 }
 
 type KVNode struct {

@@ -46,3 +46,39 @@ func GobUnmarshal(b []byte, e interface{}) error {
 	}
 	return nil
 }
+
+type AccountUnmarshalerFactory struct {
+	fc ModelFactory
+}
+
+func (f *AccountUnmarshalerFactory) CreateUnmarshaler() Unmarshaler {
+	return f.fc.NewEmptyAccount()
+}
+
+func NewAccountUnmarshalerFactory(fc ModelFactory) UnmarshalerFactory {
+	return &AccountUnmarshalerFactory{fc}
+}
+
+type PeerUnmarshalerFactory struct {
+	fc ModelFactory
+}
+
+func (f *PeerUnmarshalerFactory) CreateUnmarshaler() Unmarshaler {
+	return f.fc.NewEmptyPeer()
+}
+
+func NewPeerUnmarshalerFactory(fc ModelFactory) UnmarshalerFactory {
+	return &PeerUnmarshalerFactory{fc}
+}
+
+type StorageUnmarshalerFactory struct {
+	fc ModelFactory
+}
+
+func (f *StorageUnmarshalerFactory) CreateUnmarshaler() Unmarshaler {
+	return f.fc.NewEmptyStorage()
+}
+
+func NewStorageUnmarshalerFactory(fc ModelFactory) UnmarshalerFactory {
+	return &StorageUnmarshalerFactory{fc}
+}

@@ -236,7 +236,11 @@ func MustAddress(id string) Address {
 	return ret
 }
 
-const dividedChar = "\\"
+const (
+	dividedChar        = "\\"
+	AccountStorageName = "account"
+	PeerStorageName    = "peer"
+)
 
 func (a *AddressConv) Storage() string {
 	return a.storage
@@ -277,11 +281,11 @@ func (a *AddressConv) Id() string {
 }
 
 func (a *AddressConv) AccountId() string {
-	return a.account + "@" + a.domain + "/account"
+	return a.account + "@" + a.domain + "/" + AccountStorageName
 }
 
 func (a *AddressConv) PeerId() string {
-	return a.account + "@" + a.domain + "/peer"
+	return a.account + "@" + a.domain + "/" + PeerStorageName
 }
 
 func (a *AddressConv) StorageId() string {

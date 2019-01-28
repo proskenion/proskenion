@@ -5,11 +5,6 @@ import (
 	. "github.com/proskenion/proskenion/core/model"
 )
 
-const (
-	AccountStorageName = "account"
-	PeerStorageName    = "peer"
-)
-
 var (
 	ErrWSVNotFound       = errors.Errorf("Failed WSV Query Not Found")
 	ErrWSVQueryUnmarshal = errors.Errorf("Failed WSV Query Unmarshal")
@@ -41,6 +36,13 @@ type TxListCache interface {
 	Get(hash Hash) (TxList, bool)
 }
 
+type ClientCache interface {
+	SetConsensus(peer Peer, client ConsensusGateClient) error
+	GetConsensus(Peer) (ConsensusGateClient, bool)
+	SetAPI(peer Peer, client APIGateClient) error
+	GetAPI(Peer) (APIGateClient, bool)
+}
+
 // WSV (MerklePatriciaTree で管理)
 type WSV interface {
 	Hasher
@@ -49,7 +51,7 @@ type WSV interface {
 	// Query All gets value from fromId
 	QueryAll(fromId Address, value UnmarshalerFactory) ([]Unmarshaler, error)
 	// Get PeerService
-	PeerService(peerRootId Address) (PeerService, error)
+	PeerService() (PeerService, error)
 	// Append [targetId] = value
 	Append(targetId Address, value Marshaler) error
 	// Commit appenging nodes
@@ -114,5 +116,7 @@ type RepositoryTx interface {
 
 // Peer 取得機構
 type PeerService interface {
+	Set([]Peer)
 	List() []Peer
+	Hasher
 }

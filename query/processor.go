@@ -152,45 +152,10 @@ func (q *QueryProcessor) selectStorage(storage model.Storage, query model.Query)
 	return builder.Storage(storage)
 }
 
-type AccountUnmarshalerFactory struct {
-	fc model.ModelFactory
-}
-
-func (f *AccountUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
-	return f.fc.NewEmptyAccount()
-}
-
-func NewAccountUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
-	return &AccountUnmarshalerFactory{fc}
-}
-
-type PeerUnmarshalerFactory struct {
-	fc model.ModelFactory
-}
-
-func (f *PeerUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
-	return f.fc.NewEmptyPeer()
-}
-
-func NewPeerUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
-	return &PeerUnmarshalerFactory{fc}
-}
-
-type StorageUnmarshalerFactory struct {
-	fc model.ModelFactory
-}
-
-func (f *StorageUnmarshalerFactory) CreateUnmarshaler() model.Unmarshaler {
-	return f.fc.NewEmptyStorage()
-}
-
-func NewStorageUnmarshalerFactory(fc model.ModelFactory) model.UnmarshalerFactory {
-	return &StorageUnmarshalerFactory{fc}
-}
 
 func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Account, error) {
 	acs := make([]model.Account, 0)
-	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewAccountUnmarshalerFactory(q.fc))
+	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewAccountUnmarshalerFactory(q.fc))
 	if err != nil {
 		return nil, errors.Wrap(core.ErrQueryProcessorNotFound, err.Error())
 	}
@@ -202,7 +167,7 @@ func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv core
 
 func (q *QueryProcessor) peerObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Peer, error) {
 	peers := make([]model.Peer, 0)
-	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewPeerUnmarshalerFactory(q.fc))
+	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewPeerUnmarshalerFactory(q.fc))
 	if err != nil {
 		return nil, errors.Wrap(core.ErrQueryProcessorNotFound, err.Error())
 	}
@@ -214,7 +179,7 @@ func (q *QueryProcessor) peerObjectQueryRange(qp model.QueryPayload, wsv core.WS
 
 func (q *QueryProcessor) storageObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Storage, error) {
 	storages := make([]model.Storage, 0)
-	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), NewStorageUnmarshalerFactory(q.fc))
+	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewStorageUnmarshalerFactory(q.fc))
 	if err != nil {
 		return nil, errors.Wrap(core.ErrQueryProcessorNotFound, err.Error())
 	}

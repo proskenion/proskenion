@@ -1,8 +1,11 @@
 package grpc_test
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/config"
+	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/test_utils"
+	"google.golang.org/grpc"
 	"sync"
 	"testing"
 	"time"
@@ -10,16 +13,35 @@ import (
 
 func TestScenario(t *testing.T) {
 	// Boot Server
-	conf := config.NewConfig("config.yaml")
-	server := RandomServer()
-	go func() {
-		SetUpTestServer(t, conf, server)
-	}()
-	time.Sleep(time.Second * 2)
+	confs := []*config.Config{
+		config.NewConfig("config.yaml"),
+		config.NewConfig("config.yaml"),
+		config.NewConfig("config.yaml"),
+		config.NewConfig("config.yaml"),
+	}
+	for i, _ := range confs {
+		confs[i].Peer.Port = fmt.Sprintf("5002%d", 3+i)
+		confs[i].DB.Name = fmt.Sprintf("testdb%d", i)
+		if i > 0 {
+			confs[i].Peer.Id = fmt.Sprintf("p%d@peer", i)
+		}
+	}
 
 	fc := RandomFactory()
-	serverPeer := fc.NewPeer(RandomStr(), ":50023", conf.Peer.PublicKeyBytes())
-	am := NewAccountManager(t, serverPeer)
+	servers := make([]*grpc.Server, 0)
+	serversPeer := make([]model.Peer, 0)
+	for i, conf := range confs {
+		servers = append(servers, RandomServer())
+		serversPeer = append(serversPeer,
+			fc.NewPeer(conf.Peer.Id, conf.Peer.Port, conf.Peer.PublicKeyBytes()))
+		go func(conf *config.Config, server *grpc.Server) {
+			SetUpTestServer(t, conf, server)
+		}(conf, servers[i])
+	}
+	time.Sleep(time.Second * 2)
+
+	rootPeer := serversPeer[0]
+	am := NewAccountManager(t, rootPeer)
 
 	// set authorizer
 	am.SetAuthorizer(t)
@@ -40,11 +62,11 @@ func TestScenario(t *testing.T) {
 	}
 	time.Sleep(time.Second * 2)
 	ams := []*AccountManager{
-		NewAccountManager(t, serverPeer),
-		NewAccountManager(t, serverPeer),
-		NewAccountManager(t, serverPeer),
-		NewAccountManager(t, serverPeer),
-		NewAccountManager(t, serverPeer),
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, rootPeer),
 	}
 	w := &sync.WaitGroup{}
 	for i, ac := range acs {
@@ -57,5 +79,7 @@ func TestScenario(t *testing.T) {
 	w.Wait()
 
 	// server stop
-	server.GracefulStop()
+	for _, server := range servers {
+		server.GracefulStop()
+	}
 }

@@ -87,6 +87,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	logger.Info("================= Consensus Boot =================")
 	go func() {
 		css.Boot()
+		css.Receiver()
 	}()
 
 	if err := s.Serve(l); err != nil {

@@ -13,3 +13,8 @@ type ConsensusGateClient interface {
 	PropagateTx(tx Transaction) error
 	PropagateBlockStreamTx(block Block, txLit TxList) error
 }
+
+type ClientFactory interface {
+	APIClient(peer Peer) (APIGateClient, error)
+	ConsensusClient(peer Peer) (ConsensusGateClient, error)
+}
