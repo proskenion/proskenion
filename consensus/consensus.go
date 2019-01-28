@@ -12,6 +12,7 @@ type Consensus struct {
 	rp core.Repository
 	cs core.CommitSystem
 	bq core.ProposalBlockQueue
+	tc core.TxListCache
 
 	gossip core.Gossip
 	logger log15.Logger
@@ -23,9 +24,9 @@ type Consensus struct {
 	WaitngInterval time.Duration
 }
 
-func NewConsensus(rp core.Repository, cs core.CommitSystem, bq core.ProposalBlockQueue, gossip core.Gossip, pr core.Prosl,
+func NewConsensus(rp core.Repository, cs core.CommitSystem, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
 	logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
-	return &Consensus{rp, cs, bq, gossip, logger, pr, conf,
+	return &Consensus{rp, cs, bq, tc, gossip, logger, pr, conf,
 		commitChan, time.Duration(conf.Commit.WaitInterval) * time.Millisecond}
 }
 
@@ -100,10 +101,30 @@ func (c *Consensus) Boot() {
 func (c *Consensus) Receiver() {
 	for {
 		c.bq.WaitPush()
-		_, ok := c.bq.Pop()
+		block, ok := c.bq.Pop()
+		if !ok {
+			continue
+		}
+		txList, ok := c.tc.Get(block.GetPayload().GetTxsHash())
 		if !ok {
 			continue
 		}
 
+		// Commit Phase
+		c.logger.Info("============= Receive Block and TxList =============")
+		if err := c.cs.VerifyCommit(block, txList); err != nil {
+			c.logger.Error(err.Error())
+			continue
+		}
+		if err := c.cs.ValidateCommit(block, txList); err != nil {
+			c.logger.Error(err.Error())
+			continue
+		}
+		if err := c.cs.Commit(block, txList); err != nil {
+			c.logger.Error(err.Error())
+			continue
+		}
+		c.logger.Info("============= Commit Received Block and TxList =============")
+		c.commitChan <- struct{}{}
 	}
 }

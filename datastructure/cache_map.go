@@ -41,6 +41,8 @@ func (c *CacheMap) Set(hasher model.Hasher) error {
 	if hasher == nil {
 		return core.ErrCacheMapPushNil
 	}
+	c.mutex.Lock()         // lock
+	defer c.mutex.Unlock() // unlock
 	keyHash := string(hasher.Hash())
 	if len(c.field) >= c.limit {
 		for len(c.index[c.oldestId]) == 0 {
@@ -59,6 +61,8 @@ func (c *CacheMap) Set(hasher model.Hasher) error {
 
 func (c *CacheMap) Get(hash model.Hash) (model.Hasher, bool) {
 	keyHash := string(hash)
+	c.mutex.Lock()         // lock
+	defer c.mutex.Unlock() // unlock
 	ret, ok := c.field[keyHash]
 	if !ok {
 		return nil, false
@@ -69,5 +73,6 @@ func (c *CacheMap) Get(hash model.Hash) (model.Hasher, bool) {
 		c.oldestId = nextCacheStage(c.oldestId)
 	}
 	c.index[recentCacheStage(c.oldestId)][keyHash] = struct{}{}
+
 	return ret, ok
 }

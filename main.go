@@ -53,6 +53,7 @@ func main() {
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	queue := repository.NewProposalTxQueueOnMemory(conf)
 	bq := repository.NewProposalBlockQueueOnMemory(conf)
+	txListCache := repository.NewTxListCache(conf)
 
 	pr := prosl.NewProsl(fc, rp, cryptor, conf)
 
@@ -68,11 +69,11 @@ func main() {
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
-	csc := consensus.NewConsensus(rp, cs,bq,gossip, pr, logger, conf, commitChan)
+	csc := consensus.NewConsensus(rp, cs, bq, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genTxList, err := repository.NewTxListFromConf(cryptor, fc,pr, conf)
+	genTxList, err := repository.NewTxListFromConf(cryptor, fc, pr, conf)
 	if err != nil {
 		panic(err)
 	}
