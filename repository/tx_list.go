@@ -12,9 +12,10 @@ import (
 type TxList struct {
 	tree core.MerkleTree
 	txs  []model.Transaction
+	fc   model.ModelFactory
 }
 
-func NewTxListFromConf(cryptor core.Cryptor, pr core.Prosl, conf *config.Config) (core.TxList, error) {
+func NewTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, pr core.Prosl, conf *config.Config) (core.TxList, error) {
 	buf, err := ioutil.ReadFile(conf.Prosl.Genesis.Path)
 	if err != nil {
 		return nil, err
@@ -30,15 +31,15 @@ func NewTxListFromConf(cryptor core.Cryptor, pr core.Prosl, conf *config.Config)
 	if ret.GetTransaction() == nil {
 		return nil, fmt.Errorf("Error Genesis prosl return nil.")
 	}
-	txList := NewTxList(cryptor)
+	txList := NewTxList(cryptor,fc)
 	if err := txList.Push(ret.GetTransaction()); err != nil {
 		return nil, err
 	}
 	return txList, nil
 }
 
-func NewTxList(cryptor core.Cryptor) core.TxList {
-	return &TxList{datastructure.NewAccumulateHash(cryptor), make([]model.Transaction, 0)}
+func NewTxList(cryptor core.Cryptor, fc model.ModelFactory) core.TxList {
+	return &TxList{datastructure.NewAccumulateHash(cryptor), make([]model.Transaction, 0), fc}
 }
 
 func (t *TxList) Push(tx model.Transaction) error {
@@ -56,4 +57,33 @@ func (t *TxList) List() []model.Transaction {
 
 func (t *TxList) Size() int {
 	return len(t.txs)
+}
+
+func (t *TxList) Marshal() ([]byte, error) {
+	mbytes := make([][]byte, 0, len(t.txs))
+	for _, tx := range t.txs {
+		ret, err := tx.Marshal()
+		if err != nil {
+			return nil, err
+		}
+		mbytes = append(mbytes, ret)
+	}
+	return model.GobMarshal(mbytes)
+}
+
+func (t *TxList) Unmarshal(b []byte) error {
+	mbytes := make([][]byte, 0)
+	if err := model.GobUnmarshal(b, &mbytes); err != nil {
+		return err
+	}
+	for _, bytes := range mbytes {
+		etx := t.fc.NewEmptyTx()
+		if err := etx.Unmarshal(bytes); err != nil {
+			return err
+		}
+		if err := t.Push(etx); err != nil {
+			return err
+		}
+	}
+	return nil
 }

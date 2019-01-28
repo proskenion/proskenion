@@ -89,7 +89,7 @@ func TestAPIGateServer_Write(t *testing.T) {
 
 			actTx, ok := queue.Pop()
 			require.True(t, ok)
-			assert.Equal(t, MustHash(c.tx), MustHash(actTx))
+			assert.Equal(t, MustHash(c.tx), actTx.Hash())
 		})
 	}
 }

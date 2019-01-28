@@ -20,7 +20,7 @@ func test_WSV_Upserts(t *testing.T, wsv core.WSV, id model.Address, ac model.Acc
 	unmarshaler := RandomAccount()
 	err = wsv.Query(id, unmarshaler)
 	require.NoError(t, err)
-	assert.Equal(t, MustHash(ac), MustHash(unmarshaler))
+	assert.Equal(t, ac.Hash(), unmarshaler.Hash())
 }
 
 func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id model.Address, peer model.Peer) {
@@ -32,7 +32,7 @@ func test_WSV_Upserts_Peer(t *testing.T, wsv core.WSV, id model.Address, peer mo
 	unmarshaler := RandomPeer()
 	err = wsv.Query(id, unmarshaler)
 	require.NoError(t, err)
-	assert.Equal(t, MustHash(peer), MustHash(unmarshaler))
+	assert.Equal(t, peer.Hash(), unmarshaler.Hash())
 }
 
 type AccountUnmarshalerFactory struct {

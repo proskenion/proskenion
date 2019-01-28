@@ -16,10 +16,10 @@ type WSV struct {
 	psHash model.Hash
 }
 
-var WSV_ROOT_KEY byte = 0
+var WsvRootKey byte = 0
 
 func NewWSV(tx core.DBATx, cryptor core.Cryptor, fc model.ObjectFactory, rootHash model.Hash) (core.WSV, error) {
-	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
+	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, WsvRootKey)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (w *WSV) Hash() model.Hash {
 // targetId を MerklePatriciaTree の key バイト列に変換
 func makeWSVId(id model.Address) []byte {
 	ret := make([]byte, 1)
-	ret[0] = WSV_ROOT_KEY
+	ret[0] = WsvRootKey
 	return append(ret, id.GetBytes()...)
 }
 

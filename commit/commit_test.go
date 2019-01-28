@@ -36,16 +36,16 @@ func TestCommitSystem_CreateBlock_Commit(t *testing.T) {
 	rtx, err := rp.Begin()
 	require.NoError(t, err)
 
-	bc, err := rtx.Blockchain(MustHash(block))
+	bc, err := rtx.Blockchain(block.Hash())
 	require.NoError(t, err)
 
 	rtx2, err := rp2.Begin()
 	require.NoError(t, err)
-	bc2, err := rtx2.Blockchain(MustHash(block))
+	bc2, err := rtx2.Blockchain(block.Hash())
 
-	b1, err := bc.Get(MustHash(block))
+	b1, err := bc.Get(block.Hash())
 	require.NoError(t, err)
-	b2, err := bc2.Get(MustHash(block))
+	b2, err := bc2.Get(block.Hash())
 	require.NoError(t, err)
 
 	assert.Equal(t, MustHash(b1), MustHash(b2))

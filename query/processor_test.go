@@ -13,7 +13,7 @@ import (
 )
 
 func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri) {
-	txList := repository.NewTxList(RandomCryptor())
+	txList := repository.NewTxList(RandomCryptor(), RandomFactory())
 	require.NoError(t, txList.Push(
 		RandomFactory().NewTxBuilder().
 			CreateAccount("root@/root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).

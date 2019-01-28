@@ -33,7 +33,7 @@ type TxList interface {
 	Push(tx Transaction) error
 	List() []Transaction
 	Size() int
-	Hasher
+	Modelor
 }
 
 type TxListCache interface {
@@ -61,10 +61,12 @@ type WSV interface {
 // 全Tx履歴 (MerklePatriciaTree で管理)
 type TxHistory interface {
 	Hasher
-	// Query gets tx from txHash
-	Query(txHash Hash) (Transaction, error)
+	// GetTxList gets txList from txHash
+	GetTxList(txListHash Hash) (TxList, error)
+	// GetTxList gets
+	GetTx(txHash Hash) (Transaction, error)
 	// Append tx
-	Append(tx Transaction) error
+	Append(txList TxList) error
 	// Commit appenging nodes
 	Commit() error
 	// RollBack

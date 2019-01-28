@@ -36,13 +36,13 @@ func CommitTxWrapBlock(t *testing.T, rp core.Repository, fc model.ModelFactory, 
 	require.NoError(t, err)
 
 	// transactions execute (no validate)
-	txList := repository.NewTxList(RandomCryptor())
+	txList := repository.NewTxList(RandomCryptor(),RandomFactory())
 	require.NoError(t, txList.Push(tx))
 	for _, cmd := range tx.GetPayload().GetCommands() {
 		err := cmd.Execute(wsv)
 		require.NoError(t, err)
 	}
-	err = txHistory.Append(tx)
+	err = txHistory.Append(txList)
 	require.NoError(t, err)
 
 	// hash check and block 生成

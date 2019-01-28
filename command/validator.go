@@ -96,7 +96,7 @@ func containsPublicKeyInSignaturesForQuorum(sigs []model.Signature, key model.Pu
 // 3. Authorozer の権限を行使するための署名が揃っているか
 func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx model.Transaction) error {
 	hash := tx.Hash()
-	_, err := txh.Query(hash)
+	_, err := txh.GetTx(hash)
 	if errors.Cause(err) != core.ErrTxHistoryNotFound {
 		return core.ErrTxValidateAlreadyExist
 	}

@@ -65,7 +65,7 @@ func (c *ConsensusGate) PropagateBlockAck(block model.Block) (model.Signature, e
 }
 
 func (c *ConsensusGate) PropagateBlockStreamTx(block model.Block, txChan chan model.Transaction, errChan chan error) error {
-	txList := repository.NewTxList(c.c)
+	txList := repository.NewTxList(c.c,c.fc)
 	for {
 		select {
 		case tx := <-txChan:

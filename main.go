@@ -72,7 +72,7 @@ func main() {
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genTxList, err := repository.NewTxListFromConf(cryptor, pr, conf)
+	genTxList, err := repository.NewTxListFromConf(cryptor, fc,pr, conf)
 	if err != nil {
 		panic(err)
 	}

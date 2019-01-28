@@ -32,5 +32,23 @@ func testTxList_PushAndTop(t *testing.T, list core.TxList) {
 
 func TestTxList_PushAndTop(t *testing.T) {
 	cryptor := crypto.NewEd25519Sha256Cryptor()
-	testTxList_PushAndTop(t, NewTxList(cryptor))
+	fc := RandomFactory()
+	testTxList_PushAndTop(t, NewTxList(cryptor, fc))
+}
+
+func TestTxList_MarshalUnmarshal(t *testing.T) {
+	txList := RandomTxList()
+	fc := RandomFactory()
+	anothertxList := NewTxList(RandomCryptor(), fc)
+
+	b, err := txList.Marshal()
+	require.NoError(t, err)
+	require.NoError(t, anothertxList.Unmarshal(b))
+
+	assert.Equal(t, txList.Hash(), anothertxList.Hash())
+
+	assert.Equal(t, len(txList.List()), len(anothertxList.List()))
+	for i, tx := range txList.List() {
+		assert.Equal(t, tx.Hash(), anothertxList.List()[i].Hash())
+	}
 }
