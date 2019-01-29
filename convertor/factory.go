@@ -648,8 +648,8 @@ func (t *TxBuilder) RemovePublicKeys(authorizerId string, accountId string, pubk
 func (t *TxBuilder) SetQuorum(authorizerId string, accountId string, quorum int32) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{
-			Command: &proskenion.Command_SetQurum{
-				SetQurum: &proskenion.SetQuorum{
+			Command: &proskenion.Command_SetQuorum{
+				SetQuorum: &proskenion.SetQuorum{
 					Quorum: quorum,
 				},
 			},

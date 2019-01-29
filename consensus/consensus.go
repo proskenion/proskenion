@@ -94,6 +94,7 @@ func (c *Consensus) Boot() {
 					c.logger.Error(err.Error())
 					continue
 				}
+				c.logger.Info("============= Finish Gossiped  =============")
 				break
 			}
 		}

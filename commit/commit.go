@@ -69,7 +69,8 @@ func (c *CommitSystem) ValidateCommit(block model.Block, txList core.TxList) err
 			"round: %d", block.GetPayload().GetRound())
 	}
 	peerId := model.MustAddress(model.MustAddress(acs[block.GetPayload().GetRound()].GetDelegatePeerId()).PeerId())
-	rtx, wsv, top, err := getTopWSV(c.rp)
+	_, wsv, top, err := getTopWSV(c.rp)
+	defer core.CommitTx(wsv)
 	peer := c.factory.NewEmptyPeer()
 	if err := wsv.Query(peerId, peer); err != nil {
 		return errors.Wrapf(core.ErrCommitSystemValidateCommitInternal, err.Error())
@@ -91,7 +92,7 @@ func (c *CommitSystem) ValidateCommit(block model.Block, txList core.TxList) err
 			"round: %d, expected after time: %d, but now: %d", block.GetPayload().GetRound(), expAfter, now)
 	}
 
-	return rtx.Commit()
+	return nil
 }
 
 func (c *CommitSystem) Commit(block model.Block, txList core.TxList) error {

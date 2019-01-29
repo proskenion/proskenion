@@ -47,7 +47,6 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	txQueue := repository.NewProposalTxQueueOnMemory(conf)
 	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
-	bq := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
 	pr := prosl.NewProsl(fc, cryptor, conf)
@@ -62,15 +61,17 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
 	gossip := p2p.NewGossip(rp, fc, cf, cryptor, conf)
-	css := consensus.NewConsensus(rp, cs, bq, txListCache, gossip, pr, logger, conf, commitChan)
+	css := consensus.NewConsensus(rp, cs, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
 	genTxList, err := repository.GenesisTxListFromConf(cryptor, fc, rp, pr, conf)
 	if err != nil {
+		logger.Error(err.Error())
 		panic(err)
 	}
 	if err := rp.GenesisCommit(genTxList); err != nil {
+		logger.Error(err.Error())
 		panic(err)
 	}
 

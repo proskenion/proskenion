@@ -87,7 +87,7 @@ message Command {
         TransferBalance transferBalance = 5;
         AddPublicKeys addPublicKeys = 6;
         RemovePublicKeys removePublicKeys = 7;
-        SetQuorum setQurum = 8;
+        SetQuorum setQuorum = 8;
         DefineStorage defineStorage = 9;
         CreateStorage createStorage = 10;
         UpdateObject updateObject = 11;

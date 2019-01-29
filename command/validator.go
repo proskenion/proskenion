@@ -1,7 +1,6 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
@@ -35,6 +34,10 @@ func (c *CommandValidator) CreateAccount(wsv model.ObjectFinder, cmd model.Comma
 		return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
 			fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
 	}
+	return nil
+}
+
+func (c *CommandValidator) SetQuorum(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }
 
@@ -78,16 +81,20 @@ func (c *CommandValidator) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model
 	return nil
 }
 
-func containsPublicKeyInSignaturesForQuorum(sigs []model.Signature, key model.PublicKey, quorum int32) bool {
+func containsPublicKeyInSignaturesForQuorum(sigs []model.Signature, keys []model.PublicKey, quorum int32) bool {
+	cnt := make(map[string]int)
 	for _, sig := range sigs {
-		if quorum == 0 {
-			return true
-		}
-		if bytes.Equal(sig.GetPublicKey(), key) {
+		cnt[string(sig.GetPublicKey())] = 1
+	}
+	for _, key := range keys {
+		cnt[string(key)] |= 2
+	}
+	for _, c := range cnt {
+		if c == 3 {
 			quorum--
 		}
 	}
-	return quorum == 0
+	return quorum <= 0
 }
 
 // Transaction 全体の Stateful Validate
@@ -109,12 +116,10 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 				"authorizer : %s", cmd.GetAuthorizerId())
 		}
 		// TODO : sort すれば全体一致判定をO(nlogn)
-		for _, key := range ac.GetPublicKeys() {
-			if !containsPublicKeyInSignaturesForQuorum(tx.GetSignatures(), key, ac.GetQuorum()) {
-				return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
-					"authorizer : %s, expect key : %x",
-					cmd.GetAuthorizerId(), key)
-			}
+		if !containsPublicKeyInSignaturesForQuorum(tx.GetSignatures(), ac.GetPublicKeys(), ac.GetQuorum()) {
+			return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
+				"authorizer : %s, expect keys : %+v",
+				cmd.GetAuthorizerId(), ac.GetPublicKeys())
 		}
 	}
 	return nil

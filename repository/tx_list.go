@@ -24,6 +24,7 @@ func GenesisTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, rp core.
 	if err != nil {
 		return nil, err
 	}
+	defer core.CommitTx(wsv)
 	err = pr.ConvertFromYaml(buf)
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ func GenesisTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, rp core.
 	if ret.GetTransaction() == nil {
 		return nil, fmt.Errorf("Error Genesis prosl return nil.")
 	}
-	txList := NewTxList(cryptor,fc)
+	txList := NewTxList(cryptor, fc)
 	if err := txList.Push(ret.GetTransaction()); err != nil {
 		return nil, err
 	}

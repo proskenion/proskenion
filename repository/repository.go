@@ -11,20 +11,6 @@ import (
 	"io/ioutil"
 )
 
-func rollBackTx(tx core.RepositoryTx, mtErr error) error {
-	if err := tx.Rollback(); err != nil {
-		return errors.Wrap(err, mtErr.Error())
-	}
-	return mtErr
-}
-
-func commitTx(tx core.RepositoryTx) error {
-	if err := tx.Commit(); err != nil {
-		return rollBackTx(tx, err)
-	}
-	return nil
-}
-
 type Repository struct {
 	dba     core.DBA
 	cryptor core.Cryptor
@@ -67,7 +53,7 @@ func (r *Repository) TopWSV() (core.WSV, error) {
 	}
 	wsv, err := rtx.WSV(topWSVHash)
 	if err != nil {
-		return nil, rollBackTx(rtx, err)
+		return nil, core.RollBackTx(rtx, err)
 	}
 	return wsv, err
 }
@@ -77,20 +63,14 @@ func (r *Repository) GetDelegatedAccounts() ([]model.Account, error) {
 	if !ok {
 		panic("Failed Repository error empty top")
 	}
-	rtx, err := r.Begin()
+	wsv, err := r.TopWSV()
 	if err != nil {
 		return nil, err
 	}
-	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
-	if err != nil {
-		return nil, err
-	}
+	defer core.CommitTx(wsv)
 	st := ProslStorage(r.fc, r.conf)
 	id := model.MustAddress(r.conf.Prosl.Consensus.Id)
 	if err := wsv.Query(id, st); err != nil {
-		return nil, err
-	}
-	if err := commitTx(rtx); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +114,7 @@ func (r *Repository) loadMPTrees(dtx core.RepositoryTx, preBlock model.Block, pr
 }
 
 // Incentive Prosl exeucute (fource execute)
-func (r *Repository) executeProslIncentive(wsv core.WSV, txHistory core.TxHistory, top model.Block) error {
+func (r *Repository) executeProslIncentive(wsv core.WSV, top model.Block) error {
 	// 1. get prosl
 	proSt := r.fc.NewEmptyStorage()
 	if err := wsv.Query(model.MustAddress(r.conf.Prosl.Incentive.Id), proSt); err != nil {
@@ -195,8 +175,8 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 	}
 
 	// execute incentive prosl transaction. (fource execute)
-	if err := r.executeProslIncentive(wsv, txHistory, preBlock); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+	if err := r.executeProslIncentive(wsv, preBlock); err != nil {
+		return nil, nil, core.RollBackTx(dtx, err)
 	}
 
 	txList := NewTxList(r.cryptor, r.fc)
@@ -206,7 +186,6 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 		if !ok {
 			break
 		}
-
 		// tx を構築
 		if err := tx.Validate(wsv, txHistory); err != nil {
 			goto txskip
@@ -215,19 +194,21 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 			if err := cmd.Validate(wsv); err != nil {
 				goto txskip
 			}
+		}
+		// TODO Validate -> Execute -> Validate とやりたいけどTargetIdの情報だけOnMemoryに取り出して云々やる必要がある。
+		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Execute(wsv); err != nil {
-				goto txskip // WIP : 要考
-				//return nil, nil, rollBackTx(dtx, err)
+				return nil, nil, core.RollBackTx(dtx, err)
 			}
 		}
 		if err := txList.Push(tx); err != nil {
-			return nil, nil, rollBackTx(dtx, err)
+			return nil, nil, core.RollBackTx(dtx, err)
 		}
 
 	txskip:
 	}
 	if err := txHistory.Append(txList); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+		return nil, nil, core.RollBackTx(dtx, err)
 	}
 
 	newBlock := r.fc.NewBlockBuilder().
@@ -240,17 +221,14 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 		PreBlockHash(preBlock.Hash()).
 		Build()
 	if err = newBlock.Sign(r.conf.Peer.PublicKeyBytes(), r.conf.Peer.PrivateKeyBytes()); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+		return nil, nil, core.RollBackTx(dtx, err)
 	}
 
 	// append Block and repository state update
 	if err := r.appendAndUpdateBlock(bc, newBlock); err != nil {
-		return nil, nil, rollBackTx(dtx, err)
+		return nil, nil, core.RollBackTx(dtx, err)
 	}
-	if err := commitTx(dtx); err != nil {
-		return nil, nil, err
-	}
-	return newBlock, txList, nil
+	return newBlock, txList, core.CommitTx(dtx)
 }
 
 func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
@@ -266,42 +244,47 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 		return err
 	}
 
+	// Incentive Prosl exeucute (fource execute)
+	if err := r.executeProslIncentive(wsv, preBlock); err != nil {
+		return core.RollBackTx(dtx, err)
+	}
+
 	// transactions execute
 	for _, tx := range txList.List() {
 		if err := tx.Validate(wsv, txHistory); err != nil {
-			return rollBackTx(dtx, err)
+			return core.RollBackTx(dtx, err)
 		}
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
-				return rollBackTx(dtx, err)
+				return core.RollBackTx(dtx, err)
 			}
+		}
+		// TODO CreateBlock と同一条件下で実行しなければならないので
+		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Execute(wsv); err != nil {
-				return rollBackTx(dtx, err)
+				return core.RollBackTx(dtx, err)
 			}
 		}
 	}
 	if err := txHistory.Append(txList); err != nil {
-		return rollBackTx(dtx, err)
-	}
-
-	// Incentive Prosl exeucute (fource execute)
-	if err := r.executeProslIncentive(wsv, txHistory, preBlock); err != nil {
-		return rollBackTx(dtx, err)
+		return core.RollBackTx(dtx, err)
 	}
 
 	// hash check
-	if !bytes.Equal(block.GetPayload().GetWSVHash(), wsv.Hash()) {
-		return rollBackTx(dtx, errors.Errorf("not equaled wsv Hash : %x", wsv.Hash()))
-	}
 	if !bytes.Equal(block.GetPayload().GetTxHistoryHash(), txHistory.Hash()) {
-		return rollBackTx(dtx, errors.Errorf("not equaled txHistory Hash : %x", txHistory.Hash()))
+		return core.RollBackTx(dtx,
+			errors.Errorf("not equaled txHistory Hash, expected: %x, actual: %x", block.GetPayload().GetTxHistoryHash(), txHistory.Hash()))
+	}
+	if !bytes.Equal(block.GetPayload().GetWSVHash(), wsv.Hash()) {
+		return core.RollBackTx(dtx,
+			errors.Errorf("not equaled wsv Hash, expected: %x, actual: %x", block.GetPayload().GetWSVHash(), wsv.Hash()))
 	}
 
 	// append Block and repository state update
 	if err := r.appendAndUpdateBlock(bc, block); err != nil {
-		return rollBackTx(dtx, err)
+		return core.RollBackTx(dtx, err)
 	}
-	return commitTx(dtx)
+	return core.CommitTx(dtx)
 }
 
 func ProslStorage(fc model.ModelFactory, conf *config.Config) model.Storage {
@@ -366,47 +349,47 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 	// load state
 	var bc core.Blockchain
 	if bc, err = dtx.Blockchain(nil); err != nil {
-		return err
+		return core.RollBackTx(dtx, err)
 	}
 	wsv, err := dtx.WSV(nil)
 	if err != nil {
-		return errors.Wrap(core.ErrRepositoryCommitLoadWSV, err.Error())
+		return core.RollBackTx(dtx, errors.Wrap(core.ErrRepositoryCommitLoadWSV, err.Error()))
 	}
 	txHistory, err := dtx.TxHistory(nil)
 	if err != nil {
-		return errors.Wrap(core.ErrRepositoryCommitLoadTxHistory, err.Error())
+		return core.RollBackTx(dtx, errors.Wrap(core.ErrRepositoryCommitLoadTxHistory, err.Error()))
 	}
 
 	// Genesis Commit to add prosl
 	genTx, err := r.genesisProslSetting()
 	if err != nil {
-		return err
+		return core.RollBackTx(dtx, err)
 	}
 	err = txList.Push(genTx)
 	if err != nil {
-		return err
+		return core.RollBackTx(dtx, err)
 	}
 
 	// transactions execute (no validate)
 	for _, tx := range txList.List() {
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Execute(wsv); err != nil {
-				return rollBackTx(dtx, err)
+				return core.RollBackTx(dtx, err)
 			}
 		}
 	}
 	if err := txHistory.Append(txList); err != nil {
-		return rollBackTx(dtx, err)
+		return core.RollBackTx(dtx, err)
 	}
 
 	// hash check and block 生成
 	wsvHash := wsv.Hash()
 	if err != nil {
-		return rollBackTx(dtx, err)
+		return core.RollBackTx(dtx, err)
 	}
 	txHistoryHash := txHistory.Hash()
 	if err != nil {
-		return rollBackTx(dtx, err)
+		return core.RollBackTx(dtx, err)
 	}
 	genesisBlock := r.fc.NewBlockBuilder().
 		CreatedTime(0).
@@ -420,12 +403,12 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 
 	// block を追加・
 	if err := bc.Append(genesisBlock); err != nil {
-		return err
+		return core.RollBackTx(dtx, err)
 	}
 	// top ブロックを更新
 	r.Height = genesisBlock.GetPayload().GetHeight()
 	r.TopBlock = genesisBlock
-	return commitTx(dtx)
+	return core.CommitTx(dtx)
 }
 
 type RepositoryTx struct {

@@ -22,21 +22,15 @@ func NewGossip(rp core.Repository, fc model.ModelFactory, cf core.ClientFactory,
 }
 
 func (g *Gossip) GossipBlock(block model.Block, txList core.TxList) error {
-	top, ok := g.rp.Top()
-	if !ok {
-		panic("Repository top is nil")
-	}
-	rtx, err := g.rp.Begin()
+	wsv, err := g.rp.TopWSV()
 	if err != nil {
 		return err
 	}
-	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
-	if err != nil {
-		return err
-	}
-
 	unmarshalers, err := wsv.QueryAll(model.MustAddress("/"+model.PeerStorageName), model.NewPeerUnmarshalerFactory(g.fc))
 	if err != nil {
+		return err
+	}
+	if err := core.CommitTx(wsv); err != nil {
 		return err
 	}
 

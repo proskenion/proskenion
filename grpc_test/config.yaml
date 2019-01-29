@@ -6,6 +6,9 @@ db:
 queue:
   txs_limits: 2000
   block_limits: 30
+cache:
+  client_limits: 500
+  tx_list_limits: 100
 commit:
   wait_interval: 1000
   num_tx_in_block: 99

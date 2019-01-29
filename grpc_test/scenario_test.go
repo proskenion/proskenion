@@ -6,6 +6,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/test_utils"
 	"google.golang.org/grpc"
+	"sync"
 	"testing"
 	"time"
 )
@@ -38,44 +39,44 @@ func TestScenario(t *testing.T) {
 		}(conf, servers[i])
 	}
 	time.Sleep(time.Second * 10)
-	//
-	//rootPeer := serversPeer[0]
-	//am := NewAccountManager(t, rootPeer)
-	//
-	//// set authorizer
-	//am.SetAuthorizer(t)
-	//
-	//acs := []*AccountWithPri{
-	//	NewAccountWithPri("target1@pr"),
-	//	NewAccountWithPri("target2@pr"),
-	//	NewAccountWithPri("target3@pr"),
-	//	NewAccountWithPri("target4@pr"),
-	//	NewAccountWithPri("target5@pr"),
-	//}
-	//
-	//// Scenario 1 ====== Create 5 Accounts ===================
-	//for _, ac := range acs {
-	//	go func(ac *AccountWithPri) {
-	//		am.CreateAccount(t, ac)
-	//	}(ac)
-	//}
-	//time.Sleep(time.Second * 5)
-	//ams := []*AccountManager{
-	//	NewAccountManager(t, rootPeer),
-	//	NewAccountManager(t, rootPeer),
-	//	NewAccountManager(t, rootPeer),
-	//	NewAccountManager(t, rootPeer),
-	//	NewAccountManager(t, rootPeer),
-	//}
-	//w := &sync.WaitGroup{}
-	//for i, ac := range acs {
-	//	w.Add(1)
-	//	go func(ac *AccountWithPri) {
-	//		ams[i].QueryAccountPassed(t, ac)
-	//		w.Done()
-	//	}(ac)
-	//}
-	//w.Wait()
+
+	rootPeer := serversPeer[0]
+	am := NewAccountManager(t, rootPeer)
+
+	// set authorizer
+	am.SetAuthorizer(t)
+
+	acs := []*AccountWithPri{
+		NewAccountWithPri("target1@pr"),
+		NewAccountWithPri("target2@pr"),
+		NewAccountWithPri("target3@pr"),
+		NewAccountWithPri("target4@pr"),
+		NewAccountWithPri("target5@pr"),
+	}
+
+	// Scenario 1 ====== Create 5 Accounts ===================
+	for _, ac := range acs {
+		go func(ac *AccountWithPri) {
+			am.CreateAccount(t, ac)
+		}(ac)
+	}
+	time.Sleep(time.Second * 2)
+	ams := []*AccountManager{
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, rootPeer),
+		NewAccountManager(t, serversPeer[1]),
+		NewAccountManager(t, serversPeer[2]),
+		NewAccountManager(t, serversPeer[3]),
+	}
+	w := &sync.WaitGroup{}
+	for i, ac := range acs {
+		w.Add(1)
+		go func(am *AccountManager, ac *AccountWithPri) {
+			am.QueryAccountPassed(t, ac)
+			w.Done()
+		}(ams[i], ac)
+	}
+	w.Wait()
 
 	// server stop
 	for _, server := range servers {

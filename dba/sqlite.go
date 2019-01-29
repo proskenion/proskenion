@@ -51,20 +51,6 @@ type DBASQLite struct {
 	mutex *sync.Mutex
 }
 
-func commitTx(dba DBATx) error {
-	if err := dba.Commit(); err != nil {
-		return rollBackTx(dba, err)
-	}
-	return nil
-}
-
-func rollBackTx(dba DBATx, mtErr error) error {
-	if err := dba.Rollback(); err != nil {
-		return errors.Wrap(err, mtErr.Error())
-	}
-	return mtErr
-}
-
 func (d *DBASQLite) Begin() (DBATx, error) {
 	d.mutex.Lock()
 	tx, err := d.db.Beginx()
@@ -78,20 +64,20 @@ func (d *DBASQLite) Begin() (DBATx, error) {
 func (d *DBASQLite) Load(key model.Hash, value Unmarshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
-		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
+		return RollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
 	}
-	return rollBackTx(tx, tx.Load(key, value))
+	return RollBackTx(tx, tx.Load(key, value))
 }
 
 func (d *DBASQLite) Store(key model.Hash, value Marshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
-		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
+		return RollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
 	}
 	if err := tx.Store(key, value); err != nil {
-		return rollBackTx(tx, err)
+		return RollBackTx(tx, err)
 	}
-	return commitTx(tx)
+	return CommitTx(tx)
 }
 
 func NewDBA(db *sqlx.DB, table string) DBA {

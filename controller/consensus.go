@@ -54,7 +54,6 @@ func (s *ConsensusGateServer) internalError(err error) error {
 }
 
 func (s *ConsensusGateServer) PropagateBlock(stream proskenion.ConsensusGate_PropagateBlockServer) error {
-
 	req, err := stream.Recv()
 	if err != nil {
 		s.logger.Error(err.Error())

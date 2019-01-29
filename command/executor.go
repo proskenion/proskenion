@@ -81,6 +81,23 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 	return nil
 }
 
+func (c *CommandExecutor) SetQuorum(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())
+	sq := cmd.GetSetQuorum()
+	ac := c.factory.NewEmptyAccount()
+	if err := wsv.Query(id, ac); err != nil {
+		return errors.Wrapf(core.ErrCommandExecutorAddBalanceNotExistAccount, err.Error())
+	}
+	newAc := c.factory.NewAccountBuilder().
+		From(ac).
+		Quorum(sq.GetQuorum()).
+		Build()
+	if err := wsv.Append(id, newAc); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *CommandExecutor) AddBalance(wsv model.ObjectFinder, cmd model.Command) error {
 	aa := cmd.GetAddBalance()
 	ac := c.factory.NewEmptyAccount()
