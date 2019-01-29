@@ -9,11 +9,10 @@ import (
 )
 
 type TxHistory struct {
-	tx          core.DBATx
-	factory     model.ModelFactory
-	c           core.Cryptor
-	tree        core.MerklePatriciaTree
-	txListCache core.TxListCache
+	tx      core.DBATx
+	factory model.ModelFactory
+	c       core.Cryptor
+	tree    core.MerklePatriciaTree
 }
 
 type TxIndexed struct {
@@ -35,12 +34,12 @@ var (
 	TxHistoryTxListRootKey byte = 1
 )
 
-func NewTxHistory(tx core.DBATx, factory model.ModelFactory, cryptor core.Cryptor, cache core.TxListCache, rootHash model.Hash) (core.TxHistory, error) {
+func NewTxHistory(tx core.DBATx, factory model.ModelFactory, cryptor core.Cryptor, rootHash model.Hash) (core.TxHistory, error) {
 	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, TxHistoryRootKey)
 	if err != nil {
 		return nil, err
 	}
-	return &TxHistory{tx, factory, cryptor, tree, cache}, nil
+	return &TxHistory{tx, factory, cryptor, tree}, nil
 }
 
 func (w *TxHistory) Hash() model.Hash {
@@ -57,11 +56,6 @@ func TxListHashToKey(txHash model.Hash) []byte {
 
 // GetTxList gets txList from txHash
 func (w *TxHistory) GetTxList(txListHash model.Hash) (core.TxList, error) {
-	// get txList from cache.
-	if cachetxList, ok := w.txListCache.Get(txListHash); ok {
-		return cachetxList, nil
-	}
-
 	txListKey := TxListHashToKey(txListHash)
 	it, err := w.tree.Find(txListKey)
 	if err != nil {
@@ -70,15 +64,11 @@ func (w *TxHistory) GetTxList(txListHash model.Hash) (core.TxList, error) {
 		}
 		return nil, err
 	}
-	retTxList := NewTxList(w.c,w.factory)
+	retTxList := NewTxList(w.c, w.factory)
 	if err = it.Data(retTxList); err != nil {
 		return nil, errors.Wrap(core.ErrTxHistoryQueryUnmarshal, err.Error())
 	}
 
-	// set cache txList.
-	if err := w.txListCache.Set(retTxList); err != nil {
-		return nil, err
-	}
 	return retTxList, nil
 }
 

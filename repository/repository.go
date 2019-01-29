@@ -26,18 +26,17 @@ func commitTx(tx core.RepositoryTx) error {
 }
 
 type Repository struct {
-	dba         core.DBA
-	cryptor     core.Cryptor
-	cacheTxList core.TxListCache
-	fc          model.ModelFactory
-	conf        *config.Config
+	dba     core.DBA
+	cryptor core.Cryptor
+	fc      model.ModelFactory
+	conf    *config.Config
 
 	TopBlock model.Block
 	Height   int64
 }
 
 func NewRepository(dba core.DBA, cryptor core.Cryptor, fc model.ModelFactory, conf *config.Config) core.Repository {
-	return &Repository{dba, cryptor, NewTxListCache(conf), fc, conf, nil, 0}
+	return &Repository{dba, cryptor, fc, conf, nil, 0}
 }
 
 func (r *Repository) Begin() (core.RepositoryTx, error) {
@@ -45,7 +44,7 @@ func (r *Repository) Begin() (core.RepositoryTx, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RepositoryTx{tx, r.cryptor, r.cacheTxList, r.fc}, nil
+	return &RepositoryTx{tx, r.cryptor, r.fc}, nil
 }
 
 func (r *Repository) Top() (model.Block, bool) {
@@ -182,7 +181,7 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 		return nil, nil, rollBackTx(dtx, err)
 	}
 
-	txList := NewTxList(r.cryptor,r.fc)
+	txList := NewTxList(r.cryptor, r.fc)
 	// ProposalTxQueue から valid な Tx をとってきて hoge る
 	for txList.Size() < r.conf.Commit.NumTxInBlock {
 		tx, ok := queue.Pop()
@@ -412,10 +411,9 @@ func (r *Repository) GenesisCommit(txList core.TxList) (err error) {
 }
 
 type RepositoryTx struct {
-	tx          core.DBATx
-	cryptor     core.Cryptor
-	cacheTxList core.TxListCache
-	fc          model.ModelFactory
+	tx      core.DBATx
+	cryptor core.Cryptor
+	fc      model.ModelFactory
 }
 
 func (r *RepositoryTx) WSV(hash model.Hash) (core.WSV, error) {
@@ -423,7 +421,7 @@ func (r *RepositoryTx) WSV(hash model.Hash) (core.WSV, error) {
 }
 
 func (r *RepositoryTx) TxHistory(hash model.Hash) (core.TxHistory, error) {
-	return NewTxHistory(r.tx, r.fc, r.cryptor, r.cacheTxList, hash)
+	return NewTxHistory(r.tx, r.fc, r.cryptor, hash)
 }
 
 func (r *RepositoryTx) Blockchain(topBlockHash model.Hash) (core.Blockchain, error) {

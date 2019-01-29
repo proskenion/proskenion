@@ -4,7 +4,7 @@ db:
   kind: sqlite3
   name: testdb
 queue:
-  txs_limits: 1000
+  txs_limits: 2000
   block_limits: 30
 commit:
   wait_interval: 1000
@@ -13,7 +13,8 @@ peer:
   id: root@peer
   public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
   private_key: 82d2750b9278d74cd492ba21ba5843655123f903f7fdadb654f6519bf1f9dea73788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
-  port: 50023
+  host: 127.0.0.1
+  port: 50053
 prosl:
   id: "/prosl"
   genesis:

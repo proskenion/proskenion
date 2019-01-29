@@ -1,8 +1,9 @@
-package controller
+package controller_test
 
 import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
+	. "github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/proto"

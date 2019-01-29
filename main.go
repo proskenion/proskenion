@@ -51,7 +51,8 @@ func main() {
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifyier)
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
-	queue := repository.NewProposalTxQueueOnMemory(conf)
+	txQueue := repository.NewProposalTxQueueOnMemory(conf)
+	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
 	bq := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
@@ -65,7 +66,7 @@ func main() {
 	qv := query.NewQueryValidator(rp, fc, conf)
 
 	commitChan := make(chan struct{})
-	cs := commit.NewCommitSystem(fc, cryptor, queue, rp, conf)
+	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
@@ -88,7 +89,6 @@ func main() {
 		panic(err.Error())
 	}
 
-	api := gate.NewAPIGate(queue, qp, qv, logger)
 	s := grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),
@@ -96,7 +96,10 @@ func main() {
 			grpc_recovery.UnaryServerInterceptor(),
 		)),
 	}...)
+	api := gate.NewAPIGate(txQueue, qp, qv, logger)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
+	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {

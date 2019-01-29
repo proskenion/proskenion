@@ -24,12 +24,20 @@ func NewClientCache(conf *config.Config) core.ClientCache {
 	return &ClientCache{datastructure.NewCacheMap(conf.Cache.ClientLimits)}
 }
 
+func apiId(p model.Peer) string {
+	return p.GetPeerId() + "#a"
+}
+
+func conId(p model.Peer) string {
+	return p.GetPeerId() + "#c"
+}
+
 func (c *ClientCache) SetConsensus(peer model.Peer, client core.ConsensusGateClient) error {
-	return c.CacheMap.Set(&ClientHashWraper{peer.GetPeerId(), client})
+	return c.CacheMap.Set(&ClientHashWraper{conId(peer), client})
 }
 
 func (c *ClientCache) GetConsensus(p model.Peer) (core.ConsensusGateClient, bool) {
-	ret, ok := c.Get(model.Hash(p.GetPeerId()))
+	ret, ok := c.Get(model.Hash(conId(p)))
 	if !ok {
 		return nil, false
 	}
@@ -45,11 +53,11 @@ func (c *ClientCache) GetConsensus(p model.Peer) (core.ConsensusGateClient, bool
 }
 
 func (c *ClientCache) SetAPI(peer model.Peer, client core.APIGateClient) error {
-	return c.CacheMap.Set(&ClientHashWraper{peer.GetPeerId(), client})
+	return c.CacheMap.Set(&ClientHashWraper{apiId(peer), client})
 }
 
 func (c *ClientCache) GetAPI(p model.Peer) (core.APIGateClient, bool) {
-	ret, ok := c.Get(model.Hash(p.GetPeerId()))
+	ret, ok := c.Get(model.Hash(apiId(p)))
 	if !ok {
 		return nil, false
 	}

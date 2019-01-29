@@ -74,5 +74,5 @@ func (c *CacheMap) Get(hash model.Hash) (model.Hasher, bool) {
 	}
 	c.index[recentCacheStage(c.oldestId)][keyHash] = struct{}{}
 
-	return ret, ok
+	return ret.Hasher, ok
 }

@@ -17,6 +17,10 @@ type Gossip struct {
 	conf *config.Config
 }
 
+func NewGossip(rp core.Repository, fc model.ModelFactory, cf core.ClientFactory, c core.Cryptor, conf *config.Config) core.Gossip {
+	return &Gossip{rp, fc, cf, c, conf}
+}
+
 func (g *Gossip) GossipBlock(block model.Block, txList core.TxList) error {
 	top, ok := g.rp.Top()
 	if !ok {
@@ -26,7 +30,7 @@ func (g *Gossip) GossipBlock(block model.Block, txList core.TxList) error {
 	if err != nil {
 		return err
 	}
-	wsv, err := rtx.WSV(top.Hash())
+	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
 	if err != nil {
 		return err
 	}

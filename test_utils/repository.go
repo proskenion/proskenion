@@ -74,3 +74,7 @@ func RandomGenesisTxList(t *testing.T) core.TxList {
 	require.NoError(t, err)
 	return ret
 }
+
+func RandomTxListCache() core.TxListCache {
+	return repository.NewTxListCache(RandomConfig())
+}

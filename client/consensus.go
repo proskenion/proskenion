@@ -35,7 +35,6 @@ func (c *ConsensusGateClient) PropagateTx(in model.Transaction) error {
 
 func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList core.TxList) error {
 	stream, err := c.ConsensusGateClient.PropagateBlock(context.TODO())
-	defer stream.CloseSend()
 	if err != nil {
 		return err
 	}
@@ -63,5 +62,5 @@ func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList c
 			return err
 		}
 	}
-	return nil
+	return stream.CloseSend()
 }

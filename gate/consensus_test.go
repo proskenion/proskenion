@@ -1,9 +1,10 @@
-package gate
+package gate_test
 
 import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
+	. "github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"

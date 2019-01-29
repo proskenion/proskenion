@@ -42,6 +42,7 @@ type PeerConfig struct {
 	Id         string `yaml:"id"`
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
+	Host       string `yaml:"host"`
 	Port       string `yaml:"port"`
 }
 

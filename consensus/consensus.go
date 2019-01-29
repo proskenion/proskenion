@@ -52,6 +52,7 @@ func (c *Consensus) isBlockCreator(round int) bool {
 	acs, err := c.rp.GetDelegatedAccounts()
 	if err != nil {
 		c.logger.Error("GetDelegatePeers error: %s", err.Error())
+		return false
 	}
 	if len(acs) <= round {
 		return false
@@ -87,6 +88,7 @@ func (c *Consensus) Boot() {
 				}
 				c.logger.Info(fmt.Sprintf("txLen :: %d", len(txList.List())))
 				// 3. block を Gosship
+				c.logger.Info("============= Gossip Block And TxList =============")
 				err = c.gossip.GossipBlock(block, txList)
 				if err != nil {
 					c.logger.Error(err.Error())
@@ -100,6 +102,7 @@ func (c *Consensus) Boot() {
 
 func (c *Consensus) Receiver() {
 	for {
+		c.logger.Info("============= Wait Receive Block =============")
 		c.bq.WaitPush()
 		block, ok := c.bq.Pop()
 		if !ok {

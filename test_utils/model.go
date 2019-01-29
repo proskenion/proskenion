@@ -120,7 +120,7 @@ func RandomAccount() model.Account {
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
-	return RandomFactory().NewPeer(RandomStr(), RandomStr(), pub)
+	return RandomFactory().NewPeer(RandomAccountId(), RandomStr(), pub)
 }
 
 func RandomBlock() model.Block {

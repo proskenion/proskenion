@@ -12,6 +12,9 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, conf.DB.Kind, "sqlite3")
 	assert.Equal(t, conf.DB.Name, "db")
 
+	assert.Equal(t, conf.Cache.ClientLimits, 500)
+	assert.Equal(t, conf.Cache.TxListLimits, 100)
+
 	assert.Equal(t, conf.Commit.WaitInterval, 1000)
 	assert.Equal(t, conf.Commit.NumTxInBlock, 1000)
 
@@ -21,6 +24,8 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, conf.Cache.TxListLimits, 100)
 
 	assert.Equal(t, conf.Peer.Port, "50023")
+	assert.Equal(t, conf.Peer.Host, "127.0.0.1")
+
 
 	assert.Equal(t, conf.Prosl.Id, "/prosl")
 
