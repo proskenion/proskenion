@@ -9,14 +9,15 @@ import (
 )
 
 type APIGate struct {
+	rp     core.Repository
 	queue  core.ProposalTxQueue
 	logger log15.Logger
 	qp     core.QueryProcessor
 	qv     core.QueryValidator
 }
 
-func NewAPIGate(queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.APIGate {
-	return &APIGate{queue, logger, qp, qv}
+func NewAPIGate(rp core.Repository, queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.APIGate {
+	return &APIGate{rp, queue, logger, qp, qv}
 }
 
 func (a *APIGate) Write(tx model.Transaction) error {
@@ -36,10 +37,15 @@ func (a *APIGate) Read(query model.Query) (model.QueryResponse, error) {
 	if err := query.Verify(); err != nil {
 		return nil, errors.Wrap(core.ErrAPIGateQueryVerifyError, err.Error())
 	}
-	if err := a.qv.Validate(query); err != nil {
+	wsv, err := a.rp.TopWSV()
+	if err != nil {
+		return nil, err
+	}
+	defer wsv.Commit()
+	if err := a.qv.Validate(wsv, query); err != nil {
 		return nil, errors.Wrap(core.ErrAPIGateQueryValidateError, err.Error())
 	}
-	res, err := a.qp.Query(query)
+	res, err := a.qp.Query(wsv, query)
 	if err != nil {
 		if errors.Cause(err) == core.ErrQueryProcessorNotFound {
 			return nil, errors.Wrap(core.ErrAPIGateQueryNotFound, err.Error())

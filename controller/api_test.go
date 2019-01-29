@@ -26,9 +26,9 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, p
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, conf)
 	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc, RandomConfig())
-	qv := query.NewQueryValidator(rp, fc, conf)
-	api := gate.NewAPIGate(queue, qp, qv, logger)
+	qp := query.NewQueryProcessor( fc, RandomConfig())
+	qv := query.NewQueryValidator( fc, conf)
+	api := gate.NewAPIGate(rp, queue, qp, qv, logger)
 
 	server := NewAPIGateServer(fc, api, logger)
 

@@ -50,13 +50,13 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	bq := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
-	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+	pr := prosl.NewProsl(fc, cryptor, conf)
 
 	cmdExecutor.SetField(fc, pr)
 	cmdValidator.SetField(fc, pr)
 
-	qp := query.NewQueryProcessor(rp, fc, conf)
-	qv := query.NewQueryValidator(rp, fc, conf)
+	qp := query.NewQueryProcessor(fc, conf)
+	qv := query.NewQueryValidator(fc, conf)
 
 	commitChan := make(chan struct{})
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
@@ -66,7 +66,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genTxList, err := repository.NewTxListFromConf(cryptor, fc, pr, conf)
+	genTxList, err := repository.GenesisTxListFromConf(cryptor, fc, rp, pr, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", conf.Peer.Port))
 	require.NoError(t, err)
 
-	api := gate.NewAPIGate(txQueue, qp, qv, logger)
+	api := gate.NewAPIGate(rp, txQueue, qp, qv, logger)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
 	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))

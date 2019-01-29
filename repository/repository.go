@@ -54,6 +54,24 @@ func (r *Repository) Top() (model.Block, bool) {
 	return r.TopBlock, true
 }
 
+func (r *Repository) TopWSV() (core.WSV, error) {
+	rtx, err := r.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	top, ok := r.Top()
+	topWSVHash := model.Hash(nil)
+	if ok {
+		topWSVHash = top.GetPayload().GetWSVHash()
+	}
+	wsv, err := rtx.WSV(topWSVHash)
+	if err != nil {
+		return nil, rollBackTx(rtx, err)
+	}
+	return wsv, err
+}
+
 func (r *Repository) GetDelegatedAccounts() ([]model.Account, error) {
 	top, ok := r.Top()
 	if !ok {
@@ -77,11 +95,11 @@ func (r *Repository) GetDelegatedAccounts() ([]model.Account, error) {
 	}
 
 	prData := st.GetFromKey(core.ProslKey).GetData()
-	pr := prosl.NewProsl(r.fc, r, r.cryptor, r.conf)
+	pr := prosl.NewProsl(r.fc, r.cryptor, r.conf)
 	if err := pr.Unmarshal(prData); err != nil {
 		return nil, err
 	}
-	ret, vars, err := pr.Execute()
+	ret, vars, err := pr.Execute(wsv, top)
 	if err != nil {
 		return nil, fmt.Errorf("errors: %s\nvariables: %+v\n", err.Error(), vars)
 	}
@@ -116,19 +134,19 @@ func (r *Repository) loadMPTrees(dtx core.RepositoryTx, preBlock model.Block, pr
 }
 
 // Incentive Prosl exeucute (fource execute)
-func (r *Repository) executeProslIncentive(wsv core.WSV, txHistory core.TxHistory) error {
+func (r *Repository) executeProslIncentive(wsv core.WSV, txHistory core.TxHistory, top model.Block) error {
 	// 1. get prosl
 	proSt := r.fc.NewEmptyStorage()
 	if err := wsv.Query(model.MustAddress(r.conf.Prosl.Incentive.Id), proSt); err != nil {
 		return nil
 	}
-	pr := prosl.NewProsl(r.fc, r, r.cryptor, r.conf)
+	pr := prosl.NewProsl(r.fc, r.cryptor, r.conf)
 	proslByte := proSt.GetFromKey(core.ProslKey).GetData()
 	if err := pr.Unmarshal(proslByte); err != nil {
 		return nil
 	}
 	// 2. execute incentive prosl
-	ret, vars, err := pr.Execute()
+	ret, vars, err := pr.Execute(wsv, top)
 	if err != nil {
 		fmt.Printf("Incentive Prosl Error\nvariables: %+v, error: %s\n", vars, err.Error())
 	} else if ret == nil || ret.GetTransaction() == nil {
@@ -177,7 +195,7 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 	}
 
 	// execute incentive prosl transaction. (fource execute)
-	if err := r.executeProslIncentive(wsv, txHistory); err != nil {
+	if err := r.executeProslIncentive(wsv, txHistory, preBlock); err != nil {
 		return nil, nil, rollBackTx(dtx, err)
 	}
 
@@ -243,7 +261,7 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 
 	// load state
 	preBlockHash := block.GetPayload().GetPreBlockHash()
-	bc, wsv, txHistory, _, err := r.loadMPTrees(dtx, nil, preBlockHash)
+	bc, wsv, txHistory, preBlock, err := r.loadMPTrees(dtx, nil, preBlockHash)
 	if err != nil {
 		return err
 	}
@@ -267,7 +285,7 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 	}
 
 	// Incentive Prosl exeucute (fource execute)
-	if err := r.executeProslIncentive(wsv, txHistory); err != nil {
+	if err := r.executeProslIncentive(wsv, txHistory, preBlock); err != nil {
 		return rollBackTx(dtx, err)
 	}
 
@@ -306,7 +324,7 @@ func (r *Repository) getProslBytes(filename string, pr core.Prosl) ([]byte, erro
 
 func (r *Repository) genesisProslSetting() (model.Transaction, error) {
 	proSt := ProslStorage(r.fc, r.conf)
-	pr := prosl.NewProsl(r.fc, r, r.cryptor, r.conf)
+	pr := prosl.NewProsl(r.fc, r.cryptor, r.conf)
 	incPr, err := r.getProslBytes(r.conf.Prosl.Incentive.Path, pr)
 	if err != nil {
 		return nil, err

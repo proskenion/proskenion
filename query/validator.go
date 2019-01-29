@@ -9,13 +9,12 @@ import (
 )
 
 type QueryValidator struct {
-	rp   core.Repository
 	fc   model.ModelFactory
 	conf *config.Config
 }
 
-func NewQueryValidator(rp core.Repository, fc model.ModelFactory, conf *config.Config) core.QueryValidator {
-	return &QueryValidator{rp, fc, conf}
+func NewQueryValidator(fc model.ModelFactory, conf *config.Config) core.QueryValidator {
+	return &QueryValidator{ fc, conf}
 }
 
 func containsPublicKey(keys []model.PublicKey, pub model.PublicKey) bool {
@@ -27,24 +26,11 @@ func containsPublicKey(keys []model.PublicKey, pub model.PublicKey) bool {
 	return false
 }
 
-func (q *QueryValidator) Validate(query model.Query) error {
-	top, ok := q.rp.Top()
-	if !ok {
-		return core.ErrQueryProcessorQueryEmptyBlockchain
-	}
-	rtx, err := q.rp.Begin()
-	if err != nil {
-		return err
-	}
-	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
-	if err != nil {
-		return err
-	}
-
+func (q *QueryValidator) Validate(wsv model.ObjectFinder, query model.Query) error {
 	// 署名チェック
 	ac := q.fc.NewEmptyAccount()
 	authorizer := model.MustAddress(model.MustAddress(query.GetPayload().GetAuthorizerId()).AccountId())
-	err = wsv.Query(authorizer, ac)
+	err := wsv.Query(authorizer, ac)
 	if err != nil {
 		return errors.Wrapf(core.ErrQueryProcessorNotExistAuthoirizer,
 			"authorizer : %s", query.GetPayload().GetAuthorizerId())
@@ -54,5 +40,5 @@ func (q *QueryValidator) Validate(query model.Query) error {
 			"authorizer : %s, expect key : %x",
 			query.GetPayload().GetAuthorizerId(), query.GetSignature().GetPublicKey())
 	}
-	return rtx.Commit()
+	return nil
 }

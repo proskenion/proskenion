@@ -100,6 +100,9 @@ type ProposalBlockQueue interface {
 type Repository interface {
 	Begin() (RepositoryTx, error)
 	Top() (Block, bool)
+
+	TopWSV() (WSV, error)
+
 	GetDelegatedAccounts() ([]Account, error)
 	Commit(Block, TxList) error
 	GenesisCommit(TxList) error

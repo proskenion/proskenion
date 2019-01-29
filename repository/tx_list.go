@@ -15,8 +15,12 @@ type TxList struct {
 	fc   model.ModelFactory
 }
 
-func NewTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, pr core.Prosl, conf *config.Config) (core.TxList, error) {
+func GenesisTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, rp core.Repository, pr core.Prosl, conf *config.Config) (core.TxList, error) {
 	buf, err := ioutil.ReadFile(conf.Prosl.Genesis.Path)
+	if err != nil {
+		return nil, err
+	}
+	wsv, err := rp.TopWSV()
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +28,7 @@ func NewTxListFromConf(cryptor core.Cryptor, fc model.ModelFactory, pr core.Pros
 	if err != nil {
 		return nil, err
 	}
-	ret, vars, err := pr.Execute()
+	ret, vars, err := pr.Execute(wsv, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error Genesis prosl: %s\nvariables: %+v\n", err.Error(), vars)
 	}

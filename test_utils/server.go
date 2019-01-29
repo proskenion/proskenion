@@ -12,7 +12,6 @@ import (
 	"github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/crypto"
-	"github.com/proskenion/proskenion/dba"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/proto"
@@ -30,18 +29,16 @@ func RandomSetUpConsensusServer(t *testing.T, conf *config.Config, s *grpc.Serve
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
 
-	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor(conf)
 	cmdValidator := command.NewCommandValidator(conf)
 	qVerifier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
 
-	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	txQueue := repository.NewProposalTxQueueOnMemory(conf)
 	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
-	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+	pr := prosl.NewProsl(fc, cryptor, conf)
 
 	cmdExecutor.SetField(fc, pr)
 	cmdValidator.SetField(fc, pr)

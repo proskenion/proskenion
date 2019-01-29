@@ -67,13 +67,13 @@ func (c *CommandExecutor) CreateAccount(wsv model.ObjectFinder, cmd model.Comman
 		Build()
 
 	/*
-	ac := c.factory.NewEmptyAccount()
-	if err := wsv.Query(id, ac); err == nil {
-		if ac.GetAccountId() == cmd.GetTargetId() {
-			return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
-				fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
+		ac := c.factory.NewEmptyAccount()
+		if err := wsv.Query(id, ac); err == nil {
+			if ac.GetAccountId() == cmd.GetTargetId() {
+				return errors.Wrap(core.ErrCommandExecutorCreateAccountAlreadyExistAccount,
+					fmt.Errorf("already exist accountId : %s", id.AccountId()).Error())
+			}
 		}
-	}
 	*/
 	if err := wsv.Append(id, newAccount); err != nil {
 		return err
@@ -310,7 +310,7 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	// 2. update prosl execute with prams + ["target_id"] = target_id
 	params := cc.GetVariables()
 	params[core.TargetIdKey] = c.factory.NewObjectBuilder().Address(cmd.GetTargetId())
-	if check, variables, err := c.prosl.ExecuteWithParams(params); err != nil {
+	if check, variables, err := c.prosl.ExecuteWithParams(wsv, nil, params); err != nil {
 		return errors.Errorf("variales: %+v, error: %s", variables, err.Error())
 	} else if !check.GetBoolean() {
 		return errors.Wrapf(core.ErrCommandExecutorCheckAndCommitProslInvalid,

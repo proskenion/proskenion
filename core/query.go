@@ -14,11 +14,11 @@ var (
 )
 
 type QueryProcessor interface {
-	Query(query model.Query) (model.QueryResponse, error)
+	Query(wsv model.ObjectFinder, query model.Query) (model.QueryResponse, error)
 }
 
 type QueryValidator interface {
-	Validate(query model.Query) error
+	Validate(wsv model.ObjectFinder, query model.Query) error
 }
 
 type QueryVerifier interface {

@@ -9,29 +9,15 @@ import (
 )
 
 type QueryProcessor struct {
-	rp   core.Repository
 	fc   model.ModelFactory
 	conf *config.Config
 }
 
-func NewQueryProcessor(rp core.Repository, fc model.ModelFactory, conf *config.Config) core.QueryProcessor {
-	return &QueryProcessor{rp, fc, conf}
+func NewQueryProcessor(fc model.ModelFactory, conf *config.Config) core.QueryProcessor {
+	return &QueryProcessor{ fc, conf}
 }
 
-func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
-	top, ok := q.rp.Top()
-	if !ok {
-		return nil, core.ErrQueryProcessorQueryEmptyBlockchain
-	}
-	rtx, err := q.rp.Begin()
-	if err != nil {
-		return nil, err
-	}
-	wsv, err := rtx.WSV(top.GetPayload().GetWSVHash())
-	if err != nil {
-		return nil, err
-	}
-
+func (q *QueryProcessor) Query(wsv model.ObjectFinder, query model.Query) (model.QueryResponse, error) {
 	id := model.MustAddress(query.GetPayload().GetFromId())
 	var object model.Object
 	if id.Type() == model.WallettAddressType { // 単一検索
@@ -92,10 +78,10 @@ func (q *QueryProcessor) Query(query model.Query) (model.QueryResponse, error) {
 	if err := q.signedResponse(ret); err != nil {
 		return nil, err
 	}
-	return ret, rtx.Commit()
+	return ret, nil
 }
 
-func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.Account, error) {
+func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv model.ObjectFinder) (model.Account, error) {
 	ac := q.fc.NewEmptyAccount()
 	err := wsv.Query(model.MustAddress(qp.GetFromId()), ac)
 	if err != nil {
@@ -104,7 +90,7 @@ func (q *QueryProcessor) accountObjectQuery(qp model.QueryPayload, wsv core.WSV)
 	return ac, nil
 }
 
-func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.Peer, error) {
+func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv model.ObjectFinder) (model.Peer, error) {
 	peer := q.fc.NewEmptyPeer()
 	err := wsv.Query(model.MustAddress(qp.GetFromId()), peer)
 	if err != nil {
@@ -113,7 +99,7 @@ func (q *QueryProcessor) peerObjectQuery(qp model.QueryPayload, wsv core.WSV) (m
 	return peer, nil
 }
 
-func (q *QueryProcessor) storageObjectQuery(qp model.QueryPayload, wsv core.WSV) (model.Storage, error) {
+func (q *QueryProcessor) storageObjectQuery(qp model.QueryPayload, wsv model.ObjectFinder) (model.Storage, error) {
 	storage := q.fc.NewEmptyStorage()
 	err := wsv.Query(model.MustAddress(qp.GetFromId()), storage)
 	if err != nil {
@@ -153,7 +139,7 @@ func (q *QueryProcessor) selectStorage(storage model.Storage, query model.Query)
 }
 
 
-func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Account, error) {
+func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv model.ObjectFinder) ([]model.Account, error) {
 	acs := make([]model.Account, 0)
 	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewAccountUnmarshalerFactory(q.fc))
 	if err != nil {
@@ -165,7 +151,7 @@ func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv core
 	return acs, nil
 }
 
-func (q *QueryProcessor) peerObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Peer, error) {
+func (q *QueryProcessor) peerObjectQueryRange(qp model.QueryPayload, wsv model.ObjectFinder) ([]model.Peer, error) {
 	peers := make([]model.Peer, 0)
 	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewPeerUnmarshalerFactory(q.fc))
 	if err != nil {
@@ -177,7 +163,7 @@ func (q *QueryProcessor) peerObjectQueryRange(qp model.QueryPayload, wsv core.WS
 	return peers, nil
 }
 
-func (q *QueryProcessor) storageObjectQueryRange(qp model.QueryPayload, wsv core.WSV) ([]model.Storage, error) {
+func (q *QueryProcessor) storageObjectQueryRange(qp model.QueryPayload, wsv model.ObjectFinder) ([]model.Storage, error) {
 	storages := make([]model.Storage, 0)
 	res, err := wsv.QueryAll(model.MustAddress(qp.GetFromId()), model.NewStorageUnmarshalerFactory(q.fc))
 	if err != nil {

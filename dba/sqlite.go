@@ -69,6 +69,7 @@ func (d *DBASQLite) Begin() (DBATx, error) {
 	d.mutex.Lock()
 	tx, err := d.db.Beginx()
 	if err != nil {
+		d.mutex.Unlock()
 		return nil, err
 	}
 	return &DBASQLiteTx{tx, d.table, d.mutex}, nil
