@@ -13,7 +13,12 @@ type Blockchain struct {
 	tree    core.MerklePatriciaTree
 }
 
-var BlockChainRootKey byte = 9
+var (
+	BlockChainRootKey     byte = 9
+	BlockChainTopRootKey  byte = 0
+	BlockChainNowRootKey  byte = 1
+	BlockChainNextRootKey byte = 2
+)
 
 type ByteWrapper struct {
 	B []byte
@@ -45,11 +50,15 @@ func NewBlockchainFromTopBlock(tx core.DBATx, factory model.ModelFactory, crypto
 }
 
 func BlockHashToKey(blockHash model.Hash) []byte {
-	return append([]byte{BlockChainRootKey}, blockHash...)
+	return append([]byte{BlockChainRootKey, BlockChainNowRootKey}, blockHash...)
 }
 
 func BlockHashToMappingKey(blockHash model.Hash) []byte {
-	return append([]byte{BlockChainRootKey, 0}, blockHash...)
+	return append([]byte{BlockChainRootKey, BlockChainTopRootKey}, blockHash...)
+}
+
+func BlockHashToNextKey(blockHash model.Hash) []byte {
+	return append([]byte{BlockChainRootKey, BlockChainNextRootKey}, blockHash...)
 }
 
 func (b *Blockchain) Get(blockHash model.Hash) (model.Block, error) {
@@ -76,6 +85,10 @@ func (b *Blockchain) Append(block model.Block) (err error) {
 	}
 	it, err := b.tree.Upsert(&KVNode{BlockHashToKey(blockHash), block})
 	if err != nil {
+		return err
+	}
+	if _, err := b.tree.Upsert(&KVNode{BlockHashToNextKey(block.GetPayload().GetPreBlockHash()),
+		&ByteWrapper{blockHash}}); err != nil {
 		return err
 	}
 
