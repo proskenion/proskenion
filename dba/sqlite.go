@@ -10,6 +10,7 @@ import (
 	. "github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/core/model"
+	"sync"
 )
 
 type DBSQLite struct {
@@ -47,58 +48,48 @@ func sq() squirrel.StatementBuilderType {
 type DBASQLite struct {
 	db    *sqlx.DB
 	table string
-}
-
-func commitTx(dba DBATx) error {
-	if err := dba.Commit(); err != nil {
-		return rollBackTx(dba, err)
-	}
-	return nil
-}
-
-func rollBackTx(dba DBATx, mtErr error) error {
-	if err := dba.Rollback(); err != nil {
-		return errors.Wrap(err, mtErr.Error())
-	}
-	return mtErr
+	mutex *sync.Mutex
 }
 
 func (d *DBASQLite) Begin() (DBATx, error) {
+	d.mutex.Lock()
 	tx, err := d.db.Beginx()
 	if err != nil {
+		d.mutex.Unlock()
 		return nil, err
 	}
-	return &DBASQLiteTx{tx, d.table}, nil
+	return &DBASQLiteTx{tx, d.table, d.mutex}, nil
 }
 
 func (d *DBASQLite) Load(key model.Hash, value Unmarshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
-		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
+		return RollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
 	}
-	return rollBackTx(tx, tx.Load(key, value))
+	return RollBackTx(tx, tx.Load(key, value))
 }
 
 func (d *DBASQLite) Store(key model.Hash, value Marshaler) error {
 	tx, err := d.Begin()
 	if err != nil {
-		return rollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
+		return RollBackTx(tx, errors.Wrap(ErrDBABeginErr, err.Error()))
 	}
 	if err := tx.Store(key, value); err != nil {
-		return rollBackTx(tx, err)
+		return RollBackTx(tx, err)
 	}
-	return commitTx(tx)
+	return CommitTx(tx)
 }
 
 func NewDBA(db *sqlx.DB, table string) DBA {
 	schema := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s ("key" BLOB PRIMARY KEY, "value" BLOB);`, table)
 	db.MustExec(schema)
-	return &DBASQLite{db, table}
+	return &DBASQLite{db, table, &sync.Mutex{}}
 }
 
 type DBASQLiteTx struct {
 	*sqlx.Tx
 	table string
+	mutex *sync.Mutex
 }
 
 type KVTable struct {
@@ -107,6 +98,7 @@ type KVTable struct {
 }
 
 func (t *DBASQLiteTx) Rollback() error {
+	defer t.mutex.Unlock()
 	return t.Tx.Rollback()
 }
 
@@ -163,5 +155,6 @@ func (t *DBASQLiteTx) Store(key model.Hash, value Marshaler) error {
 }
 
 func (t *DBASQLiteTx) Commit() error {
+	defer t.mutex.Unlock()
 	return t.Tx.Commit()
 }

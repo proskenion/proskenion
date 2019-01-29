@@ -99,7 +99,13 @@ func testConvertProsl(t *testing.T, filename string) *proskenion.Prosl {
 	return prosl
 }
 
-func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository) {
+func testGenesisExecuteProsl(t *testing.T, filename string, fc model.ModelFactory, rp core.Repository, conf *config.Config) {
+	top, _ := rp.Top()
+	wsv, err := rp.TopWSV()
+	require.NoError(t, err)
+
+	value := InitProslStateValue(fc, wsv, top, conf)
+
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
@@ -130,7 +136,13 @@ func testGenesisExecuteProsl(t *testing.T, filename string, value *ProslStateVal
 	CommitTxWrapBlock(t, rp, state.Fc, actualTx)
 }
 
-func testGetAccountsExecuteProsl(t *testing.T, filename string, value *ProslStateValue) {
+func testGetAccountsExecuteProsl(t *testing.T, filename string, fc model.ModelFactory, rp core.Repository, conf *config.Config) {
+	top, _ := rp.Top()
+	wsv, err := rp.TopWSV()
+	require.NoError(t, err)
+
+	value := InitProslStateValue(fc, wsv, top, conf)
+
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
@@ -154,7 +166,13 @@ func accountsToObjectList(accounts []model.Account) model.Object {
 	return RandomFactory().NewObjectBuilder().List(obs)
 }
 
-func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateValue, rp core.Repository, expTx model.Transaction) {
+func testIncentiveExecuteProsl(t *testing.T, filename string, fc model.ModelFactory, rp core.Repository, conf *config.Config, expTx model.Transaction) {
+	top, _ := rp.Top()
+	wsv, err := rp.TopWSV()
+	require.NoError(t, err)
+
+	value := InitProslStateValue(fc, wsv, top, conf)
+
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
 	require.NoError(t, state.Err)
@@ -169,11 +187,10 @@ func testIncentiveExecuteProsl(t *testing.T, filename string, value *ProslStateV
 func TestExecuteProsl(t *testing.T) {
 	rp, fc, conf := Initalize()
 	InitializeObjects(t)
-	testGenesisExecuteProsl(t, "./test_yaml/genesis.yaml",
-		InitProslStateValue(fc, rp, conf), rp)
 
-	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml",
-		InitProslStateValue(fc, rp, conf))
+	testGenesisExecuteProsl(t, "./test_yaml/genesis.yaml", fc, rp, conf)
+
+	testGetAccountsExecuteProsl(t, "./test_yaml/test_1.yaml", fc, rp, conf)
 
 	expTx := fc.NewTxBuilder().
 		UpdateObject(genesisRootId, "root@com/degraders", "acs",
@@ -184,12 +201,10 @@ func TestExecuteProsl(t *testing.T) {
 				})).
 		AddBalance(genesisRootId, acs[2].AccountId, 10000).
 		Build()
-	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml",
-		InitProslStateValue(fc, rp, conf), rp, expTx)
+	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml", fc, rp, conf, expTx)
 
 	expTx = fc.NewTxBuilder().
 		AddBalance(genesisRootId, acs[1].AccountId, 10000).
 		Build()
-	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml",
-		InitProslStateValue(fc, rp, conf), rp, expTx)
+	testIncentiveExecuteProsl(t, "./test_yaml/test_2.yaml", fc, rp, conf, expTx)
 }

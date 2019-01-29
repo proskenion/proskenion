@@ -19,9 +19,9 @@ func TestTransaction_GetHash(t *testing.T) {
 	for id, a := range txs {
 		for jd, b := range txs {
 			if id != jd {
-				assert.NotEqual(t, MustHash(a), MustHash(b))
+				assert.NotEqual(t, a.Hash(), b.Hash())
 			} else {
-				assert.Equal(t, MustHash(a), MustHash(b))
+				assert.Equal(t, a.Hash(), b.Hash())
 			}
 		}
 	}

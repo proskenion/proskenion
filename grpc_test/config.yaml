@@ -3,13 +3,21 @@ db:
   path: database
   kind: sqlite3
   name: testdb
-proposal_txs_limits: 1000
+queue:
+  txs_limits: 2000
+  block_limits: 30
+cache:
+  client_limits: 500
+  tx_list_limits: 100
 commit:
+  wait_interval: 1000
   num_tx_in_block: 99
 peer:
-  public_key: 3ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
-  private_key: 820d31b8bbfaaa835de50fd82ee5f40a80e1dd681498efc119bae23de2af9ed73ee656a52ae5e1ac9979e4f4ca34b41d38a2a87cd034a404127d6cd28a19c882
-  port: 50023
+  id: root@peer
+  public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+  private_key: 82d2750b9278d74cd492ba21ba5843655123f903f7fdadb654f6519bf1f9dea73788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+  host: 127.0.0.1
+  port: 50053
 prosl:
   id: "/prosl"
   genesis:

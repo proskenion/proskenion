@@ -2,9 +2,6 @@ package core
 
 type Consensus interface {
 	Boot()
+	Receiver()
 }
 
-type ConsensusCustomize interface {
-	WaitUntilComeNextBlock()
-	IsBlockCreator() bool
-}

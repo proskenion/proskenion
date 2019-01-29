@@ -18,13 +18,14 @@ import (
 
 func TestAPIGate_WriteAndRead(t *testing.T) {
 	fc := RandomFactory()
+	conf := RandomConfig()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
 	queue := repository.NewProposalTxQueueOnMemory(RandomConfig())
 	logger := log15.New(context.TODO())
-	qp := query.NewQueryProcessor(rp, fc, RandomConfig())
-	qv := query.NewQueryValidator(rp, fc, RandomConfig())
-	api := NewAPIGate(queue, qp, qv, logger)
-	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, RandomCommitProperty(), rp)
+	qp := query.NewQueryProcessor(fc, RandomConfig())
+	qv := query.NewQueryValidator(fc, RandomConfig())
+	api := NewAPIGate(rp, queue, qp, qv, logger)
+	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, rp, conf)
 
 	// genesis Commit
 	acs := []*AccountWithPri{
@@ -45,7 +46,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		require.NoError(t, api.Write(tx))
 	}
 	// Commit
-	_, txList, err := cm.CreateBlock()
+	_, txList, err := cm.CreateBlock(0)
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, txList.Size())

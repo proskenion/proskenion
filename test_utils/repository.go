@@ -58,19 +58,29 @@ func RandomQueue() core.ProposalTxQueue {
 }
 
 func EmptyTxList() core.TxList {
-	return repository.NewTxList(RandomCryptor())
+	return repository.NewTxList(RandomCryptor(), RandomFactory())
 }
 
 func RandomTxList() core.TxList {
-	txList := repository.NewTxList(RandomCryptor())
+	txList := repository.NewTxList(RandomCryptor(), RandomFactory())
 	for _, tx := range RandomTxs() {
 		txList.Push(tx)
 	}
 	return txList
 }
 
+func RandomRepository() core.Repository {
+	_, _, _, _, rp, _, _ := NewTestFactories()
+	return rp
+}
+
 func RandomGenesisTxList(t *testing.T) core.TxList {
-	ret, err := repository.NewTxListFromConf(RandomCryptor(), RandomProsl(), RandomConfig())
+	NewTestFactories()
+	ret, err := repository.GenesisTxListFromConf(RandomCryptor(), RandomFactory(), RandomRepository(), RandomProsl(), RandomConfig())
 	require.NoError(t, err)
 	return ret
+}
+
+func RandomTxListCache() core.TxListCache {
+	return repository.NewTxListCache(RandomConfig())
 }

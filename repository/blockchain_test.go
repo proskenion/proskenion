@@ -12,14 +12,14 @@ import (
 )
 
 func test_Blockchain_Upserts(t *testing.T, blockchain core.Blockchain, block model.Block) {
-	_, err := blockchain.Get(MustHash(block))
+	_, err := blockchain.Get(block.Hash())
 	require.EqualError(t, errors.Cause(err), core.ErrBlockchainNotFound.Error())
 	err = blockchain.Append(block)
 	require.NoError(t, err)
 
-	retBlock, err := blockchain.Get(MustHash(block))
+	retBlock, err := blockchain.Get(block.Hash())
 	require.NoError(t, err)
-	assert.Equal(t, MustHash(block), MustHash(retBlock))
+	assert.Equal(t, block.Hash(), retBlock.Hash())
 }
 
 func test_Blockchain(t *testing.T, dba core.DBA) {

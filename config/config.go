@@ -8,12 +8,23 @@ import (
 )
 
 type Config struct {
-	DB                DBConfig     `yaml:"db"`
-	ProposalTxsLimits int          `yaml:"proposal_txs_limits"`
-	Commit            CommitConfig `yaml:"commit"`
-	Peer              PeerConfig   `yaml:"peer"`
-	Prosl             ProslConfig  `yaml:"prosl"`
-	Root              RootConfig   `yaml:"root"`
+	DB     DBConfig     `yaml:"db"`
+	Queue  QueueConfig  `yaml:"queue"`
+	Cache  CacheConfig  `yaml:"cache"`
+	Commit CommitConfig `yaml:"commit"`
+	Peer   PeerConfig   `yaml:"peer"`
+	Prosl  ProslConfig  `yaml:"prosl"`
+	Root   RootConfig   `yaml:"root"`
+}
+
+type QueueConfig struct {
+	TxsLimits   int `yaml:"txs_limits"`
+	BlockLimits int `yaml:"block_limits"`
+}
+
+type CacheConfig struct {
+	ClientLimits int `yaml:"client_limits"`
+	TxListLimits int `yaml:"tx_list_limits"`
 }
 
 type DBConfig struct {
@@ -23,18 +34,21 @@ type DBConfig struct {
 }
 
 type CommitConfig struct {
+	WaitInterval int `yaml:"wait_interval"`
 	NumTxInBlock int `yaml:"num_tx_in_block"`
 }
 
 type PeerConfig struct {
+	Id         string `yaml:"id"`
 	PublicKey  string `yaml:"public_key"`
 	PrivateKey string `yaml:"private_key"`
+	Host       string `yaml:"host"`
 	Port       string `yaml:"port"`
 }
 
 type ProslConfig struct {
 	Id        string             `yaml:"id"`
-	Genesis   DefaultProslConfig `yaml:genesis`
+	Genesis   DefaultProslConfig `yaml:"genesis"`
 	Incentive DefaultProslConfig `yaml:"incentive"`
 	Consensus DefaultProslConfig `yaml:"consensus"`
 	Update    DefaultProslConfig `yaml:"update"`

@@ -29,6 +29,14 @@
           - create_storage:
               authorizer_id: root@root
               wallet_id: root@root/degraders
+          - consign:
+              authorizer_id: root@root
+              account_id: authorizer@com
+              peer_id: root@peer
+          - consign:
+              authorizer_id: root@root
+              account_id: incentive@com
+              peer_id: root@peer
           - define_storage:
               authorizer_id: root@root
               storage_id: /prflag

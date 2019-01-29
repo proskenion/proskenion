@@ -25,7 +25,7 @@ type AccountWithPri struct {
 }
 
 func GenesisCommitFromAccounts(t *testing.T, rp core.Repository, acs []*AccountWithPri) {
-	txList, err := repository.NewTxListFromConf(RandomCryptor(), RandomProsl(), RandomConfig())
+	txList, err := repository.GenesisTxListFromConf(RandomCryptor(),RandomFactory(), RandomRepository(),RandomProsl(), RandomConfig())
 	require.NoError(t, err)
 
 	builder := RandomFactory().NewTxBuilder()

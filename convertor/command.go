@@ -22,6 +22,8 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.AddBalance(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.executor.CreateAccount(wsv, c)
+	case *proskenion.Command_SetQuorum:
+		return c.executor.SetQuorum(wsv, c)
 	case *proskenion.Command_AddPublicKeys:
 		return c.executor.AddPublicKeys(wsv, c)
 	case *proskenion.Command_DefineStorage:
@@ -53,6 +55,8 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.AddBalance(wsv, c)
 	case *proskenion.Command_CreateAccount:
 		return c.validator.CreateAccount(wsv, c)
+	case *proskenion.Command_SetQuorum:
+		return c.executor.SetQuorum(wsv, c)
 	case *proskenion.Command_AddPublicKeys:
 		return c.validator.AddPublicKeys(wsv, c)
 	case *proskenion.Command_DefineStorage:
@@ -96,7 +100,7 @@ func (c *Command) GetRemovePublicKeys() model.RemovePublicKeys {
 }
 
 func (c *Command) GetSetQuorum() model.SetQuroum {
-	return c.Command.GetSetQurum()
+	return c.Command.GetSetQuorum()
 }
 
 type CreateAccount struct {

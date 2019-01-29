@@ -9,6 +9,15 @@ message ConsensusResponse {}
 message CollectTxRequest {
     bytes blockHash = 1;
 }
+message PropagateBlockRequest {
+    oneof req {
+        Block block = 1;
+        Transaction transaction = 2;
+    }
+}
+message PropagateBlockResponse {
+    Signature signature = 1;
+}
 // WIP
 
 /**
@@ -22,8 +31,6 @@ service ConsensusGate {
      *
      * InvalidArgument (code = 3) : One of following conditions:
      *  1 ) StatelessValidator で落ちる場合
-     * AlreadyExist (code = 6) : One of following conditions:
-     *  1 ) 既に同じ Transaction を受け取っていた場合
      * PermissionDenied (code = 7) : One of following conditions:
      *  1 ) Context の 署名の主がPeerでない場合
      **/
@@ -31,13 +38,18 @@ service ConsensusGate {
 
 
     /**
-     * PropagateBlock は Commit する block を自分以外の Peer に伝搬させる。
-     * Context には送信者の署名をつける。
+     * PropagateBlock は Commit する block と txList を自分以外の Peer に伝搬させる。
+     * Context には送信者の署名をつける
+     *
+     * InvalidArgument (code = 3) : One of following conditions:
+     *  1 ) Block is nil.
+     *  2 ) Block Verify failed.
+     *  3 ) Transaction is nil.
+     *  4 ) Transaction Verify failed.
+     *  AlreadyExist (code = 6) : One of following conditions:
+     *  1 ) Block is already exist in block queue.
+     *  PermissionDenied (code = 7) : One of following conditions:
+     *  1 ) Context の 署名の主がPeerでない場合
      **/
-    rpc PropagateBlock(Block) returns (ConsensusResponse);
-
-    /**
-     * CollectTx は blockHash をもとにその block に含まれる Transaction を取得する。
-     **/
-    rpc CollectTx(CollectTxRequest) returns (stream Transaction);
+    rpc PropagateBlock(stream PropagateBlockRequest) returns (stream PropagateBlockResponse);
 }

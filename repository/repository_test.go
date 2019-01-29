@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/repository"
@@ -40,7 +41,7 @@ func TestRepository_Commit(t *testing.T) {
 
 	queue := RandomQueue()
 	require.NoError(t, queue.Push(tx))
-	newBlock, newTxList, err := rp.CreateBlock(queue, RandomNow())
+	newBlock, newTxList, err := rp.CreateBlock(queue, 0, RandomNow())
 	require.NoError(t, err)
 	require.Equal(t, tx.Hash(), newTxList.List()[0].Hash())
 	sameRepositoryTop(t, rp, newBlock)
@@ -53,4 +54,18 @@ func TestRepository_Commit(t *testing.T) {
 	assert.Equal(t, top.Hash(), top2.Hash())
 	require.NoError(t, rp2.Commit(newBlock, newTxList))
 	sameRepositoryTop(t, rp2, newBlock)
+}
+
+func TestRepository_GetDelegatedAccounts(t *testing.T) {
+	rp := NewRepository(RandomDBA(), RandomCryptor(), RandomFactory(), RandomConfig())
+	require.NoError(t, rp.GenesisCommit(RandomGenesisTxList(t)))
+
+	acs, err := rp.GetDelegatedAccounts()
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, len(acs))
+	fmt.Println(acs[0])
+	fmt.Println(acs[1])
+	assert.Equal(t, "root@peer", acs[0].GetDelegatePeerId())
+	assert.Equal(t, "root@peer", acs[1].GetDelegatePeerId())
 }

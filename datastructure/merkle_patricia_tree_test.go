@@ -1,11 +1,11 @@
-package repository_test
+package datastructure_test
 
 import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
-	"github.com/proskenion/proskenion/repository"
+	. "github.com/proskenion/proskenion/datastructure"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -106,7 +106,7 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		require.NoError(t, err)
 		err = it.Data(ac)
 		assert.NoError(t, err)
-		assert.Equal(t, MustHash(acs[i]), MustHash(ac))
+		assert.Equal(t, acs[i].Hash(), ac.Hash())
 	}
 	// Check SubTree1
 	it := tree1.Iterator()
@@ -116,12 +116,12 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 	assert.Equal(t, 5, len(leafs))
 	assertAcs := func(ac model.Account) {
 		for i, exAc := range exAcs {
-			if bytes.Equal(MustHash(exAc), MustHash(ac)) {
+			if bytes.Equal(exAc.Hash(), ac.Hash()) {
 				exAcs = append(exAcs[:i], exAcs[i+1:]...)
 				return
 			}
 		}
-		assert.Failf(t, "assert accounts.", "%x is not found.", MustHash(ac))
+		assert.Failf(t, "assert accounts.", "%x is not found.", ac.Hash())
 	}
 	for i, leaf := range leafs {
 		ac := RandomAccount()
@@ -140,7 +140,7 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 		require.NoError(t, err)
 		err = it.Data(ac)
 		assert.NoError(t, err)
-		assert.Equal(t, MustHash(acs2[i]), MustHash(ac))
+		assert.Equal(t, MustHash(acs2[i]), ac.Hash())
 	}
 
 	// Check SubTree2
@@ -160,9 +160,9 @@ func testMerklePatriciaTree(t *testing.T, tree1 core.MerklePatriciaTree, tree2 c
 
 func TestMerklePatriciaTree(t *testing.T) {
 	cryptor := RandomCryptor()
-	tree1, err := repository.NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
+	tree1, err := NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
 	require.NoError(t, err)
-	tree2, err := repository.NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
+	tree2, err := NewMerklePatriciaTree(RandomDBA(), cryptor, model.Hash(nil), MOCK_ROOT_KEY)
 	require.NoError(t, err)
 	testMerklePatriciaTree(t, tree1, tree2)
 }

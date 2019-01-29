@@ -1,4 +1,4 @@
-package repository
+package datastructure
 
 import (
 	"github.com/proskenion/proskenion/core"
@@ -28,12 +28,12 @@ func newDefaultMarshaler(a []byte, b []byte) *DefaultMarshaler {
 }
 
 func (t *AccumulateHash) Push(hasher model.Hasher) error {
-	rh := t.cryptor.Hash(newDefaultMarshaler(t.Top(), hasher.Hash()))
+	rh := t.cryptor.Hash(newDefaultMarshaler(t.Hash(), hasher.Hash()))
 	t.hashes = append(t.hashes, rh)
 	return nil
 }
 
-func (t *AccumulateHash) Top() model.Hash {
+func (t *AccumulateHash) Hash() model.Hash {
 	if len(t.hashes) == 0 {
 		return nil
 	}

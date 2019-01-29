@@ -11,39 +11,39 @@ import (
 	"testing"
 )
 
-func test_TxHistory_Upserts(t *testing.T, txHistory core.TxHistory, tx model.Transaction) {
-	hash := MustHash(tx)
-	_, err := txHistory.Query(hash)
+func test_TxHistory_Upserts(t *testing.T, txHistory core.TxHistory, txList core.TxList) {
+	hash := txList.Hash()
+	_, err := txHistory.GetTxList(hash)
 	require.EqualError(t, errors.Cause(err), core.ErrTxHistoryNotFound.Error())
-	err = txHistory.Append(tx)
+	err = txHistory.Append(txList)
 	require.NoError(t, err)
 
-	retTx, err := txHistory.Query(hash)
+	retTxList, err := txHistory.GetTxList(hash)
 	require.NoError(t, err)
-	assert.Equal(t, MustHash(tx), MustHash(retTx))
+	assert.Equal(t, txList.Hash(), retTxList.Hash())
 }
 
 func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
-	txs := []model.Transaction{
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
+	txs := []core.TxList{
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
 	}
-	txs2 := []model.Transaction{
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
+	txs2 := []core.TxList{
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
 	}
-	txs3 := []model.Transaction{
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
-		RandomTx(),
+	txs3 := []core.TxList{
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
+		RandomTxList(),
 	}
 
 	for _, tx := range txs {
@@ -81,11 +81,11 @@ func test_TxHistory(t *testing.T, dba core.DBA, TxHistory core.TxHistory) {
 
 	for _, tx := range txs2 {
 		// History2 では tx2 が保存されていないことになっている
-		_, err := txFirstHistory2.Query(MustHash(tx))
+		_, err := txFirstHistory2.GetTxList(tx.Hash())
 		assert.EqualError(t, errors.Cause(err), core.ErrTxHistoryNotFound.Error())
 
-		retTx, err := txFirstHistory.Query(MustHash(tx))
-		assert.Equal(t, MustHash(tx), MustHash(retTx))
+		retTx, err := txFirstHistory.GetTxList(tx.Hash())
+		assert.Equal(t, tx.Hash(), retTx.Hash())
 	}
 }
 

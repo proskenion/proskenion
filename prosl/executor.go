@@ -42,6 +42,7 @@ const (
 type ProslConstState struct {
 	Variables map[string]model.Object
 	Fc        model.ModelFactory
+	Wsv       model.ObjectFinder
 	Qc        core.Querycutor
 }
 
@@ -53,13 +54,12 @@ type ProslStateValue struct {
 	Err          error
 }
 
-func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config.Config) *ProslStateValue {
+func InitProslStateValue(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, conf *config.Config) *ProslStateValue {
 	qc := struct {
 		core.QueryProcessor
 		core.QueryValidator
 		core.QueryVerifier
-	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
-	top, _ := rp.Top()
+	}{query.NewQueryProcessor(fc, conf), query.NewQueryValidator(fc, conf), query.NewQueryVerifier()}
 	variables := make(map[string]model.Object)
 	if top != nil {
 		variables["top"] = fc.NewObjectBuilder().Block(top)
@@ -67,6 +67,7 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 	return &ProslStateValue{
 		ProslConstState: &ProslConstState{
 			Fc:        fc,
+			Wsv:       wsv,
 			Qc:        qc,
 			Variables: variables,
 		},
@@ -77,13 +78,12 @@ func InitProslStateValue(fc model.ModelFactory, rp core.Repository, conf *config
 	}
 }
 
-func InitProslStateValueWithPrams(fc model.ModelFactory, rp core.Repository, conf *config.Config, params map[string]model.Object) *ProslStateValue {
+func InitProslStateValueWithPrams(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, conf *config.Config, params map[string]model.Object) *ProslStateValue {
 	qc := struct {
 		core.QueryProcessor
 		core.QueryValidator
 		core.QueryVerifier
-	}{query.NewQueryProcessor(rp, fc, conf), query.NewQueryValidator(rp, fc, conf), query.NewQueryVerifier()}
-	top, _ := rp.Top()
+	}{query.NewQueryProcessor(fc, conf), query.NewQueryValidator(fc, conf), query.NewQueryVerifier()}
 	variables := make(map[string]model.Object)
 	// params setting
 	for key, value := range params {
@@ -95,6 +95,7 @@ func InitProslStateValueWithPrams(fc model.ModelFactory, rp core.Repository, con
 	return &ProslStateValue{
 		ProslConstState: &ProslConstState{
 			Fc:        fc,
+			Wsv:       wsv,
 			Qc:        qc,
 			Variables: variables,
 		},
@@ -433,7 +434,7 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 			return ReturnErrorProslStateValue(state, proskenion.ErrCode_QueryValidate, err.Error())
 		}
 	*/
-	ret, err := state.Qc.Query(query)
+	ret, err := state.Qc.Query(state.Wsv, query)
 	if err != nil {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_Internal, err.Error())
 	}

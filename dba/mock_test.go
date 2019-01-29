@@ -14,3 +14,8 @@ func TestDBAOnMemoryTx_StoreAndLoad(t *testing.T) {
 	db := NewDBOnMemory()
 	testDBATx_Store_Load(t, db.DBA("test"))
 }
+
+func TestDBAOnMemory_Parallel(t *testing.T) {
+	db := NewDBOnMemory()
+	testDBA_Parallel(t, db.DBA("test"))
+}

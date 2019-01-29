@@ -88,6 +88,7 @@ type CommandExecutor interface {
 	SetField(factory ModelFactory, prosl Prosl)
 	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
+	SetQuorum(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
 	AddPublicKeys(ObjectFinder, Command) error
 	DefineStorage(ObjectFinder, Command) error
@@ -104,6 +105,7 @@ type CommandValidator interface {
 	SetField(factory ModelFactory, prosl Prosl)
 	TransferBalance(ObjectFinder, Command) error
 	CreateAccount(ObjectFinder, Command) error
+	SetQuorum(ObjectFinder, Command) error
 	AddBalance(ObjectFinder, Command) error
 	AddPublicKeys(ObjectFinder, Command) error
 	DefineStorage(ObjectFinder, Command) error

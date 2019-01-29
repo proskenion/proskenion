@@ -8,6 +8,7 @@ import (
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sync"
 	"testing"
 )
 
@@ -116,14 +117,13 @@ func testDBATx_Store_Load(t *testing.T, dba core.DBA) {
 			btx, err := dba.Begin()
 			require.NoError(t, err)
 
-			defer btx.Rollback()
-
 			err = btx.Store(c.key, c.expValue)
 			require.NoError(t, err)
 
 			err = btx.Load(c.key, c.actValue)
 			if c.expErr != nil {
 				assert.EqualError(t, errors.Cause(err), c.expErr.Error())
+				require.NoError(t, btx.Rollback())
 				return
 			} else {
 				require.NoError(t, err)
@@ -156,4 +156,90 @@ func testDBATx_Store_Load(t *testing.T, dba core.DBA) {
 			assert.EqualValues(t, c.expValue, c.actValue)
 		})
 	}
+}
+
+func testDBA_Parallel(t *testing.T, dba core.DBA) {
+	wg := &sync.WaitGroup{}
+	type testCase struct {
+		name     string
+		key      model.Hash
+		expValue model.Marshaler
+		actValue model.Unmarshaler
+		expErr   error
+	}
+	for _, c := range []*testCase{
+		{
+			"case 1",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 2",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 3",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 4",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 5",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 6",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"failed unmarshal",
+			RandomByte(),
+			RandomMarshaler(),
+			&ErrUnmarshaler{},
+			core.ErrUnmarshal,
+		},
+	} {
+		wg.Add(1)
+		go func(t *testing.T, c *testCase) {
+			defer wg.Done()
+			t.Run(c.name, func(t *testing.T) {
+				btx, err := dba.Begin()
+				require.NoError(t, err)
+
+				err = btx.Store(c.key, c.expValue)
+				require.NoError(t, err)
+
+				err = btx.Load(c.key, c.actValue)
+				if c.expErr != nil {
+					assert.EqualError(t, errors.Cause(err), c.expErr.Error())
+					require.NoError(t, btx.Rollback())
+					return
+				} else {
+					require.NoError(t, err)
+				}
+				assert.EqualValues(t, c.expValue, c.actValue)
+				require.NoError(t, btx.Commit())
+			})
+		}(t, c)
+	}
+	wg.Wait()
 }

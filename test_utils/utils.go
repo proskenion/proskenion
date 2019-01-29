@@ -2,8 +2,10 @@ package test_utils
 
 import (
 	"bytes"
+	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -67,4 +69,8 @@ func AssertSetEqual(t *testing.T, actI interface{}, expI interface{}) {
 		}
 		assert.Equalf(t, len(act)-i-1, len(exp), "assert hasher.", "%x is not found.", ac.Hash())
 	}
+}
+
+func RandomLogger() log15.Logger {
+	return log15.New(context.TODO())
 }

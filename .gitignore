@@ -104,3 +104,4 @@ bin/
 
 ## database ##
 *.sqlite
+*.sqlite*

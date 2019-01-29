@@ -5,20 +5,20 @@ import (
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/datastructure"
 )
 
 type WSV struct {
-	tx     core.DBATx
-	tree   core.MerklePatriciaTree
-	fc     model.ObjectFactory
-	ps     core.PeerService
-	psHash model.Hash
+	tx   core.DBATx
+	tree core.MerklePatriciaTree
+	fc   model.ObjectFactory
+	ps   core.PeerService
 }
 
-var WSV_ROOT_KEY byte = 0
+var WsvRootKey byte = 0
 
 func NewWSV(tx core.DBATx, cryptor core.Cryptor, fc model.ObjectFactory, rootHash model.Hash) (core.WSV, error) {
-	tree, err := NewMerklePatriciaTree(tx, cryptor, rootHash, WSV_ROOT_KEY)
+	tree, err := datastructure.NewMerklePatriciaTree(tx, cryptor, rootHash, WsvRootKey)
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +26,7 @@ func NewWSV(tx core.DBATx, cryptor core.Cryptor, fc model.ObjectFactory, rootHas
 		tx:   tx,
 		tree: tree,
 		fc:   fc,
+		ps:   NewPeerService(cryptor),
 	}, nil
 }
 
@@ -36,7 +37,7 @@ func (w *WSV) Hash() model.Hash {
 // targetId を MerklePatriciaTree の key バイト列に変換
 func makeWSVId(id model.Address) []byte {
 	ret := make([]byte, 1)
-	ret[0] = WSV_ROOT_KEY
+	ret[0] = WsvRootKey
 	return append(ret, id.GetBytes()...)
 }
 
@@ -76,17 +77,15 @@ func (w *WSV) QueryAll(fromId model.Address, ufc model.UnmarshalerFactory) ([]mo
 }
 
 // PeerService gets value from targetId
-func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
-	peerRoot, err := w.tree.Search(makeWSVId(peerRootId))
+func (w *WSV) PeerService() (core.PeerService, error) {
+	peerRoot, err := w.tree.Search(makeWSVId(model.MustAddress("/" + model.PeerStorageName)))
 	if err != nil {
 		return nil, err
 	}
 	peerRootHash := peerRoot.Hash()
-	if len(w.psHash) != 0 {
-		// キャッシュがあったら再利用
-		if bytes.Equal(w.psHash, peerRootHash) {
-			return w.ps, nil
-		}
+	// キャッシュがあったら再利用
+	if bytes.Equal(w.ps.Hash(), peerRootHash) {
+		return w.ps, nil
 	}
 
 	leafs, err := peerRoot.SubLeafs()
@@ -103,9 +102,8 @@ func (w *WSV) PeerService(peerRootId model.Address) (core.PeerService, error) {
 		}
 		peers = append(peers, peer)
 	}
-	w.ps = NewPeerService(peers)
-	w.psHash = peerRootHash
-	return NewPeerService(peers), nil
+	w.ps.Set(peers)
+	return w.ps, nil //TODO
 }
 
 type KVNode struct {

@@ -51,28 +51,30 @@ func main() {
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifyier)
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
-	queue := repository.NewProposalTxQueueOnMemory(conf)
+	txQueue := repository.NewProposalTxQueueOnMemory(conf)
+	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
+	bq := repository.NewProposalBlockQueueOnMemory(conf)
+	txListCache := repository.NewTxListCache(conf)
 
-	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+	pr := prosl.NewProsl(fc, cryptor, conf)
 
 	// cmd executor and validator set field.
 	cmdExecutor.SetField(fc, pr)
 	cmdValidator.SetField(fc, pr)
 
-	qp := query.NewQueryProcessor(rp, fc, conf)
-	qv := query.NewQueryValidator(rp, fc, conf)
+	qp := query.NewQueryProcessor(fc, conf)
+	qv := query.NewQueryValidator(fc, conf)
 
-	commitChan := make(chan interface{})
-	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
-	cc := consensus.NewMockCustomize(rp, commitChan)
+	commitChan := make(chan struct{})
+	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
 	// WIP : mock
 	gossip := &p2p.MockGossip{}
-	csc := consensus.NewConsensus(cc, cs, gossip, logger)
+	csc := consensus.NewConsensus(rp, cs, bq, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genTxList, err := repository.NewTxListFromConf(cryptor, pr, conf)
+	genTxList, err := repository.GenesisTxListFromConf(cryptor, fc, rp, pr, conf)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +89,6 @@ func main() {
 		panic(err.Error())
 	}
 
-	api := gate.NewAPIGate(queue, qp, qv, logger)
 	s := grpc.NewServer([]grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_validator.UnaryServerInterceptor(),
@@ -95,7 +96,10 @@ func main() {
 			grpc_recovery.UnaryServerInterceptor(),
 		)),
 	}...)
+	api := gate.NewAPIGate(rp, txQueue, qp, qv, logger)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
+	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {

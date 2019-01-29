@@ -2,11 +2,8 @@ package grpc_test
 
 import (
 	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/inconshreveable/log15"
+	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/config"
@@ -45,60 +42,58 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	cmdValidator := command.NewCommandValidator(conf)
 	qVerifier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
+	cf := client.NewClientFactory(fc, cryptor, conf)
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
-	queue := repository.NewProposalTxQueueOnMemory(conf)
+	txQueue := repository.NewProposalTxQueueOnMemory(conf)
+	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
+	txListCache := repository.NewTxListCache(conf)
 
-	pr := prosl.NewProsl(fc, rp, cryptor, conf)
+	pr := prosl.NewProsl(fc, cryptor, conf)
 
 	cmdExecutor.SetField(fc, pr)
 	cmdValidator.SetField(fc, pr)
 
-	qp := query.NewQueryProcessor(rp, fc, conf)
-	qv := query.NewQueryValidator(rp, fc, conf)
+	qp := query.NewQueryProcessor(fc, conf)
+	qv := query.NewQueryValidator(fc, conf)
 
-	commitChan := make(chan interface{})
-	cs := commit.NewCommitSystem(fc, cryptor, queue, commit.DefaultCommitProperty(conf), rp)
-	cc := consensus.NewMockCustomize(rp, commitChan)
+	commitChan := make(chan struct{})
+	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
-	// WIP : mock
-	gossip := &p2p.MockGossip{}
-	css := consensus.NewConsensus(cc, cs, gossip, logger)
+	gossip := p2p.NewGossip(rp, fc, cf, cryptor, conf)
+	css := consensus.NewConsensus(rp, cs, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
-	genTxList, err := repository.NewTxListFromConf(cryptor, pr, conf)
+	genTxList, err := repository.GenesisTxListFromConf(cryptor, fc, rp, pr, conf)
 	if err != nil {
+		logger.Error(err.Error())
 		panic(err)
 	}
 	if err := rp.GenesisCommit(genTxList); err != nil {
+		logger.Error(err.Error())
 		panic(err)
 	}
 
 	// ==================== gate =======================
 	logger.Info("================= Gate Boot =================")
-	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
+	l, err := net.Listen("tcp", fmt.Sprintf(":%s", conf.Peer.Port))
 	require.NoError(t, err)
 
-	api := gate.NewAPIGate(queue, qp, qv, logger)
+	api := gate.NewAPIGate(rp, txQueue, qp, qv, logger)
 	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
+	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {
 		css.Boot()
 	}()
+	go func() {
+		css.Receiver()
+	}()
 
 	if err := s.Serve(l); err != nil {
 		require.NoError(t, err)
 	}
-}
-
-func RandomServer() *grpc.Server {
-	return grpc.NewServer([]grpc.ServerOption{
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_validator.UnaryServerInterceptor(),
-			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
-		)),
-	}...)
 }

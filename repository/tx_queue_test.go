@@ -37,7 +37,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 
 	t.Run("Failed, nil tx push", func(t *testing.T) {
 		err := queue.Push(nil)
-		assert.EqualError(t, errors.Cause(err), model.ErrInvalidTransaction.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueuePushNil.Error())
 	})
 
 	t.Run("Empty pop, return nil", func(t *testing.T) {
@@ -54,9 +54,9 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 			err := queue.Push(tx)
 			require.NoError(t, err)
 		}
-		queue.Erase(MustHash(txs[0]))
-		queue.Erase(MustHash(txs[2]))
-		queue.Erase(MustHash(txs[4]))
+		require.NoError(t, queue.Erase(txs[0].Hash()))
+		require.NoError(t, queue.Erase(txs[2].Hash()))
+		require.NoError(t, queue.Erase(txs[4].Hash()))
 
 		tx1, ok := queue.Pop()
 		assert.True(t, ok)
@@ -71,7 +71,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 	})
 
 	t.Run("Failed, over limits random valid tx push", func(t *testing.T) {
-		limit := RandomConfig().ProposalTxsLimits
+		limit := RandomConfig().Queue.TxsLimits
 		txs := make([]model.Transaction, 0, limit)
 		for i := 0; i < limit; i++ {
 			txs = append(txs, RandomTx())
@@ -79,7 +79,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 		}
 
 		err := queue.Push(RandomTx())
-		assert.EqualError(t, errors.Cause(err), ErrProposalTxQueueLimits.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueLimits.Error())
 
 		for i := 0; i < limit; i++ {
 			front, ok := queue.Pop()
@@ -97,7 +97,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 		require.NoError(t, err)
 
 		err = queue.Push(tx)
-		assert.EqualError(t, errors.Cause(err), ErrProposalTxQueueAlreadyExistTx.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueAlreadyExist.Error())
 
 		exTx, ok := queue.Pop()
 		require.True(t, ok)
@@ -105,7 +105,7 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 	})
 
 	t.Run("Failed, over limits random tx push and erase", func(t *testing.T) {
-		limit := RandomConfig().ProposalTxsLimits
+		limit := RandomConfig().Queue.TxsLimits
 		txs := make([]model.Transaction, 0, limit)
 		txs2 := make([]model.Transaction, 0, limit/2)
 		for i := 0; i < limit; i++ {
@@ -114,11 +114,11 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 		}
 
 		err := queue.Push(RandomTx())
-		assert.EqualError(t, errors.Cause(err), ErrProposalTxQueueLimits.Error())
+		assert.EqualError(t, errors.Cause(err), core.ErrProposalQueueLimits.Error())
 
 		for i := 0; i < limit; i += 2 {
 			txs2 = append(txs2, RandomTx())
-			assert.NoError(t, queue.Erase(MustHash(txs[i])))
+			assert.NoError(t, queue.Erase(txs[i].Hash()))
 			require.NoError(t, queue.Push(txs2[i/2]))
 		}
 
@@ -141,18 +141,18 @@ func testProposalTxQueue(t *testing.T, queue core.ProposalTxQueue) {
 		require.NoError(t, queue.Push(tx))
 
 		tx2 := RandomTx()
-		err := queue.Erase(MustHash(tx2))
-		assert.EqualError(t, ErrProposalTxQueueEraseUnexistTx, errors.Cause(err).Error())
+		err := queue.Erase(tx2.Hash())
+		assert.EqualError(t, core.ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
 
 		require.NoError(t, queue.Push(tx2))
-		require.NoError(t, queue.Erase(MustHash(tx2)))
+		require.NoError(t, queue.Erase(tx2.Hash()))
 
 		exTx, ok := queue.Pop()
 		require.True(t, ok)
 		assert.Equal(t, tx, exTx)
 
-		err = queue.Erase(MustHash(tx))
-		assert.EqualError(t, ErrProposalTxQueueEraseUnexistTx, errors.Cause(err).Error())
+		err = queue.Erase(tx.Hash())
+		assert.EqualError(t, core.ErrProposalQueueEraseUnexist, errors.Cause(err).Error())
 
 		_, ok = queue.Pop()
 		assert.False(t, ok)

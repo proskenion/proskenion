@@ -33,14 +33,14 @@ func NewTestFactories() (model.ModelFactory,
 		query.NewQueryVerifier(),
 	)
 	rp := repository.NewRepository(RandomDBA(), c, fc, cf)
-	pr := prosl.NewProsl(fc, rp, c, cf)
+	pr := prosl.NewProsl(fc, c, cf)
 	ex.SetField(fc, pr)
 	vl.SetField(fc, pr)
-	return fc, ex, vl, c, rp, pr ,cf
+	return fc, ex, vl, c, rp, pr, cf
 }
 
 func RandomFactory() model.ModelFactory {
-	fc, _, _, _, _, _ ,_:= NewTestFactories()
+	fc, _, _, _, _, _, _ := NewTestFactories()
 	return fc
 }
 
@@ -67,6 +67,13 @@ func RandomTx() model.Transaction {
 		CreatedTime(rand.Int63()).
 		CreateAccount(RandomAccountId(), RandomAccountId(), []model.PublicKey{}, 1).
 		Build()
+	return tx
+}
+
+func RandomSignedTx(t *testing.T) model.Transaction {
+	validPub, validPriv := RandomKeyPairs()
+	tx := RandomTx()
+	require.NoError(t, tx.Sign(validPub, validPriv))
 	return tx
 }
 
@@ -113,7 +120,7 @@ func RandomAccount() model.Account {
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
-	return RandomFactory().NewPeer(RandomStr(), RandomStr(), pub)
+	return RandomFactory().NewPeer(RandomAccountId(), RandomStr(), pub)
 }
 
 func RandomBlock() model.Block {
@@ -126,6 +133,37 @@ func RandomBlock() model.Block {
 		CreatedTime(rand.Int63()).
 		TxsHash(RandomByte()).
 		Build()
+}
+
+func RandomSignedBlock(t *testing.T) model.Block {
+	pub, pri := RandomKeyPairs()
+	ret := RandomFactory().NewBlockBuilder().
+		Height(rand.Int63()).
+		Round(0).
+		WSVHash(RandomByte()).
+		TxHistoryHash(RandomByte()).
+		PreBlockHash(RandomByte()).
+		CreatedTime(rand.Int63()).
+		TxsHash(RandomByte()).
+		Build()
+	require.NoError(t, ret.Sign(pub, pri))
+	return ret
+}
+
+func RandomValidSignedBlockAndTxList(t *testing.T) (model.Block, core.TxList) {
+	pub, pri := RandomKeyPairs()
+	txList := RandomTxList()
+	ret := RandomFactory().NewBlockBuilder().
+		Height(rand.Int63()).
+		Round(0).
+		WSVHash(RandomByte()).
+		TxHistoryHash(RandomByte()).
+		PreBlockHash(RandomByte()).
+		CreatedTime(rand.Int63()).
+		TxsHash(txList.Hash()).
+		Build()
+	require.NoError(t, ret.Sign(pub, pri))
+	return ret, txList
 }
 
 func TxSign(t *testing.T, tx model.Transaction, pub []model.PublicKey, pri []model.PrivateKey) model.Transaction {

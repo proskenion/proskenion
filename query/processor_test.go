@@ -13,7 +13,7 @@ import (
 )
 
 func genesisCommit(t *testing.T, rp core.Repository, authorizer *AccountWithPri) {
-	txList := repository.NewTxList(RandomCryptor())
+	txList := repository.NewTxList(RandomCryptor(), RandomFactory())
 	require.NoError(t, txList.Push(
 		RandomFactory().NewTxBuilder().
 			CreateAccount("root@/root", authorizer.AccountId, []model.PublicKey{authorizer.Pubkey}, 1).
@@ -39,20 +39,23 @@ func TestQueryProcessor_Query(t *testing.T) {
 	authorizer := NewAccountWithPri("authorizer@com/account")
 	genesisCommit(t, rp, authorizer)
 
-	qp := NewQueryProcessor(rp, fc, RandomConfig())
+	qp := NewQueryProcessor( fc, RandomConfig())
 
+	wsv, err := rp.TopWSV()
+	require.NoError(t, err)
+	defer wsv.Commit()
 	query := GetAccountQuery(t, authorizer, "target0@com/account")
-	res, err := qp.Query(query)
+	res, err := qp.Query(wsv, query)
 	require.NoError(t, err)
 	ac := res.GetObject().GetAccount()
 	assert.Equal(t, "target0@com", ac.GetAccountId())
 
 	q2 := GetAccountQuery(t, authorizer, "targetx@com/account")
-	_, err = qp.Query(q2)
+	_, err = qp.Query(wsv,q2)
 	assert.EqualError(t, errors.Cause(err), core.ErrQueryProcessorNotFound.Error())
 
 	q3 := GetAccountListQuery(t, authorizer, "com/account", "id", model.ASC, 100)
-	res, err = qp.Query(q3)
+	res, err = qp.Query(wsv,q3)
 	expctedIds := []string{
 		"authorizer@com",
 		"target0@com",
@@ -66,13 +69,13 @@ func TestQueryProcessor_Query(t *testing.T) {
 	}
 
 	q4 := GetAccountListQuery(t, authorizer, "com/account", "id", model.DESC, 100)
-	res, err = qp.Query(q4)
+	res, err = qp.Query(wsv,q4)
 	for i, l := range res.GetObject().GetList() {
 		assert.Equal(t, expctedIds[len(expctedIds)-i-1], l.GetAccount().GetAccountId())
 	}
 
 	q5 := GetAccountListQuery(t, authorizer, "pr/account", "id", model.ASC, 100)
-	res, err = qp.Query(q5)
+	res, err = qp.Query(wsv,q5)
 	expctedIds2 := []string{
 		"targeta@pr",
 		"targetb@pr",

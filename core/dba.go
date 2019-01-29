@@ -2,7 +2,6 @@ package core
 
 import (
 	"github.com/pkg/errors"
-	. "github.com/proskenion/proskenion/core/model"
 )
 
 var (
@@ -11,9 +10,9 @@ var (
 	ErrDBABeginErr       = errors.Errorf("Failed DBA BeignTx Error")
 )
 
-type KeyValueStore interface {
-	Load(key Hash, value Unmarshaler) error // value = Load(key)
-	Store(key Hash, value Marshaler) error  // Duplicate Insert error
+type Txx interface {
+	Commit() error
+	Rollback() error
 }
 
 type DB interface {
@@ -29,4 +28,18 @@ type DBATx interface {
 type DBA interface {
 	Begin() (DBATx, error)
 	KeyValueStore
+}
+
+func RollBackTx(tx Txx, mtErr error) error {
+	if err := tx.Rollback(); err != nil {
+		return errors.Wrap(err, mtErr.Error())
+	}
+	return mtErr
+}
+
+func CommitTx(tx Txx) error {
+	if err := tx.Commit(); err != nil {
+		return RollBackTx(tx, err)
+	}
+	return nil
 }

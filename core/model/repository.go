@@ -10,8 +10,7 @@ type ObjectFinder interface {
 }
 
 type TxFinder interface {
-	// Query gets tx from txHash
-	Query(txHash Hash) (Transaction, error)
-	// Append tx
-	Append(tx Transaction) error
+	// GetTxList gets
+	GetTx(txHash Hash) (Transaction, error)
 }
+

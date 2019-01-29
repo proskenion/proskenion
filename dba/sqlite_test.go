@@ -17,3 +17,9 @@ func TestDBASQLiteTx_StoreAndLoad(t *testing.T) {
 	db := NewDBSQLite(conf)
 	testDBATx_Store_Load(t, db.DBA("test"))
 }
+
+func TestDBASQLite_Parallel(t *testing.T) {
+	conf := RandomConfig()
+	db := NewDBSQLite(conf)
+	testDBA_Parallel(t, db.DBA("test"))
+}

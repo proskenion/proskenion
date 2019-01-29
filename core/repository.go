@@ -5,82 +5,42 @@ import (
 	. "github.com/proskenion/proskenion/core/model"
 )
 
-const (
-	AccountStorageName = "account"
-	PeerStorageName    = "peer"
-)
-
 var (
-	ErrMerklePatriciaTreeNotSearchKey = errors.Errorf("Failed MerklePatriciaTree can not search key")
-	ErrMerklePatriciaTreeNotFoundKey  = errors.Errorf("Failed MerklePatriciaTree Not Found key")
-	ErrInvalidKVNodes                 = errors.Errorf("Failed Key Value Nodes Invalid")
-	ErrWSVNotFound                    = errors.Errorf("Failed WSV Query Not Found")
-	ErrWSVQueryUnmarshal              = errors.Errorf("Failed WSV Query Unmarshal")
-	ErrTxHistoryNotFound              = errors.Errorf("Failed TxHistory Query Not Found")
-	ErrTxHistoryQueryUnmarshal        = errors.Errorf("Failed TxHistory Query Unmarshal")
-	ErrBlockchainNotFound             = errors.Errorf("Failed Blockchain Get Not Found")
-	ErrBlockchainQueryUnmarshal       = errors.Errorf("Failed Blocchain Get Unmarshal")
-)
+	ErrWSVNotFound       = errors.Errorf("Failed WSV Query Not Found")
+	ErrWSVQueryUnmarshal = errors.Errorf("Failed WSV Query Unmarshal")
 
-var (
+	ErrTxHistoryNotFound       = errors.Errorf("Failed TxHistory Query Not Found")
+	ErrTxHistoryQueryUnmarshal = errors.Errorf("Failed TxHistory Query Unmarshal")
+
+	ErrBlockchainNotFound       = errors.Errorf("Failed Blockchain Get Not Found")
+	ErrBlockchainQueryUnmarshal = errors.Errorf("Failed Blocchain Get Unmarshal")
+
+	ErrProposalBlockQueuePush = errors.Errorf("Failed ProposalBlockQueue Push")
+	ErrProposalTxListCacheSet = errors.Errorf("Failed ProposalTXListCache Set")
+
 	ErrRepositoryCommitLoadPreBlock  = errors.Errorf("Failed Repository Commit Load PreBlockchain")
 	ErrRepositoryCommitLoadWSV       = errors.Errorf("Failed Repository Commit Load WSV")
 	ErrRepositoryCommitLoadTxHistory = errors.Errorf("Failed Repository Commit Load TxHistory")
 )
 
-// Transaction 列の管理
-type MerkleTree interface {
-	Push(hash Hasher) error
-	Top() Hash
-}
-
 // TxList Wrap MerkleTree
 type TxList interface {
 	Push(tx Transaction) error
-	Top() Hash
 	List() []Transaction
 	Size() int
+	Modelor
 }
 
-type KVNode interface {
-	// KVNode{key = Key()[cnt:], value=value}
-	Next(cnt int) KVNode
-	Key() []byte
-	Value() Marshaler
+type TxListCache interface {
+	Set(txList TxList) error
+	Get(hash Hash) (TxList, bool)
 }
 
-// Merkle Patricia Tree に対する操作
-type MerklePatriciaController interface {
-	// key と prefix が一致している最も浅い internal iterator を取得
-	Search(key []byte) (MerklePatriciaNodeIterator, error)
-	// key で参照した先の leaf iterator を取得
-	Find(key []byte) (MerklePatriciaNodeIterator, error)
-	// Upsert したあとの Iterator を生成して取得
-	Upsert(KVNode) (MerklePatriciaNodeIterator, error)
-	// hash を Root にする
-	Set(hash Hash) error
-	Get(hash Hash) (MerklePatriciaNodeIterator, error)
-	Hasher
-	Marshaler
-	Unmarshaler
-}
-
-// World State の管理 に使う(SubTree の管理にも使う)
-type MerklePatriciaTree interface {
-	Iterator() MerklePatriciaNodeIterator
-	MerklePatriciaController
-}
-
-// Merkle Patricia Node を管理する Iterator
-type MerklePatriciaNodeIterator interface {
-	MerklePatriciaController
-	Key() []byte
-	Childs() map[byte]Hash
-	DataHash() Hash
-	Leaf() bool
-	Data(unmarshaler Unmarshaler) error
-	Prev() (MerklePatriciaNodeIterator, error)
-	SubLeafs() ([]MerklePatriciaNodeIterator, error)
+type ClientCache interface {
+	SetConsensus(peer Peer, client ConsensusGateClient) error
+	GetConsensus(Peer) (ConsensusGateClient, bool)
+	SetAPI(peer Peer, client APIGateClient) error
+	GetAPI(Peer) (APIGateClient, bool)
 }
 
 // WSV (MerklePatriciaTree で管理)
@@ -91,7 +51,7 @@ type WSV interface {
 	// Query All gets value from fromId
 	QueryAll(fromId Address, value UnmarshalerFactory) ([]Unmarshaler, error)
 	// Get PeerService
-	PeerService(peerRootId Address) (PeerService, error)
+	PeerService() (PeerService, error)
 	// Append [targetId] = value
 	Append(targetId Address, value Marshaler) error
 	// Commit appenging nodes
@@ -103,10 +63,12 @@ type WSV interface {
 // 全Tx履歴 (MerklePatriciaTree で管理)
 type TxHistory interface {
 	Hasher
-	// Query gets tx from txHash
-	Query(txHash Hash) (Transaction, error)
+	// GetTxList gets txList from txHash
+	GetTxList(txListHash Hash) (TxList, error)
+	// GetTxList gets
+	GetTx(txHash Hash) (Transaction, error)
 	// Append tx
-	Append(tx Transaction) error
+	Append(txList TxList) error
 	// Commit appenging nodes
 	Commit() error
 	// RollBack
@@ -128,12 +90,23 @@ type ProposalTxQueue interface {
 	Pop() (Transaction, bool)
 }
 
+type ProposalBlockQueue interface {
+	Push(block Block) error
+	Erase(hash Hash) error
+	Pop() (Block, bool)
+	WaitPush() struct{}
+}
+
 type Repository interface {
 	Begin() (RepositoryTx, error)
 	Top() (Block, bool)
+
+	TopWSV() (WSV, error)
+
+	GetDelegatedAccounts() ([]Account, error)
 	Commit(Block, TxList) error
 	GenesisCommit(TxList) error
-	CreateBlock(queue ProposalTxQueue, now int64) (Block, TxList, error)
+	CreateBlock(queue ProposalTxQueue, round int32, now int64) (Block, TxList, error)
 }
 
 type RepositoryTx interface {
@@ -146,5 +119,7 @@ type RepositoryTx interface {
 
 // Peer 取得機構
 type PeerService interface {
+	Set([]Peer)
 	List() []Peer
+	Hasher
 }

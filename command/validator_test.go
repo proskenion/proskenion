@@ -56,10 +56,10 @@ func TestCommandValidator_Tx(t *testing.T) {
 			core.ErrTxValidateNotSignedAuthorizer,
 		},
 		{
-			"case 2 different key",
+			"case 3 different key",
 			fc.NewTxBuilder().CreateAccount("authorizer@com", "a@b", []model.PublicKey{}, 0).Build(),
 			core.ErrTxValidateNotSignedAuthorizer,
-		},
+		},// TODO "case 4 n-m multi-sig"
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			err := c.tx.Validate(wsv, txh)
