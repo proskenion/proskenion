@@ -77,6 +77,8 @@ type TxHistory interface {
 
 // BlockChain
 type Blockchain interface {
+	// blockHash を指定して次の Block を取得
+	Next(blockHash Hash) (Block, error)
 	// blockHash を指定して Block を取得
 	Get(blockHash Hash) (Block, error)
 	// Commit block
