@@ -190,6 +190,27 @@ func testDBA_Parallel(t *testing.T, dba core.DBA) {
 			nil,
 		},
 		{
+			"case 4",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 5",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
+			"case 6",
+			RandomByte(),
+			RandomMarshaler(),
+			RandomMarshaler(),
+			nil,
+		},
+		{
 			"failed unmarshal",
 			RandomByte(),
 			RandomMarshaler(),
@@ -200,22 +221,24 @@ func testDBA_Parallel(t *testing.T, dba core.DBA) {
 		wg.Add(1)
 		go func(t *testing.T, c *testCase) {
 			defer wg.Done()
-			btx, err := dba.Begin()
-			require.NoError(t, err)
-
-			err = btx.Store(c.key, c.expValue)
-			require.NoError(t, err)
-
-			err = btx.Load(c.key, c.actValue)
-			if c.expErr != nil {
-				assert.EqualError(t, errors.Cause(err), c.expErr.Error())
-				require.NoError(t, btx.Rollback())
-				return
-			} else {
+			t.Run(c.name, func(t *testing.T) {
+				btx, err := dba.Begin()
 				require.NoError(t, err)
-			}
-			assert.EqualValues(t, c.expValue, c.actValue)
-			require.NoError(t, btx.Commit())
+
+				err = btx.Store(c.key, c.expValue)
+				require.NoError(t, err)
+
+				err = btx.Load(c.key, c.actValue)
+				if c.expErr != nil {
+					assert.EqualError(t, errors.Cause(err), c.expErr.Error())
+					require.NoError(t, btx.Rollback())
+					return
+				} else {
+					require.NoError(t, err)
+				}
+				assert.EqualValues(t, c.expValue, c.actValue)
+				require.NoError(t, btx.Commit())
+			})
 		}(t, c)
 	}
 	wg.Wait()
