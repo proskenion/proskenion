@@ -115,6 +115,9 @@ type TxBuilder interface {
 	AddObject(authorizerId string, walletId string, key string, object Object) TxBuilder
 	TransferObject(authorizerId string, walletId string, destAccountId string, key string, object Object) TxBuilder
 	AddPeer(authorizerId string, peerId string, address string, pubkey PublicKey) TxBuilder
+	ActivatePeer(authorizerId string, peerId string) TxBuilder
+	SuspendPeer(authorizerId string, peerId string) TxBuilder
+	BanPeer(authorizerId string, peerId string) TxBuilder
 	Consign(authorizerId string, accountId string, peerId string) TxBuilder
 	CheckAndCommitProsl(authorizerId string, proslId string, params map[string]Object) TxBuilder
 	AppendCommand(cmd Command) TxBuilder

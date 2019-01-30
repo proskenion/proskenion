@@ -292,6 +292,19 @@ func (c *CommandExecutor) AddPeer(wsv model.ObjectFinder, cmd model.Command) err
 	return nil
 }
 
+// TODO implent sync
+func (c *CommandExecutor) ActivatePeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
+func (c *CommandExecutor) SuspendPeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
+func (c *CommandExecutor) BanPeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
 func (c *CommandExecutor) Consign(wsv model.ObjectFinder, cmd model.Command) error {
 	cc := cmd.GetConsign()
 	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).AccountId())

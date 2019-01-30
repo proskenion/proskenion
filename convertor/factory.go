@@ -746,6 +746,42 @@ func (t *TxBuilder) AddPeer(authorizerId string, accountId string, address strin
 	return t
 }
 
+func (t *TxBuilder) ActivatePeer(authorizerId string, peerId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_ActivatePeer{
+				ActivatePeer: &proskenion.ActivatePeer{},
+			},
+			TargetId:     peerId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) SuspendPeer(authorizerId string, peerId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_SuspendPeer{
+				SuspendPeer: &proskenion.SuspendPeer{},
+			},
+			TargetId:     peerId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
+func (t *TxBuilder) BanPeer(authorizerId string, peerId string) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_BanPeer{
+				BanPeer: &proskenion.BanPeer{},
+			},
+			TargetId:     peerId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) Consign(authorizerId string, accountId string, peerId string) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands,
 		&proskenion.Command{

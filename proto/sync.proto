@@ -4,13 +4,39 @@ package proskenion;
 import "objects.proto";
 
 // Error は GRPC Error Code で返す
+/**
+ * SynRequest は取得したい BlockChain の先頭のブロックハッシュを渡す。
+ * 終了は io.EOF を用いる。
+ **/
 message SyncRequest {
    bytes blockHash = 1;
 }
 
 /**
+ * SyncResponse は Block と Transaction の列を返す。
+ * データベースのロック解除のために空を返す。
+ * 空を返されたら Request で再び続きから取得する。
+ **/
+message SyncResponse {
+    oneof res {
+        Block block = 1;
+        Transaction transaction = 2;
+    }
+}
+
+/**
  * SyncGate は 同期を行うための通信
+ *
+ * InvalidArgument (code = 3) : One of following conditions:
+ *   1 ) Block hash is nil.
+ *   2 ) Block Verify failed.
+ *   3 ) Transaction is nil.
+ *   4 ) Transaction Verify failed.
+ * DeadlineExceeded (Code = 4) One fo following conditoins:
+ *   1 ) Timeout stream response.
+ * AlreadyExist (code = 6) : One of following conditions:
+ *   1 ) Block is already exist is blockchain.
  **/
 service SyncGate {
-    rpc Sync (SyncRequest) returns (stream Block);
+    rpc Sync (stream SyncRequest) returns (stream SyncResponse);
 }
