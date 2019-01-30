@@ -293,15 +293,42 @@ func (c *CommandExecutor) AddPeer(wsv model.ObjectFinder, cmd model.Command) err
 }
 
 // TODO implent sync
-func (c *CommandExecutor) ActivatePeer(model.ObjectFinder, model.Command) error {
+func (c *CommandExecutor) ActivatePeer(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).PeerId())
+	peer := c.factory.NewEmptyPeer()
+	if err := wsv.Query(id, peer); err != nil {
+		return err
+	}
+	peer.Activate()
+	if err := wsv.Append(id, peer); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (c *CommandExecutor) SuspendPeer(model.ObjectFinder, model.Command) error {
+func (c *CommandExecutor) SuspendPeer(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).PeerId())
+	peer := c.factory.NewEmptyPeer()
+	if err := wsv.Query(id, peer); err != nil {
+		return err
+	}
+	peer.Suspend()
+	if err := wsv.Append(id, peer); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (c *CommandExecutor) BanPeer(model.ObjectFinder, model.Command) error {
+func (c *CommandExecutor) BanPeer(wsv model.ObjectFinder, cmd model.Command) error {
+	id := model.MustAddress(model.MustAddress(cmd.GetTargetId()).PeerId())
+	peer := c.factory.NewEmptyPeer()
+	if err := wsv.Query(id, peer); err != nil {
+		return err
+	}
+	peer.Ban()
+	if err := wsv.Append(id, peer); err != nil {
+		return err
+	}
 	return nil
 }
 

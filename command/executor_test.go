@@ -857,6 +857,144 @@ func TestCommandExecutor_AddPeer(t *testing.T) {
 	require.NoError(t, dtx.Commit())
 }
 
+func TestCommandExecutor_ActivatePeer(t *testing.T) {
+	fc, _, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		peerId       string
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"peer1@com",
+			nil,
+		},
+		{
+			"case 2 : no error",
+			authorizerId,
+			"peer2@com",
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			err := fc.NewTxBuilder().
+				ActivatePeer(authorizerId, c.peerId).
+				Build().GetPayload().GetCommands()[0].Execute(wsv)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				require.NoError(t, err)
+
+				p := fc.NewEmptyPeer()
+				err := wsv.Query(model.MustAddress(model.MustAddress(c.peerId).PeerId()), p)
+				require.NoError(t, err)
+				assert.Equal(t, c.peerId, p.GetPeerId())
+				assert.Equal(t, true, p.GetActive())
+				assert.Equal(t, false, p.GetBan())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
+func TestCommandExecutor_SuspendPeer(t *testing.T) {
+	fc, _, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		peerId       string
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"peer1@com",
+			nil,
+		},
+		{
+			"case 2 : no error",
+			authorizerId,
+			"peer2@com",
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			err := fc.NewTxBuilder().
+				SuspendPeer(authorizerId, c.peerId).
+				Build().GetPayload().GetCommands()[0].Execute(wsv)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				require.NoError(t, err)
+
+				p := fc.NewEmptyPeer()
+				err := wsv.Query(model.MustAddress(model.MustAddress(c.peerId).PeerId()), p)
+				require.NoError(t, err)
+				assert.Equal(t, c.peerId, p.GetPeerId())
+				assert.Equal(t, false, p.GetActive())
+				assert.Equal(t, false, p.GetBan())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
+func TestCommandExecutor_BanPeer(t *testing.T) {
+	fc, _, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		peerId       string
+		err          error
+	}{
+		{
+			"case 1 : no error",
+			authorizerId,
+			"peer1@com",
+			nil,
+		},
+		{
+			"case 2 : no error",
+			authorizerId,
+			"peer2@com",
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			err := fc.NewTxBuilder().
+				BanPeer(authorizerId, c.peerId).
+				Build().GetPayload().GetCommands()[0].Execute(wsv)
+			if c.err != nil {
+				assert.EqualError(t, errors.Cause(err), c.err.Error())
+			} else {
+				require.NoError(t, err)
+
+				p := fc.NewEmptyPeer()
+				err := wsv.Query(model.MustAddress(model.MustAddress(c.peerId).PeerId()), p)
+				require.NoError(t, err)
+				assert.Equal(t, c.peerId, p.GetPeerId())
+				assert.Equal(t, false, p.GetActive())
+				assert.Equal(t, true, p.GetBan())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
 func TestCommandExecutor_Consign(t *testing.T) {
 	fc, ex, rp := prePareCommandExecutor(t)
 	prePareCreateAccounts(t, fc, rp)

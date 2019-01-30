@@ -1,10 +1,10 @@
 package convertor
 
 import (
-	"github.com/satellitex/protobuf/proto"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"github.com/satellitex/protobuf/proto"
 )
 
 type Account struct {
@@ -17,6 +17,16 @@ func (a *Account) GetPublicKeys() []model.PublicKey {
 		return nil
 	}
 	return model.PublicKeysFromBytesSlice(a.Account.GetPublicKeys())
+}
+
+func BoolObject(b bool, cryptor core.Cryptor) model.Object {
+	return &Object{
+		cryptor, nil, nil,
+		&proskenion.Object{
+			Type:   proskenion.ObjectCode_BoolObjectCode,
+			Object: &proskenion.Object_Boolean{b},
+		},
+	}
 }
 
 func StrObject(str string, cryptor core.Cryptor) model.Object {
@@ -168,8 +178,24 @@ func (a *Peer) GetFromKey(key string) model.Object {
 		return StrObject(a.GetAddress(), a.cryptor)
 	case "key", "public_key":
 		return BytesObject(a.GetPublicKey(), a.cryptor)
+	case "active":
+		return BoolObject(a.GetActive(), a.cryptor)
+	case "ban":
+		return BoolObject(a.GetBan(), a.cryptor)
 	}
 	return nil
+}
+
+func (a *Peer) Activate() {
+	a.Peer.Active = true
+}
+
+func (a *Peer) Suspend() {
+	a.Peer.Active = false
+}
+
+func (a *Peer) Ban() {
+	a.Peer.Ban = true
 }
 
 func (a *Peer) Marshal() ([]byte, error) {

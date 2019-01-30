@@ -390,6 +390,8 @@ func TestNewPeer(t *testing.T) {
 			peer := RandomFactory().NewPeer(c.id, c.address, c.pubkey)
 			assert.Equal(t, c.address, peer.GetAddress())
 			assert.Equal(t, c.pubkey, peer.GetPublicKey())
+			assert.Equal(t, false, peer.GetActive())
+			assert.Equal(t, false, peer.GetBan())
 		})
 	}
 }

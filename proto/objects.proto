@@ -45,6 +45,8 @@ message Peer {
     string peerId = 1;
     string address = 2;
     bytes publicKey = 3;
+    bool active = 4;
+    bool ban = 5;
 }
 
 message ObjectList {
