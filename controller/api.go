@@ -12,32 +12,32 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// APIGateServer is the server API for APIGate service.
-type APIGateServer struct {
+// APIServer is the server API for API service.
+type APIServer struct {
 	fc     model.ModelFactory
-	api    core.APIGate
+	api    core.API
 	logger log15.Logger
 }
 
-func NewAPIGateServer(fc model.ModelFactory, api core.APIGate, logger log15.Logger) proskenion.APIGateServer {
-	return &APIGateServer{
+func NewAPIServer(fc model.ModelFactory, api core.API, logger log15.Logger) proskenion.APIServer {
+	return &APIServer{
 		fc,
 		api,
 		logger,
 	}
 }
 
-func (s *APIGateServer) Write(ctx context.Context, tx *proskenion.Transaction) (*proskenion.TxResponse, error) {
+func (s *APIServer) Write(ctx context.Context, tx *proskenion.Transaction) (*proskenion.TxResponse, error) {
 	modelTx := s.fc.NewEmptyTx()
 	modelTx.(*convertor.Transaction).Transaction = tx
 
 	err := s.api.Write(modelTx)
 	if err != nil {
 		s.logger.Error(err.Error())
-		if errors.Cause(err) == core.ErrAPIGateWriteVerifyError {
+		if errors.Cause(err) == core.ErrAPIWriteVerifyError {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
-		if errors.Cause(err) == core.ErrAPIGateWriteTxAlreadyExist {
+		if errors.Cause(err) == core.ErrAPIWriteTxAlreadyExist {
 			return nil, status.Error(codes.AlreadyExists, err.Error())
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -45,18 +45,18 @@ func (s *APIGateServer) Write(ctx context.Context, tx *proskenion.Transaction) (
 	return &proskenion.TxResponse{}, nil
 }
 
-func (s *APIGateServer) Read(ctx context.Context, query *proskenion.Query) (*proskenion.QueryResponse, error) {
+func (s *APIServer) Read(ctx context.Context, query *proskenion.Query) (*proskenion.QueryResponse, error) {
 	modelQuery := s.fc.NewEmptyQuery()
 	modelQuery.(*convertor.Query).Query = query
 
 	res, err := s.api.Read(modelQuery)
 	if err != nil {
 		s.logger.Error(err.Error())
-		if errors.Cause(err) == core.ErrAPIGateQueryVerifyError ||
-			errors.Cause(err) == core.ErrAPIGateQueryValidateError {
+		if errors.Cause(err) == core.ErrAPIQueryVerifyError ||
+			errors.Cause(err) == core.ErrAPIQueryValidateError {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
-		if errors.Cause(err) == core.ErrAPIGateQueryNotFound {
+		if errors.Cause(err) == core.ErrAPIQueryNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		return nil, status.Error(codes.Internal, err.Error())

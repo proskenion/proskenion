@@ -32,11 +32,11 @@ func conId(p model.Peer) string {
 	return p.GetPeerId() + "#c"
 }
 
-func (c *ClientCache) SetConsensus(peer model.Peer, client core.ConsensusGateClient) error {
+func (c *ClientCache) SetConsensus(peer model.Peer, client core.ConsensusClient) error {
 	return c.CacheMap.Set(&ClientHashWraper{conId(peer), client})
 }
 
-func (c *ClientCache) GetConsensus(p model.Peer) (core.ConsensusGateClient, bool) {
+func (c *ClientCache) GetConsensus(p model.Peer) (core.ConsensusClient, bool) {
 	ret, ok := c.Get(model.Hash(conId(p)))
 	if !ok {
 		return nil, false
@@ -45,18 +45,18 @@ func (c *ClientCache) GetConsensus(p model.Peer) (core.ConsensusGateClient, bool
 	if !ok {
 		return nil, false
 	}
-	client, ok := cw.e.(core.ConsensusGateClient)
+	client, ok := cw.e.(core.ConsensusClient)
 	if !ok {
 		return nil, false
 	}
 	return client, true
 }
 
-func (c *ClientCache) SetAPI(peer model.Peer, client core.APIGateClient) error {
+func (c *ClientCache) SetAPI(peer model.Peer, client core.APIClient) error {
 	return c.CacheMap.Set(&ClientHashWraper{apiId(peer), client})
 }
 
-func (c *ClientCache) GetAPI(p model.Peer) (core.APIGateClient, bool) {
+func (c *ClientCache) GetAPI(p model.Peer) (core.APIClient, bool) {
 	ret, ok := c.Get(model.Hash(apiId(p)))
 	if !ok {
 		return nil, false
@@ -65,7 +65,7 @@ func (c *ClientCache) GetAPI(p model.Peer) (core.APIGateClient, bool) {
 	if !ok {
 		return nil, false
 	}
-	client, ok := cw.e.(core.APIGateClient)
+	client, ok := cw.e.(core.APIClient)
 	if !ok {
 		return nil, false
 	}

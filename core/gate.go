@@ -7,15 +7,15 @@ import (
 
 // API
 var (
-	ErrAPIGateWriteVerifyError    = fmt.Errorf("Failed APIGate Write Stateless Verify Error")
-	ErrAPIGateWriteTxAlreadyExist = fmt.Errorf("Failed APIGate Write Transaction is already exists")
+	ErrAPIWriteVerifyError    = fmt.Errorf("Failed API Write Stateless Verify Error")
+	ErrAPIWriteTxAlreadyExist = fmt.Errorf("Failed API Write Transaction is already exists")
 
-	ErrAPIGateQueryVerifyError   = fmt.Errorf("Failed APIGate Read query Verify Error")
-	ErrAPIGateQueryValidateError = fmt.Errorf("Failed APIGate Read query Validate Error")
-	ErrAPIGateQueryNotFound      = fmt.Errorf("Failed APIGate Read query not found")
+	ErrAPIQueryVerifyError   = fmt.Errorf("Failed API Read query Verify Error")
+	ErrAPIQueryValidateError = fmt.Errorf("Failed API Read query Validate Error")
+	ErrAPIQueryNotFound      = fmt.Errorf("Failed API Read query not found")
 )
 
-type APIGate interface {
+type API interface {
 	Write(tx Transaction) error
 	Read(query Query) (QueryResponse, error)
 }
@@ -37,5 +37,5 @@ type ConsensusGate interface {
 }
 
 type SyncGate interface {
-	Sync(blockHash Hash, blockChan chan Block) error
+	Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error
 }

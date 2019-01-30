@@ -9,32 +9,32 @@ import (
 	"google.golang.org/grpc"
 )
 
-type ConsensusGateClient struct {
-	proskenion.ConsensusGateClient
+type ConsensusClient struct {
+	proskenion.ConsensusClient
 	fc model.ModelFactory
 	c  core.Cryptor
 }
 
-func NewConsensusGateClient(peer model.Peer, fc model.ModelFactory, c core.Cryptor) (core.ConsensusGateClient, error) {
+func NewConsensusClient(peer model.Peer, fc model.ModelFactory, c core.Cryptor) (core.ConsensusClient, error) {
 	gc, err := grpc.Dial(peer.GetAddress(), grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-	return &ConsensusGateClient{
-		proskenion.NewConsensusGateClient(gc),
+	return &ConsensusClient{
+		proskenion.NewConsensusClient(gc),
 		fc,
 		c,
 	}, nil
 }
 
-func (c *ConsensusGateClient) PropagateTx(in model.Transaction) error {
+func (c *ConsensusClient) PropagateTx(in model.Transaction) error {
 	tx := in.(*convertor.Transaction).Transaction
-	_, err := c.ConsensusGateClient.PropagateTx(context.TODO(), tx)
+	_, err := c.ConsensusClient.PropagateTx(context.TODO(), tx)
 	return err
 }
 
-func (c *ConsensusGateClient) PropagateBlockStreamTx(block model.Block, txList core.TxList) error {
-	stream, err := c.ConsensusGateClient.PropagateBlock(context.TODO())
+func (c *ConsensusClient) PropagateBlockStreamTx(block model.Block, txList core.TxList) error {
+	stream, err := c.ConsensusClient.PropagateBlock(context.TODO())
 	if err != nil {
 		return err
 	}

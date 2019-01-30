@@ -80,10 +80,10 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", conf.Peer.Port))
 	require.NoError(t, err)
 
-	api := gate.NewAPIGate(rp, txQueue, qp, qv, logger)
-	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
-	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
+	api := gate.NewAPI(rp, txQueue, qp, qv, logger)
+	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue,  conf)
+	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {

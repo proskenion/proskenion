@@ -13,6 +13,7 @@ type Config struct {
 	Cache  CacheConfig  `yaml:"cache"`
 	Commit CommitConfig `yaml:"commit"`
 	Peer   PeerConfig   `yaml:"peer"`
+	Sync   SyncConfig   `yaml:"sync"`
 	Prosl  ProslConfig  `yaml:"prosl"`
 	Root   RootConfig   `yaml:"root"`
 }
@@ -44,6 +45,11 @@ type PeerConfig struct {
 	PrivateKey string `yaml:"private_key"`
 	Host       string `yaml:"host"`
 	Port       string `yaml:"port"`
+}
+
+type SyncConfig struct {
+	To     string `yaml:"to"`
+	Limits int    `yaml:"limits"`
 }
 
 type ProslConfig struct {

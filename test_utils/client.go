@@ -6,24 +6,24 @@ import (
 )
 
 type MockClientFactory struct {
-	cacheAPI map[string]APIGateClient
-	cacheCon map[string]ConsensusGateClient
+	cacheAPI map[string]APIClient
+	cacheCon map[string]ConsensusClient
 }
 
 func NewMockClientFactory() ClientFactory {
 	return &MockClientFactory{
-		make(map[string]APIGateClient),
-		make(map[string]ConsensusGateClient)}
+		make(map[string]APIClient),
+		make(map[string]ConsensusClient)}
 }
 
-func (f *MockClientFactory) APIClient(peer Peer) (APIGateClient, error) {
+func (f *MockClientFactory) APIClient(peer Peer) (APIClient, error) {
 	if _, ok := f.cacheAPI[peer.GetPeerId()]; !ok {
 		f.cacheAPI[peer.GetPeerId()] = &MockAPIClient{Id: peer.GetPeerId()}
 	}
 	return f.cacheAPI[peer.GetPeerId()], nil
 }
 
-func (f *MockClientFactory) ConsensusClient(peer Peer) (ConsensusGateClient, error) {
+func (f *MockClientFactory) ConsensusClient(peer Peer) (ConsensusClient, error) {
 	if _, ok := f.cacheCon[peer.GetPeerId()]; !ok {
 		f.cacheCon[peer.GetPeerId()] = &MockConsensusClient{Id: peer.GetPeerId()}
 	}

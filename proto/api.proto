@@ -10,7 +10,7 @@ message TxResponse {}
 /**
  * TxGate は Client から Transaction を受け取る
  **/
-service APIGate {
+service API {
     /**
      * Write は Transaction を受け付ける。
      *

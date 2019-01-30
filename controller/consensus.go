@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ConsensusGateServer is the server Consensus for ConsensusGate service.
-type ConsensusGateServer struct {
+// ConsensusServer is the server Consensus for ConsensusGate service.
+type ConsensusServer struct {
 	fc     model.ModelFactory
 	cg     core.ConsensusGate
 	c      core.Cryptor
@@ -24,8 +24,8 @@ type ConsensusGateServer struct {
 	conf *config.Config
 }
 
-func NewConsensusGateServer(fc model.ModelFactory, cg core.ConsensusGate, c core.Cryptor, logger log15.Logger, conf *config.Config) proskenion.ConsensusGateServer {
-	return &ConsensusGateServer{
+func NewConsensusServer(fc model.ModelFactory, cg core.ConsensusGate, c core.Cryptor, logger log15.Logger, conf *config.Config) proskenion.ConsensusServer {
+	return &ConsensusServer{
 		fc,
 		cg,
 		c,
@@ -34,7 +34,7 @@ func NewConsensusGateServer(fc model.ModelFactory, cg core.ConsensusGate, c core
 	}
 }
 
-func (s *ConsensusGateServer) PropagateTx(ctx context.Context, tx *proskenion.Transaction) (*proskenion.ConsensusResponse, error) {
+func (s *ConsensusServer) PropagateTx(ctx context.Context, tx *proskenion.Transaction) (*proskenion.ConsensusResponse, error) {
 	modelTx := s.fc.NewEmptyTx()
 	modelTx.(*convertor.Transaction).Transaction = tx
 
@@ -48,12 +48,12 @@ func (s *ConsensusGateServer) PropagateTx(ctx context.Context, tx *proskenion.Tr
 	return &proskenion.ConsensusResponse{}, nil
 }
 
-func (s *ConsensusGateServer) internalError(err error) error {
+func (s *ConsensusServer) internalError(err error) error {
 	s.logger.Error(err.Error())
 	return status.Error(codes.Internal, err.Error())
 }
 
-func (s *ConsensusGateServer) PropagateBlock(stream proskenion.ConsensusGate_PropagateBlockServer) error {
+func (s *ConsensusServer) PropagateBlock(stream proskenion.Consensus_PropagateBlockServer) error {
 	req, err := stream.Recv()
 	if err != nil {
 		s.logger.Error(err.Error())

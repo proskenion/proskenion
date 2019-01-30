@@ -17,34 +17,34 @@ import (
 	"testing"
 )
 
-func newRandomConsensusGateServer() proskenion.ConsensusGateServer {
+func newRandomConsensusServer() proskenion.ConsensusServer {
 	fc, _, _, c, _, _, conf := NewTestFactories()
 	cg := gate.NewConsensusGate(fc, c,
 		repository.NewProposalTxQueueOnMemory(conf), repository.NewTxListCache(conf),
-		repository.NewProposalBlockQueueOnMemory(conf), RandomLogger(), conf)
-	return NewConsensusGateServer(fc, cg, c, RandomLogger(), RandomConfig())
+		repository.NewProposalBlockQueueOnMemory(conf), conf)
+	return NewConsensusServer(fc, cg, c, RandomLogger(), RandomConfig())
 }
 
-type MockConsensusGate_PropagateBlockServer struct {
+type MockConsensus_PropagateBlockServer struct {
 	Req chan *proskenion.PropagateBlockRequest
 	Res chan *proskenion.PropagateBlockResponse
 	Err chan error
 	grpc.ServerStream
 }
 
-func newMockPropagateBlockServerStream() *MockConsensusGate_PropagateBlockServer {
-	return &MockConsensusGate_PropagateBlockServer{make(chan *proskenion.PropagateBlockRequest),
+func newMockPropagateBlockServerStream() *MockConsensus_PropagateBlockServer {
+	return &MockConsensus_PropagateBlockServer{make(chan *proskenion.PropagateBlockRequest),
 		make(chan *proskenion.PropagateBlockResponse),
 		make(chan error),
 		RandomMockServerStream()}
 }
 
-func (s *MockConsensusGate_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
+func (s *MockConsensus_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
 	s.Res <- res
 	return nil
 }
 
-func (s *MockConsensusGate_PropagateBlockServer) Recv() (*proskenion.PropagateBlockRequest, error) {
+func (s *MockConsensus_PropagateBlockServer) Recv() (*proskenion.PropagateBlockRequest, error) {
 	select {
 	case req := <-s.Req:
 		return req, nil
@@ -65,8 +65,8 @@ func createRequestTx(tx model.Transaction) *proskenion.PropagateBlockRequest {
 	}
 }
 
-func TestConsensusGateServer_PropagateBlock(t *testing.T) {
-	ctrl := newRandomConsensusGateServer()
+func TestConsensusServer_PropagateBlock(t *testing.T) {
+	ctrl := newRandomConsensusServer()
 
 	t.Run("case 1 : correct", func(t *testing.T) {
 		stream := newMockPropagateBlockServerStream()

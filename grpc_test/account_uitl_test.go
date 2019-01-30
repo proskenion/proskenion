@@ -11,14 +11,14 @@ import (
 )
 
 type AccountManager struct {
-	client     core.APIGateClient
+	client     core.APIClient
 	authorizer *AccountWithPri
 	fc         model.ModelFactory
 }
 
 func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
 	fc := RandomFactory()
-	c, err := client.NewAPIGateClient(server, fc)
+	c, err := client.NewAPIClient(server, fc)
 	require.NoError(t, err)
 	return &AccountManager{
 		c,

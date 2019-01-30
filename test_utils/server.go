@@ -48,8 +48,8 @@ func RandomSetUpConsensusServer(t *testing.T, conf *config.Config, s *grpc.Serve
 	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
 	require.NoError(t, err)
 
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
-	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue,  conf)
+	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
 	if err := s.Serve(l); err != nil {
 		require.NoError(t, err)

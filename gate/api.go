@@ -8,7 +8,7 @@ import (
 	"github.com/proskenion/proskenion/repository"
 )
 
-type APIGate struct {
+type API struct {
 	rp     core.Repository
 	queue  core.ProposalTxQueue
 	logger log15.Logger
@@ -16,26 +16,26 @@ type APIGate struct {
 	qv     core.QueryValidator
 }
 
-func NewAPIGate(rp core.Repository, queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.APIGate {
-	return &APIGate{rp, queue, logger, qp, qv}
+func NewAPI(rp core.Repository, queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.API {
+	return &API{rp, queue, logger, qp, qv}
 }
 
-func (a *APIGate) Write(tx model.Transaction) error {
+func (a *API) Write(tx model.Transaction) error {
 	if err := tx.Verify(); err != nil {
-		return errors.Wrap(core.ErrAPIGateWriteVerifyError, err.Error())
+		return errors.Wrap(core.ErrAPIWriteVerifyError, err.Error())
 	}
 	if err := a.queue.Push(tx); err != nil {
 		if errors.Cause(err) == core.ErrProposalQueueAlreadyExist {
-			return errors.Wrap(core.ErrAPIGateWriteTxAlreadyExist, err.Error())
+			return errors.Wrap(core.ErrAPIWriteTxAlreadyExist, err.Error())
 		}
 		return errors.Wrapf(repository.ErrProposalTxQueuePush, err.Error())
 	}
 	return nil
 }
 
-func (a *APIGate) Read(query model.Query) (model.QueryResponse, error) {
+func (a *API) Read(query model.Query) (model.QueryResponse, error) {
 	if err := query.Verify(); err != nil {
-		return nil, errors.Wrap(core.ErrAPIGateQueryVerifyError, err.Error())
+		return nil, errors.Wrap(core.ErrAPIQueryVerifyError, err.Error())
 	}
 	wsv, err := a.rp.TopWSV()
 	if err != nil {
@@ -43,12 +43,12 @@ func (a *APIGate) Read(query model.Query) (model.QueryResponse, error) {
 	}
 	defer wsv.Commit()
 	if err := a.qv.Validate(wsv, query); err != nil {
-		return nil, errors.Wrap(core.ErrAPIGateQueryValidateError, err.Error())
+		return nil, errors.Wrap(core.ErrAPIQueryValidateError, err.Error())
 	}
 	res, err := a.qp.Query(wsv, query)
 	if err != nil {
 		if errors.Cause(err) == core.ErrQueryProcessorNotFound {
-			return nil, errors.Wrap(core.ErrAPIGateQueryNotFound, err.Error())
+			return nil, errors.Wrap(core.ErrAPIQueryNotFound, err.Error())
 		}
 		return nil, err
 	}

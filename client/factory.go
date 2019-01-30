@@ -17,12 +17,12 @@ func NewClientFactory(fc model.ModelFactory, c core.Cryptor, conf *config.Config
 	return &ClientFactory{fc, c, repository.NewClientCache(conf)}
 }
 
-func (fc *ClientFactory) APIClient(peer model.Peer) (core.APIGateClient, error) {
+func (fc *ClientFactory) APIClient(peer model.Peer) (core.APIClient, error) {
 	ret, ok := fc.cache.GetAPI(peer)
 	if ok {
 		return ret, nil
 	}
-	ret, err := NewAPIGateClient(peer, fc.fc)
+	ret, err := NewAPIClient(peer, fc.fc)
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +32,12 @@ func (fc *ClientFactory) APIClient(peer model.Peer) (core.APIGateClient, error) 
 	return ret, nil
 }
 
-func (fc *ClientFactory) ConsensusClient(peer model.Peer) (core.ConsensusGateClient, error) {
+func (fc *ClientFactory) ConsensusClient(peer model.Peer) (core.ConsensusClient, error) {
 	ret, ok := fc.cache.GetConsensus(peer)
 	if ok {
 		return ret, nil
 	}
-	ret, err := NewConsensusGateClient(peer, fc.fc, fc.c)
+	ret, err := NewConsensusClient(peer, fc.fc, fc.c)
 	if err != nil {
 		return nil, err
 	}

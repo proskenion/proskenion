@@ -38,10 +38,10 @@ type TxListCache interface {
 }
 
 type ClientCache interface {
-	SetConsensus(peer Peer, client ConsensusGateClient) error
-	GetConsensus(Peer) (ConsensusGateClient, bool)
-	SetAPI(peer Peer, client APIGateClient) error
-	GetAPI(Peer) (APIGateClient, bool)
+	SetConsensus(peer Peer, client ConsensusClient) error
+	GetConsensus(Peer) (ConsensusClient, bool)
+	SetAPI(peer Peer, client APIClient) error
+	GetAPI(Peer) (APIClient, bool)
 }
 
 // WSV (MerklePatriciaTree で管理)
