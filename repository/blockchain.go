@@ -66,7 +66,7 @@ func (b *Blockchain) Next(blockHash model.Hash) (model.Block, error) {
 	it, err := b.tree.Find(blockHash)
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
-			return nil, errors.Wrap(core.ErrBlockchainNotFound, err.Error())
+			return nil, errors.Wrap(core.ErrBlockchainNextNotFound, err.Error())
 		}
 		return nil, err
 	}

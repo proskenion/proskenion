@@ -14,6 +14,7 @@ var (
 
 	ErrBlockchainNotFound       = errors.Errorf("Failed Blockchain Get Not Found")
 	ErrBlockchainQueryUnmarshal = errors.Errorf("Failed Blocchain Get Unmarshal")
+	ErrBlockchainNextNotFound = errors.Errorf("Faild Blockchain Next NotFound")
 
 	ErrProposalBlockQueuePush = errors.Errorf("Failed ProposalBlockQueue Push")
 	ErrProposalTxListCacheSet = errors.Errorf("Failed ProposalTXListCache Set")
