@@ -57,6 +57,12 @@ func RandomQueue() core.ProposalTxQueue {
 	return queue
 }
 
+func RandomCommitableBlockAndTxList(t *testing.T, rp core.Repository) (model.Block, core.TxList) {
+	block, txList, err := rp.CreateBlock(RandomQueue(), 0, RandomNow())
+	require.NoError(t, err)
+	return block, txList
+}
+
 func EmptyTxList() core.TxList {
 	return repository.NewTxList(RandomCryptor(), RandomFactory())
 }
@@ -83,4 +89,9 @@ func RandomGenesisTxList(t *testing.T) core.TxList {
 
 func RandomTxListCache() core.TxListCache {
 	return repository.NewTxListCache(RandomConfig())
+}
+
+func MusTop(rp core.Repository) model.Block {
+	top, _ := rp.Top()
+	return top
 }

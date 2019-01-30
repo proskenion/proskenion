@@ -116,6 +116,27 @@ func test_Blockchain(t *testing.T, dba core.DBA) {
 		require.NoError(t, err)
 		assert.Equal(t, b3.Hash(), nxtb1.Hash())
 	})
+
+	t.Run("case 4 : 100 next", func(t *testing.T) {
+		rp := RandomRepository()
+		require.NoError(t, rp.GenesisCommit(RandomGenesisTxList(t)))
+		blocks := make([]model.Block, 0)
+		blocks = append(blocks, MusTop(rp))
+		limits := 100
+		for i := 0; i < limits; i++ {
+			block, _ := RandomCommitableBlockAndTxList(t, rp)
+			blocks = append(blocks, block)
+		}
+		rtx, err := rp.Begin()
+		require.NoError(t, err)
+
+		bc, err := rtx.Blockchain(MusTop(rp).Hash())
+		for i := 0; i < limits; i++ {
+			nxt, err := bc.Next(blocks[i].Hash())
+			require.NoError(t, err)
+			assert.Equal(t, blocks[i+1].Hash(), nxt.Hash())
+		}
+	})
 }
 
 func TestBlockchain(t *testing.T) {

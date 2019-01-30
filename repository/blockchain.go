@@ -62,8 +62,8 @@ func BlockHashToNextKey(blockHash model.Hash) []byte {
 }
 
 func (b *Blockchain) Next(blockHash model.Hash) (model.Block, error) {
-	blockHash = BlockHashToNextKey(blockHash)
-	it, err := b.tree.Find(blockHash)
+	blockKey := BlockHashToNextKey(blockHash)
+	it, err := b.tree.Find(blockKey)
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
 			return nil, errors.Wrap(core.ErrBlockchainNextNotFound, err.Error())
@@ -79,8 +79,8 @@ func (b *Blockchain) Next(blockHash model.Hash) (model.Block, error) {
 }
 
 func (b *Blockchain) Get(blockHash model.Hash) (model.Block, error) {
-	blockHash = BlockHashToKey(blockHash)
-	it, err := b.tree.Find(blockHash)
+	blockKey := BlockHashToKey(blockHash)
+	it, err := b.tree.Find(blockKey)
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
 			return nil, errors.Wrap(core.ErrBlockchainNotFound, err.Error())

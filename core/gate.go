@@ -36,6 +36,12 @@ type ConsensusGate interface {
 	PropagateBlockStreamTx(block Block, txChan chan Transaction, errChan chan error) error
 }
 
+
+// Sync
+var (
+	ErrSyncGateSyncNotFoundBlockHash = fmt.Errorf("Failde SyncGate Sync Not found blockHash.")
+)
+
 type SyncGate interface {
 	Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error
 }
