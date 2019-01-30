@@ -1,7 +1,6 @@
 package gate_test
 
 import (
-	"fmt"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/gate"
@@ -18,7 +17,7 @@ func Top(rp core.Repository) model.Block {
 
 func TestNewSyncGate(t *testing.T) {
 	fc, _, _, c, rp, _, conf := NewTestFactories()
-	sg := NewSyncGate(rp, fc, c, RandomLogger(), conf)
+	sg := NewSyncGate(rp, fc, c, conf)
 
 	require.NoError(t, rp.GenesisCommit(RandomGenesisTxList(t)))
 	for i := 0; i < conf.Sync.Limits*2; i++ {
@@ -45,10 +44,7 @@ func TestNewSyncGate(t *testing.T) {
 		for {
 			select {
 			case newBlock = <-blockChan:
-				fmt.Println("innewBlock")
 			case newTxList = <-txListChan:
-				fmt.Println("innewTxList")
-				fmt.Println(newBlock, newTxList)
 				err := newRp.Commit(newBlock, newTxList)
 				require.NoError(t, err)
 			case err := <-errChan:

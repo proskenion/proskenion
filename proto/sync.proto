@@ -37,6 +37,6 @@ message SyncResponse {
  * AlreadyExist (code = 6) : One of following conditions:
  *   1 ) Block is already exist is blockchain.
  **/
-service SyncGate {
+service Sync {
     rpc Sync (stream SyncRequest) returns (stream SyncResponse);
 }

@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -10,15 +9,15 @@ import (
 )
 
 type SyncGate struct {
-	rp     core.Repository
-	fc     model.ModelFactory
-	c      core.Cryptor
-	logger log15.Logger
-	conf   *config.Config
+	rp core.Repository
+	fc model.ModelFactory
+	c  core.Cryptor
+
+	conf *config.Config
 }
 
-func NewSyncGate(rp core.Repository, fc model.ModelFactory, c core.Cryptor, logger log15.Logger, conf *config.Config) core.SyncGate {
-	return &SyncGate{rp, fc, c, logger, conf}
+func NewSyncGate(rp core.Repository, fc model.ModelFactory, c core.Cryptor, conf *config.Config) core.SyncGate {
+	return &SyncGate{rp, fc, c, conf}
 }
 
 func (c *SyncGate) Sync(blockHash model.Hash, blockChan chan model.Block, txListChan chan core.TxList) error {
