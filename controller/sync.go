@@ -7,6 +7,8 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 )
 
@@ -42,6 +44,11 @@ func (s *SyncServer) newTxResponse(tx model.Transaction) *proskenion.SyncRespons
 	}
 }
 
+func (s *SyncServer) internalError(err error) error {
+	s.logger.Error(err.Error())
+	return status.Error(codes.Internal, err.Error())
+}
+
 func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 	for {
 		req, err := stream.Recv()
@@ -49,7 +56,7 @@ func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 			return nil
 		}
 		if err != nil {
-			return err
+			return s.internalError(err)
 		}
 		blockHash := req.GetBlockHash()
 		blockChan := make(chan model.Block)
@@ -66,20 +73,20 @@ func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 			select {
 			case newBlock := <-blockChan:
 				if err := stream.Send(s.newBlockResponse(newBlock)); err != nil {
-					return err
+					return s.internalError(err)
 				}
 			case newTxList := <-txListChan:
 				for _, tx := range newTxList.List() {
 					if err := stream.Send(s.newTxResponse(tx)); err != nil {
-						return err
+						return s.internalError(err)
 					}
 				}
 				if err := stream.Send(&proskenion.SyncResponse{}); err != nil {
-					return err
+					return s.internalError(err)
 				}
 			case err := <-errChan:
 				if err != nil && err != io.EOF {
-					return err
+					return s.internalError(err)
 				}
 				goto afterFor
 			}

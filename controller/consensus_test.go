@@ -1,9 +1,8 @@
 package controller_test
 
 import (
-	"github.com/pkg/errors"
-	"github.com/proskenion/proskenion/convertor"
 	. "github.com/proskenion/proskenion/controller"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/proto"
@@ -40,6 +39,12 @@ func newMockPropagateBlockServerStream() *MockConsensus_PropagateBlockServer {
 }
 
 func (s *MockConsensus_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
+	select {
+	case err := <-s.Err:
+		return err
+	default:
+		break
+	}
 	s.Res <- res
 	return nil
 }
@@ -98,7 +103,7 @@ func TestConsensusServer_PropagateBlock(t *testing.T) {
 			stream.Req <- nil
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.InvalidArgument)
+		statusCheck(t, err, codes.InvalidArgument)
 	})
 
 	t.Run("case 3 : tx is nil", func(t *testing.T) {
@@ -122,7 +127,7 @@ func TestConsensusServer_PropagateBlock(t *testing.T) {
 			}
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.Internal)
+		statusCheck(t, err, codes.Internal)
 	})
 
 	t.Run("case 4 : txs Hash not txList Hash", func(t *testing.T) {
@@ -141,8 +146,9 @@ func TestConsensusServer_PropagateBlock(t *testing.T) {
 			for _, tx := range txList.List() {
 				stream.Req <- createRequestTx(tx)
 			}
+			stream.Err <- io.EOF
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.InvalidArgument)
+		statusCheck(t, err, codes.InvalidArgument)
 	})
 }
