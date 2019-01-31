@@ -32,7 +32,7 @@ func clearData(t *testing.T, conf *config.Config) {
 func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	clearData(t, conf)
 
-	logger := log15.New()
+	logger := log15.New("peerId",conf.Peer.Id)
 	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
@@ -82,7 +82,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 
 	api := gate.NewAPI(rp, txQueue, qp, qv, logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue,  conf)
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
