@@ -6,14 +6,16 @@ import (
 )
 
 type MockClientFactory struct {
-	cacheAPI map[string]APIClient
-	cacheCon map[string]ConsensusClient
+	cacheAPI  map[string]APIClient
+	cacheCon  map[string]ConsensusClient
+	cacheSync map[string]SyncClient
 }
 
 func NewMockClientFactory() ClientFactory {
 	return &MockClientFactory{
 		make(map[string]APIClient),
-		make(map[string]ConsensusClient)}
+		make(map[string]ConsensusClient),
+		make(map[string]SyncClient)}
 }
 
 func (f *MockClientFactory) APIClient(peer Peer) (APIClient, error) {
@@ -28,6 +30,13 @@ func (f *MockClientFactory) ConsensusClient(peer Peer) (ConsensusClient, error) 
 		f.cacheCon[peer.GetPeerId()] = &MockConsensusClient{Id: peer.GetPeerId()}
 	}
 	return f.cacheCon[peer.GetPeerId()], nil
+}
+
+func (f *MockClientFactory) SyncClient(peer Peer) (SyncClient, error) {
+	if _, ok := f.cacheSync[peer.GetPeerId()]; !ok {
+		f.cacheSync[peer.GetPeerId()] = &MockSyncClient{Id: peer.GetPeerId()}
+	}
+	return f.cacheSync[peer.GetPeerId()], nil
 }
 
 type MockAPIClient struct {
@@ -59,5 +68,19 @@ func (c *MockConsensusClient) PropagateTx(tx Transaction) error {
 func (c *MockConsensusClient) PropagateBlockStreamTx(block Block, txLit TxList) error {
 	c.PropagateBlockIn1 = block
 	c.PropagateBlockIn2 = txLit
+	return nil
+}
+
+type MockSyncClient struct {
+	Id             string
+	SyncBlockHash  Hash
+	SyncBlockChan  chan Block
+	SyncTxListChan chan TxList
+}
+
+func (c *MockSyncClient) Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error {
+	c.SyncBlockHash = blockHash
+	c.SyncBlockChan = blockChan
+	c.SyncTxListChan = txListChan
 	return nil
 }

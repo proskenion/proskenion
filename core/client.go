@@ -14,7 +14,12 @@ type ConsensusClient interface {
 	PropagateBlockStreamTx(block Block, txLit TxList) error
 }
 
+type SyncClient interface {
+	Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error
+}
+
 type ClientFactory interface {
 	APIClient(peer Peer) (APIClient, error)
 	ConsensusClient(peer Peer) (ConsensusClient, error)
+	SyncClient(peer Peer) (SyncClient, error)
 }

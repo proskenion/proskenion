@@ -32,6 +32,10 @@ func conId(p model.Peer) string {
 	return p.GetPeerId() + "#c"
 }
 
+func syncId(p model.Peer) string {
+	return p.GetPeerId() + "#s"
+}
+
 func (c *ClientCache) SetConsensus(peer model.Peer, client core.ConsensusClient) error {
 	return c.CacheMap.Set(&ClientHashWraper{conId(peer), client})
 }
@@ -66,6 +70,26 @@ func (c *ClientCache) GetAPI(p model.Peer) (core.APIClient, bool) {
 		return nil, false
 	}
 	client, ok := cw.e.(core.APIClient)
+	if !ok {
+		return nil, false
+	}
+	return client, true
+}
+
+func (c *ClientCache) SetSync(peer model.Peer, client core.SyncClient) error {
+	return c.CacheMap.Set(&ClientHashWraper{syncId(peer), client})
+}
+
+func (c *ClientCache) GetSync(p model.Peer) (core.SyncClient, bool) {
+	ret, ok := c.Get(model.Hash(syncId(p)))
+	if !ok {
+		return nil, false
+	}
+	cw, ok := ret.(*ClientHashWraper)
+	if !ok {
+		return nil, false
+	}
+	client, ok := cw.e.(core.SyncClient)
 	if !ok {
 		return nil, false
 	}

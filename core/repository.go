@@ -42,6 +42,8 @@ type ClientCache interface {
 	GetConsensus(Peer) (ConsensusClient, bool)
 	SetAPI(peer Peer, client APIClient) error
 	GetAPI(Peer) (APIClient, bool)
+	SetSync(peer Peer, client SyncClient) error
+	GetSync(peer Peer) (SyncClient, bool)
 }
 
 // WSV (MerklePatriciaTree で管理)

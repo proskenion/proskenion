@@ -46,3 +46,18 @@ func (fc *ClientFactory) ConsensusClient(peer model.Peer) (core.ConsensusClient,
 	}
 	return ret, nil
 }
+
+func (fc *ClientFactory) SyncClient(peer model.Peer) (core.SyncClient, error) {
+	ret, ok := fc.cache.GetSync(peer)
+	if ok {
+		return ret, nil
+	}
+	ret, err := NewSyncClient(peer, fc.fc, fc.c)
+	if err != nil {
+		return nil, err
+	}
+	if err := fc.cache.SetSync(peer, ret); err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
