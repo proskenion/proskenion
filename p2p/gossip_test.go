@@ -11,7 +11,7 @@ import (
 func TestGossip_GossipBlock(t *testing.T) {
 	fc, _, _, c, rp, _, conf := NewTestFactories()
 	cf := NewMockClientFactory()
-	gossip := NewGossip(rp, fc, cf, c, conf)
+	gossip := NewBroadCastGossip(rp, fc, cf, c, conf)
 
 	// previous setting, commit genesis
 	txList := RandomGenesisTxList(t)

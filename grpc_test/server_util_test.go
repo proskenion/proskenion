@@ -60,7 +60,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	commitChan := make(chan struct{})
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
-	gossip := p2p.NewGossip(rp, fc, cf, cryptor, conf)
+	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
 	css := consensus.NewConsensus(rp, cs, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit

@@ -8,6 +8,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/inconshreveable/log15"
+	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/config"
@@ -68,8 +69,10 @@ func main() {
 	commitChan := make(chan struct{})
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
-	// WIP : mock
-	gossip := &p2p.MockGossip{}
+	// Gossip
+	cf := client.NewClientFactory(fc, cryptor, conf)
+	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
+
 	csc := consensus.NewConsensus(rp, cs, bq, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
