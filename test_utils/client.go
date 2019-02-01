@@ -76,11 +76,13 @@ type MockSyncClient struct {
 	SyncBlockHash  Hash
 	SyncBlockChan  chan Block
 	SyncTxListChan chan TxList
+	SyncErrorChan chan error
 }
 
-func (c *MockSyncClient) Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error {
+func (c *MockSyncClient) Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList, errChan chan error) error {
 	c.SyncBlockHash = blockHash
 	c.SyncBlockChan = blockChan
 	c.SyncTxListChan = txListChan
+	c.SyncErrorChan = errChan
 	return nil
 }

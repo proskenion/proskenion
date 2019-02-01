@@ -92,5 +92,8 @@ func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 			}
 		}
 	afterFor:
+		if err := stream.Send(&proskenion.SyncResponse{}); err != nil {
+			return s.internalError(err)
+		}
 	}
 }

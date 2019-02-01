@@ -95,6 +95,8 @@ func TestNewSyncServer(t *testing.T) {
 					}
 					require.NoError(t, rp.Commit(modelBlock, txList))
 				}
+				res := <-stream.Res
+				require.Nil(t, res.Res)
 			}
 			stream.Err <- io.EOF
 		}(t, limits)

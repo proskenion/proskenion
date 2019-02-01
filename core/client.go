@@ -15,7 +15,7 @@ type ConsensusClient interface {
 }
 
 type SyncClient interface {
-	Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList) error
+	Sync(blockHash Hash, blockChan chan Block, txListChan chan TxList, errChan chan error) error
 }
 
 type ClientFactory interface {

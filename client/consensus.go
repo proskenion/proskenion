@@ -38,6 +38,7 @@ func (c *ConsensusClient) PropagateBlockStreamTx(block model.Block, txList core.
 	if err != nil {
 		return err
 	}
+	defer stream.CloseSend()
 	req := &proskenion.PropagateBlockRequest{
 		Req: &proskenion.PropagateBlockRequest_Block{Block: block.(*convertor.Block).Block},
 	}
@@ -62,5 +63,5 @@ func (c *ConsensusClient) PropagateBlockStreamTx(block model.Block, txList core.
 			return err
 		}
 	}
-	return stream.CloseSend()
+	return nil
 }
