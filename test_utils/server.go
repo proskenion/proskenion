@@ -6,11 +6,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/prosl"
@@ -24,7 +24,7 @@ import (
 )
 
 func RandomSetUpConsensusServer(t *testing.T, conf *config.Config, s *grpc.Server) {
-	logger := log15.New()
+	logger := RandomLogger()
 	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
@@ -50,6 +50,35 @@ func RandomSetUpConsensusServer(t *testing.T, conf *config.Config, s *grpc.Serve
 
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue,  conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
+
+	if err := s.Serve(l); err != nil {
+		require.NoError(t, err)
+	}
+}
+
+func RandomSetUpSyncServer(t *testing.T, conf *config.Config, rp core.Repository, s *grpc.Server) {
+	logger := RandomLogger()
+	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
+
+	cryptor := crypto.NewEd25519Sha256Cryptor()
+
+	cmdExecutor := command.NewCommandExecutor(conf)
+	cmdValidator := command.NewCommandValidator(conf)
+	qVerifier := query.NewQueryVerifier()
+	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
+
+	pr := prosl.NewProsl(fc, cryptor, conf)
+
+	cmdExecutor.SetField(fc, pr)
+	cmdValidator.SetField(fc, pr)
+
+	// ==================== gate =======================
+	logger.Info("================= Sync Gate Boot =================")
+	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
+	require.NoError(t, err)
+
+	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
+	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
 
 	if err := s.Serve(l); err != nil {
 		require.NoError(t, err)
