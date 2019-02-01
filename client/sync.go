@@ -8,6 +8,7 @@ import (
 	"github.com/proskenion/proskenion/repository"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"io"
 )
 
 type SyncClient struct {
@@ -71,11 +72,14 @@ func (c *SyncClient) Sync(blockHash model.Hash, blockChan chan model.Block, txLi
 				}
 			}
 			txListChan <- txList
-		}
-		select {
-		case <-errChan:
-			return err
-		default:
+
+			err = <-errChan
+			if err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
 		}
 	}
 }
