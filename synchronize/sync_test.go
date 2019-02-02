@@ -16,6 +16,7 @@ import (
 
 func TestSynchronizer_Sync(t *testing.T) {
 	conf := RandomConfig()
+	conf.Peer.Port = "60001"
 	s := RandomServer()
 	rp := RandomRepository()
 	fc := RandomFactory()
