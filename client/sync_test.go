@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"fmt"
 	. "github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -59,7 +58,6 @@ func TestNewSyncClientSync(t *testing.T) {
 			select {
 			case newBlock = <-blockChan:
 			case newTxList = <-txListChan:
-				fmt.Println(newBlock, newTxList)
 				require.NoError(t, newRp.Commit(newBlock, newTxList))
 				if MusTop(newRp).GetPayload().GetHeight() == MusTop(rp).GetPayload().GetHeight() {
 					errChan <- io.EOF
