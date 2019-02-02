@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"io"
+	"sync"
 	"testing"
 	"time"
 )
@@ -31,6 +32,8 @@ func TestNewSyncClientSync(t *testing.T) {
 	}(conf, s)
 	time.Sleep(time.Second)
 
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 	t.Run("case 1 : sucess", func(t *testing.T) {
 		blockChan := make(chan model.Block)
 		txListChan := make(chan core.TxList)
@@ -71,8 +74,9 @@ func TestNewSyncClientSync(t *testing.T) {
 		}
 	afterFor:
 		assert.Equal(t, MusTop(rp).Hash(), MusTop(newRp).Hash())
+		wg.Done()
 	})
-
+	wg.Wait()
 	t.Run("case 2 : failed", func(t *testing.T) {
 		blockChan := make(chan model.Block)
 		txListChan := make(chan core.TxList)
