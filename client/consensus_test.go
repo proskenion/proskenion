@@ -17,7 +17,7 @@ func TestConsensusClient_PropagateBlockStreamTx(t *testing.T) {
 	go func(conf *config.Config, server *grpc.Server) {
 		RandomSetUpConsensusServer(t, conf, s)
 	}(conf, s)
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 
 	client, err := NewConsensusClient(RandomFactory().NewPeer(conf.Peer.Id, "127.0.0.1:"+conf.Peer.Port, conf.Peer.PublicKeyBytes()), RandomFactory(), RandomCryptor())
 	require.NoError(t, err)

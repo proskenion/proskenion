@@ -29,7 +29,7 @@ func TestNewSyncClientSync(t *testing.T) {
 	go func(conf *config.Config, server *grpc.Server) {
 		RandomSetUpSyncServer(t, conf, rp, s)
 	}(conf, s)
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 
 	t.Run("case 1 : sucess", func(t *testing.T) {
 		blockChan := make(chan model.Block)

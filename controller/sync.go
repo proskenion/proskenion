@@ -85,7 +85,10 @@ func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 					return s.internalError(err)
 				}
 			case err := <-errChan:
-				if err != nil && err != io.EOF {
+				if err == io.EOF {
+					return nil
+				}
+				if err != nil {
 					return s.internalError(err)
 				}
 				goto afterFor

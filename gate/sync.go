@@ -6,6 +6,7 @@ import (
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
+	"io"
 )
 
 type SyncGate struct {
@@ -43,7 +44,7 @@ func (c *SyncGate) Sync(blockHash model.Hash, blockChan chan model.Block, txList
 		if err != nil {
 			// next がないので正常終了
 			if errors.Cause(err) == core.ErrBlockchainNextNotFound {
-				return nil
+				return io.EOF
 			}
 			return err
 		}
