@@ -138,6 +138,10 @@ func TestNewSyncServer(t *testing.T) {
 			err := rp.Commit(modelBlock, txList)
 			assert.Error(t, err)
 			stream.Err <- err
+			select { // if send fast. ignore.
+			case <-stream.Res:
+			default:
+			}
 		}(t, limits)
 		err := ctrl.Sync(stream)
 		statusCheck(t, err, codes.Internal)
