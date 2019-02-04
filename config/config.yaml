@@ -20,7 +20,11 @@ peer:
   port: 50023
   active: true
 sync:
-  to: "root@pr"
+  to:
+    id: "root@pr"
+    public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+    host: 127.0.0.1
+    port: 50023
   limits: 50
 prosl:
   id: "/prosl"

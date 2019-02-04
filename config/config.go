@@ -49,7 +49,7 @@ type PeerConfig struct {
 }
 
 type SyncConfig struct {
-	To     string `yaml:"to"`
+	To     PeerConfig `yaml:"to"`
 	Limits int    `yaml:"limits"`
 }
 
@@ -98,4 +98,8 @@ func NewConfig(configPath string) *Config {
 		panic(err)
 	}
 	return config
+}
+
+func NewPeerFromConf(fc model.ModelFactory, pconf PeerConfig) model.Peer {
+	return fc.NewPeer(pconf.Id, model.MakeAddressFromHostAndPort(pconf.Host, pconf.Port), pconf.PublicKeyBytes())
 }

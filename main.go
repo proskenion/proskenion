@@ -23,6 +23,7 @@ import (
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
+	"github.com/proskenion/proskenion/synchronize"
 	"google.golang.org/grpc"
 	"net"
 )
@@ -73,7 +74,11 @@ func main() {
 	cf := client.NewClientFactory(fc, cryptor, conf)
 	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
 
-	csc := consensus.NewConsensus(rp, cs, bq, txListCache, gossip, pr, logger, conf, commitChan)
+	// sync
+	sync := synchronize.NewSynchronizer(rp, cf, fc)
+
+	// consensus
+	csc := consensus.NewConsensus(rp, fc,cs,sync,bq, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
@@ -104,10 +109,10 @@ func main() {
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
-	logger.Info("================= Consensus Boot =================")
-	go func() {
-		csc.Boot()
-	}()
+	// SetUp Consensus Loop
+	go csc.Boot()
+	go csc.Receiver()
+	go csc.Patrol()
 
 	if err := s.Serve(l); err != nil {
 		logger.Error("Failed to server grpc: %s", err.Error())
