@@ -25,7 +25,7 @@ func TestNewConfig(t *testing.T) {
 
 	assert.Equal(t, conf.Peer.Port, "50023")
 	assert.Equal(t, conf.Peer.Host, "127.0.0.1")
-
+	assert.Equal(t, conf.Peer.Active, true)
 
 	assert.Equal(t, conf.Prosl.Id, "/prosl")
 

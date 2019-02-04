@@ -19,6 +19,7 @@ func TestSynchronizer_Sync(t *testing.T) {
 	conf.Peer.Port = "60001"
 	s := RandomServer()
 	rp := RandomRepository()
+
 	fc := RandomFactory()
 	require.NoError(t, rp.GenesisCommit(RandomGenesisTxList(t)))
 	for i := 0; i < conf.Sync.Limits*2+10; i++ {
@@ -32,12 +33,12 @@ func TestSynchronizer_Sync(t *testing.T) {
 
 	t.Run("case 1 : success", func(t *testing.T) {
 		newRp := RandomRepository()
+		newRp.Me().Suspend()
 		cf := client.NewClientFactory(fc, RandomCryptor(), conf)
 		require.NoError(t, newRp.GenesisCommit(RandomGenesisTxList(t)))
 
-		active := false
 		peer := fc.NewPeer(conf.Peer.Id, conf.Peer.Host+":"+conf.Peer.Port, conf.Peer.PublicKeyBytes())
-		syn := NewSynchronizer(newRp, cf, &active)
+		syn := NewSynchronizer(newRp, cf, fc)
 		wg := &sync.WaitGroup{}
 		wg.Add(1)
 		go func() {
@@ -49,7 +50,7 @@ func TestSynchronizer_Sync(t *testing.T) {
 		for {
 			if MusTop(rp).GetPayload().GetHeight() == MusTop(newRp).GetPayload().GetHeight() {
 				assert.Equal(t, MusTop(rp).Hash(), MusTop(newRp).Hash())
-				active = true
+				newRp.Me().Activate()
 				break
 			}
 			time.Sleep(time.Second)

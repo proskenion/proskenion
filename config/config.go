@@ -45,6 +45,7 @@ type PeerConfig struct {
 	PrivateKey string `yaml:"private_key"`
 	Host       string `yaml:"host"`
 	Port       string `yaml:"port"`
+	Active     bool   `yaml:"active"`
 }
 
 type SyncConfig struct {

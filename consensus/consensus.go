@@ -9,10 +9,11 @@ import (
 )
 
 type Consensus struct {
-	rp core.Repository
-	cs core.CommitSystem
-	bq core.ProposalBlockQueue
-	tc core.TxListCache
+	rp   core.Repository
+	cs   core.CommitSystem
+	sync core.Synchronizer
+	bq   core.ProposalBlockQueue
+	tc   core.TxListCache
 
 	gossip core.Gossip
 	logger log15.Logger
@@ -24,9 +25,9 @@ type Consensus struct {
 	WaitngInterval time.Duration
 }
 
-func NewConsensus(rp core.Repository, cs core.CommitSystem, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
+func NewConsensus(rp core.Repository, cs core.CommitSystem, sync core.Synchronizer, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
 	logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
-	return &Consensus{rp, cs, bq, tc, gossip, logger, pr, conf,
+	return &Consensus{rp, cs, sync, bq, tc, gossip, logger, pr, conf,
 		commitChan, time.Duration(conf.Commit.WaitInterval) * time.Millisecond}
 }
 

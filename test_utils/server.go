@@ -48,7 +48,7 @@ func RandomSetUpConsensusServer(t *testing.T, conf *config.Config, s *grpc.Serve
 	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
 	require.NoError(t, err)
 
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue,  conf)
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
 	if err := s.Serve(l); err != nil {
@@ -67,18 +67,25 @@ func RandomSetUpSyncServer(t *testing.T, conf *config.Config, rp core.Repository
 	qVerifier := query.NewQueryVerifier()
 	fc := convertor.NewModelFactory(cryptor, cmdExecutor, cmdValidator, qVerifier)
 
+	qp := query.NewQueryProcessor(fc, conf)
+	qv := query.NewQueryValidator(fc, conf)
+
+	qTx := repository.NewProposalTxQueueOnMemory(conf)
+
 	pr := prosl.NewProsl(fc, cryptor, conf)
 
 	cmdExecutor.SetField(fc, pr)
 	cmdValidator.SetField(fc, pr)
 
 	// ==================== gate =======================
-	logger.Info("================= Sync Gate Boot =================")
+	logger.Info("================= Sync And API Gate Boot =================")
 	l, err := net.Listen("tcp", ":"+conf.Peer.Port)
 	require.NoError(t, err)
 
 	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
 	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
+	ap := gate.NewAPI(rp, qTx, qp, qv, logger)
+	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, ap, logger))
 
 	if err := s.Serve(l); err != nil {
 		require.NoError(t, err)

@@ -10,12 +10,26 @@ import (
 type Synchronizer struct {
 	rp core.Repository
 	cf core.ClientFactory
-
-	active *bool
+	fc model.ModelFactory
 }
 
-func NewSynchronizer(rp core.Repository, cf core.ClientFactory, active *bool) core.Synchronizer {
-	return &Synchronizer{rp, cf, active}
+func NewSynchronizer(rp core.Repository, cf core.ClientFactory, fc model.ModelFactory) core.Synchronizer {
+	return &Synchronizer{rp, cf, fc}
+}
+
+func (s *Synchronizer) activate(peer model.Peer) error {
+	client, err := s.cf.APIClient(peer)
+	if err != nil {
+		return err
+	}
+	me := s.rp.Me()
+	in := s.fc.NewTxBuilder().
+		ActivatePeer(me.GetPeerId(), me.GetPeerId()).
+		Build()
+	if err := in.Sign(me.GetPublicKey(), me.GetPrivateKey()); err != nil {
+		return err
+	}
+	return client.Write(in)
 }
 
 func (s *Synchronizer) Sync(peer model.Peer) error {
@@ -51,7 +65,7 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 		case newBlock = <-blockChan:
 		case newTxList = <-txListChan:
 			err := s.rp.Commit(newBlock, newTxList)
-			if *(s.active) {
+			if s.rp.Me().GetActive() {
 				errChan <- io.EOF
 			} else {
 				errChan <- err
@@ -60,7 +74,10 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 			if err != nil {
 				return err
 			}
-			return nil
+			goto afterSync
 		}
 	}
+
+afterSync:
+	return s.activate(peer)
 }
