@@ -13,6 +13,9 @@ import (
 	"sync"
 )
 
+// TOOD https://godoc.org/github.com/gwenn/gosqlite
+// use this library with savepoint rollback savepoint
+
 type DBSQLite struct {
 	dba map[string]DBA
 	db  *sqlx.DB

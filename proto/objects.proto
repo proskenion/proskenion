@@ -45,6 +45,8 @@ message Peer {
     string peerId = 1;
     string address = 2;
     bytes publicKey = 3;
+    bool active = 4;
+    bool ban = 5;
 }
 
 message ObjectList {
@@ -94,8 +96,11 @@ message Command {
         AddObject addObject = 12;
         TransferObject transferObject = 13;
         AddPeer addPeer = 14;
-        Consign consign = 15;
-        CheckAndCommitProsl checkAndCommitProsl = 16;
+        ActivatePeer activatePeer = 15;
+        SuspendPeer suspendPeer = 16;
+        BanPeer banPeer = 17;
+        Consign consign = 18;
+        CheckAndCommitProsl checkAndCommitProsl = 19;
    }
 }
 
@@ -191,6 +196,27 @@ message AddPeer {
     string address = 1;
     bytes publicKey = 2;
 }
+
+/**
+ * ActivatePeer Command は Peer を active 状態にする。
+ * targetId は Peer を一意に特定する。
+ * active 状態の Peer は合意形成に参加できる。
+ **/
+message ActivatePeer {}
+
+/**
+ * SuspendPeer Command は Peer を 非active 状態にする。
+ * targetId は Peer を一意に特定する。
+ * 非active 状態の Peer は合意形成に参加しない。(Consign できない)
+ **/
+message SuspendPeer{}
+
+/**
+ * BanPeer Command は Peer を使用禁止にする。
+ * targetId は Peer を一意に特定する。
+ * ban された Peer は金輪際合意形成/同期に参加できない。
+ **/
+message BanPeer{}
 
 /**
  * Consign Command は Account と Peer を紐付ける

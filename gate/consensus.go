@@ -2,7 +2,6 @@ package gate
 
 import (
 	"bytes"
-	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -17,12 +16,11 @@ type ConsensusGate struct {
 	txQueue     core.ProposalTxQueue
 	txListCache core.TxListCache
 	blockQueue  core.ProposalBlockQueue
-	logger      log15.Logger
 	conf        *config.Config
 }
 
-func NewConsensusGate(fc model.ModelFactory, c core.Cryptor, txQueue core.ProposalTxQueue, txListCache core.TxListCache, blockQueue core.ProposalBlockQueue, logger log15.Logger, conf *config.Config) core.ConsensusGate {
-	return &ConsensusGate{fc, c, txQueue, txListCache, blockQueue, logger, conf}
+func NewConsensusGate(fc model.ModelFactory, c core.Cryptor, txQueue core.ProposalTxQueue, txListCache core.TxListCache, blockQueue core.ProposalBlockQueue, conf *config.Config) core.ConsensusGate {
+	return &ConsensusGate{fc, c, txQueue, txListCache, blockQueue, conf}
 }
 
 func (c *ConsensusGate) PropagateTx(tx model.Transaction) error {

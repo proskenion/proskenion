@@ -13,7 +13,12 @@ type Blockchain struct {
 	tree    core.MerklePatriciaTree
 }
 
-var BlockChainRootKey byte = 9
+var (
+	BlockChainRootKey     byte = 9
+	BlockChainTopRootKey  byte = 0
+	BlockChainNowRootKey  byte = 1
+	BlockChainNextRootKey byte = 2
+)
 
 type ByteWrapper struct {
 	B []byte
@@ -45,16 +50,37 @@ func NewBlockchainFromTopBlock(tx core.DBATx, factory model.ModelFactory, crypto
 }
 
 func BlockHashToKey(blockHash model.Hash) []byte {
-	return append([]byte{BlockChainRootKey}, blockHash...)
+	return append([]byte{BlockChainRootKey, BlockChainNowRootKey}, blockHash...)
 }
 
 func BlockHashToMappingKey(blockHash model.Hash) []byte {
-	return append([]byte{BlockChainRootKey, 0}, blockHash...)
+	return append([]byte{BlockChainRootKey, BlockChainTopRootKey}, blockHash...)
+}
+
+func BlockHashToNextKey(blockHash model.Hash) []byte {
+	return append([]byte{BlockChainRootKey, BlockChainNextRootKey}, blockHash...)
+}
+
+func (b *Blockchain) Next(blockHash model.Hash) (model.Block, error) {
+	blockKey := BlockHashToNextKey(blockHash)
+	it, err := b.tree.Find(blockKey)
+	if err != nil {
+		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
+			return nil, errors.Wrap(core.ErrBlockchainNextNotFound, err.Error())
+		}
+		return nil, err
+	}
+
+	bw := &ByteWrapper{nil}
+	if err := it.Data(bw); err != nil {
+		return nil, err
+	}
+	return b.Get(bw.B)
 }
 
 func (b *Blockchain) Get(blockHash model.Hash) (model.Block, error) {
-	blockHash = BlockHashToKey(blockHash)
-	it, err := b.tree.Find(blockHash)
+	blockKey := BlockHashToKey(blockHash)
+	it, err := b.tree.Find(blockKey)
 	if err != nil {
 		if errors.Cause(err) == core.ErrMerklePatriciaTreeNotFoundKey {
 			return nil, errors.Wrap(core.ErrBlockchainNotFound, err.Error())
@@ -76,6 +102,10 @@ func (b *Blockchain) Append(block model.Block) (err error) {
 	}
 	it, err := b.tree.Upsert(&KVNode{BlockHashToKey(blockHash), block})
 	if err != nil {
+		return err
+	}
+	if _, err := b.tree.Upsert(&KVNode{BlockHashToNextKey(block.GetPayload().GetPreBlockHash()),
+		&ByteWrapper{blockHash}}); err != nil {
 		return err
 	}
 

@@ -24,7 +24,7 @@ message PropagateBlockResponse {
  * ConsensusGate は合意形成に使用する rpc を定義する。
  * これを使用するのは合意形成に参加するPeerのみである。
  **/
-service ConsensusGate {
+service Consensus {
     /**
      * PropagateTx は Client から受け取った Transaction を自分以外の Peer に伝搬させる。
      * Context には送信者の署名をつける。

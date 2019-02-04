@@ -90,6 +90,11 @@ type Peer interface {
 	GetAddress() string
 	GetPublicKey() PublicKey
 	GetFromKey(key string) Object
+	GetActive() bool
+	GetBan() bool
+	Activate()
+	Suspend()
+	Ban()
 	Modelor
 }
 

@@ -97,6 +97,9 @@ type CommandExecutor interface {
 	AddObject(ObjectFinder, Command) error
 	TransferObject(ObjectFinder, Command) error
 	AddPeer(ObjectFinder, Command) error
+	ActivatePeer(ObjectFinder, Command) error
+	SuspendPeer(ObjectFinder, Command) error
+	BanPeer(ObjectFinder, Command) error
 	Consign(ObjectFinder, Command) error
 	CheckAndCommitProsl(ObjectFinder, Command) error
 }
@@ -114,6 +117,9 @@ type CommandValidator interface {
 	AddObject(ObjectFinder, Command) error
 	TransferObject(ObjectFinder, Command) error
 	AddPeer(ObjectFinder, Command) error
+	ActivatePeer(ObjectFinder, Command) error
+	SuspendPeer(ObjectFinder, Command) error
+	BanPeer(ObjectFinder, Command) error
 	Consign(ObjectFinder, Command) error
 	Tx(ObjectFinder, TxFinder, Transaction) error
 	CheckAndCommitProsl(ObjectFinder, Command) error

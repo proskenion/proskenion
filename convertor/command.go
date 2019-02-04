@@ -38,6 +38,12 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.TransferObject(wsv, c)
 	case *proskenion.Command_AddPeer:
 		return c.executor.AddPeer(wsv, c)
+	case *proskenion.Command_ActivatePeer:
+		return c.executor.ActivatePeer(wsv, c)
+	case *proskenion.Command_SuspendPeer:
+		return c.executor.SuspendPeer(wsv, c)
+	case *proskenion.Command_BanPeer:
+		return c.executor.BanPeer(wsv, c)
 	case *proskenion.Command_Consign:
 		return c.executor.Consign(wsv, c)
 	case *proskenion.Command_CheckAndCommitProsl:
@@ -69,6 +75,12 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.TransferObject(wsv, c)
 	case *proskenion.Command_AddPeer:
 		return c.validator.AddPeer(wsv, c)
+	case *proskenion.Command_ActivatePeer:
+		return c.validator.ActivatePeer(wsv, c)
+	case *proskenion.Command_SuspendPeer:
+		return c.validator.SuspendPeer(wsv, c)
+	case *proskenion.Command_BanPeer:
+		return c.validator.BanPeer(wsv, c)
 	case *proskenion.Command_Consign:
 		return c.validator.Consign(wsv, c)
 	case *proskenion.Command_CheckAndCommitProsl:
@@ -202,6 +214,18 @@ func (c *Command) GetTransferObject() model.TransferObject {
 
 func (c *Command) GetAddPeer() model.AddPeer {
 	return c.Command.GetAddPeer()
+}
+
+func (c *Command) GetActivatePeer() model.ActivatePeer {
+	return c.Command.GetActivatePeer()
+}
+
+func (c *Command) GetSuspendPeer() model.SuspendPeer {
+	return c.Command.GetSuspendPeer()
+}
+
+func (c *Command) GetBanPeer() model.BanPeer {
+	return c.Command.GetBanPeer()
 }
 
 func (c *Command) GetConsign() model.Consign {

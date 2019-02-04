@@ -9,31 +9,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-type APIGateClient struct {
-	proskenion.APIGateClient
+type APIClient struct {
+	proskenion.APIClient
 	fc model.ModelFactory
 }
 
-func NewAPIGateClient(peer model.Peer, fc model.ModelFactory) (core.APIGateClient, error) {
+func NewAPIClient(peer model.Peer, fc model.ModelFactory) (core.APIClient, error) {
 	gc, err := grpc.Dial(peer.GetAddress(), grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-	return &APIGateClient{
-		proskenion.NewAPIGateClient(gc),
+	return &APIClient{
+		proskenion.NewAPIClient(gc),
 		fc,
 	}, nil
 }
 
-func (c *APIGateClient) Write(in model.Transaction) error {
+func (c *APIClient) Write(in model.Transaction) error {
 	tx := in.(*convertor.Transaction).Transaction
-	_, err := c.APIGateClient.Write(context.TODO(), tx)
+	_, err := c.APIClient.Write(context.TODO(), tx)
 	return err
 }
 
-func (c *APIGateClient) Read(in model.Query) (model.QueryResponse, error) {
+func (c *APIClient) Read(in model.Query) (model.QueryResponse, error) {
 	query := in.(*convertor.Query).Query
-	res, err := c.APIGateClient.Read(context.TODO(), query)
+	res, err := c.APIClient.Read(context.TODO(), query)
 	if err != nil {
 		return nil, err
 	}

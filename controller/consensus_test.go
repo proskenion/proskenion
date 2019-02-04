@@ -1,9 +1,9 @@
 package controller_test
 
 import (
-	"github.com/pkg/errors"
-	"github.com/proskenion/proskenion/convertor"
+	"fmt"
 	. "github.com/proskenion/proskenion/controller"
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/gate"
 	"github.com/proskenion/proskenion/proto"
@@ -17,40 +17,55 @@ import (
 	"testing"
 )
 
-func newRandomConsensusGateServer() proskenion.ConsensusGateServer {
+func newRandomConsensusServer() proskenion.ConsensusServer {
 	fc, _, _, c, _, _, conf := NewTestFactories()
 	cg := gate.NewConsensusGate(fc, c,
 		repository.NewProposalTxQueueOnMemory(conf), repository.NewTxListCache(conf),
-		repository.NewProposalBlockQueueOnMemory(conf), RandomLogger(), conf)
-	return NewConsensusGateServer(fc, cg, c, RandomLogger(), RandomConfig())
+		repository.NewProposalBlockQueueOnMemory(conf), conf)
+	return NewConsensusServer(fc, cg, c, RandomLogger(), RandomConfig())
 }
 
-type MockConsensusGate_PropagateBlockServer struct {
-	Req chan *proskenion.PropagateBlockRequest
-	Res chan *proskenion.PropagateBlockResponse
-	Err chan error
+type MockConsensus_PropagateBlockServer struct {
+	Req    chan *proskenion.PropagateBlockRequest
+	Res    chan *proskenion.PropagateBlockResponse
+	Err    chan error
+	failed bool
 	grpc.ServerStream
 }
 
-func newMockPropagateBlockServerStream() *MockConsensusGate_PropagateBlockServer {
-	return &MockConsensusGate_PropagateBlockServer{make(chan *proskenion.PropagateBlockRequest),
+func newMockPropagateBlockServerStream() *MockConsensus_PropagateBlockServer {
+	return &MockConsensus_PropagateBlockServer{make(chan *proskenion.PropagateBlockRequest),
 		make(chan *proskenion.PropagateBlockResponse),
 		make(chan error),
+		false,
 		RandomMockServerStream()}
 }
 
-func (s *MockConsensusGate_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
+func (s *MockConsensus_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
+	if s.failed {
+		return fmt.Errorf("connection failed.")
+	}
 	s.Res <- res
 	return nil
 }
 
-func (s *MockConsensusGate_PropagateBlockServer) Recv() (*proskenion.PropagateBlockRequest, error) {
+func (s *MockConsensus_PropagateBlockServer) Recv() (*proskenion.PropagateBlockRequest, error) {
+	if s.failed {
+		return nil, fmt.Errorf("connection failed.")
+	}
 	select {
 	case req := <-s.Req:
 		return req, nil
 	case err := <-s.Err:
 		return nil, err
 	}
+}
+
+func (s *MockConsensus_PropagateBlockServer) _destructor() {
+	s.failed = true
+	close(s.Res)
+	close(s.Req)
+	close(s.Err)
 }
 
 func createRequestBlock(block model.Block) *proskenion.PropagateBlockRequest {
@@ -65,8 +80,8 @@ func createRequestTx(tx model.Transaction) *proskenion.PropagateBlockRequest {
 	}
 }
 
-func TestConsensusGateServer_PropagateBlock(t *testing.T) {
-	ctrl := newRandomConsensusGateServer()
+func TestConsensusServer_PropagateBlock(t *testing.T) {
+	ctrl := newRandomConsensusServer()
 
 	t.Run("case 1 : correct", func(t *testing.T) {
 		stream := newMockPropagateBlockServerStream()
@@ -98,7 +113,7 @@ func TestConsensusGateServer_PropagateBlock(t *testing.T) {
 			stream.Req <- nil
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.InvalidArgument)
+		statusCheck(t, err, codes.InvalidArgument)
 	})
 
 	t.Run("case 3 : tx is nil", func(t *testing.T) {
@@ -122,7 +137,7 @@ func TestConsensusGateServer_PropagateBlock(t *testing.T) {
 			}
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.Internal)
+		statusCheck(t, err, codes.Internal)
 	})
 
 	t.Run("case 4 : txs Hash not txList Hash", func(t *testing.T) {
@@ -141,8 +156,9 @@ func TestConsensusGateServer_PropagateBlock(t *testing.T) {
 			for _, tx := range txList.List() {
 				stream.Req <- createRequestTx(tx)
 			}
+			stream.Err <- io.EOF
 		}(t)
 		err := ctrl.PropagateBlock(stream)
-		require.Error(t, errors.Cause(err), codes.InvalidArgument)
+		statusCheck(t, err, codes.InvalidArgument)
 	})
 }

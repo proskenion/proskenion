@@ -16,6 +16,9 @@ type Command interface {
 	GetAddObject() AddObject
 	GetTransferObject() TransferObject
 	GetAddPeer() AddPeer
+	GetActivatePeer() ActivatePeer
+	GetSuspendPeer() SuspendPeer
+	GetBanPeer() BanPeer
 	GetConsign() Consign
 	GetCheckAndCommitProsl() CheckAndCommitProsl
 
@@ -53,8 +56,7 @@ type DefineStorage interface {
 	GetStorage() Storage
 }
 
-type CreateStorage interface {
-}
+type CreateStorage interface{}
 
 type UpdateObject interface {
 	GetKey() string
@@ -76,6 +78,12 @@ type AddPeer interface {
 	GetAddress() string
 	GetPublicKey() []byte
 }
+
+type ActivatePeer interface{}
+
+type SuspendPeer interface{}
+
+type BanPeer interface{}
 
 type Consign interface {
 	GetPeerId() string

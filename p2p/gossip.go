@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type Gossip struct {
+type BroadCastGossip struct {
 	rp core.Repository
 	fc model.ModelFactory
 	cf core.ClientFactory
@@ -17,11 +17,11 @@ type Gossip struct {
 	conf *config.Config
 }
 
-func NewGossip(rp core.Repository, fc model.ModelFactory, cf core.ClientFactory, c core.Cryptor, conf *config.Config) core.Gossip {
-	return &Gossip{rp, fc, cf, c, conf}
+func NewBroadCastGossip(rp core.Repository, fc model.ModelFactory, cf core.ClientFactory, c core.Cryptor, conf *config.Config) core.Gossip {
+	return &BroadCastGossip{rp, fc, cf, c, conf}
 }
 
-func (g *Gossip) GossipBlock(block model.Block, txList core.TxList) error {
+func (g *BroadCastGossip) GossipBlock(block model.Block, txList core.TxList) error {
 	wsv, err := g.rp.TopWSV()
 	if err != nil {
 		return err

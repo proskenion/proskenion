@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestConsensusGateClient_PropagateBlockStreamTx(t *testing.T) {
+func TestConsensusClient_PropagateBlockStreamTx(t *testing.T) {
 	conf := RandomConfig()
 	s := RandomServer()
 
@@ -17,9 +17,9 @@ func TestConsensusGateClient_PropagateBlockStreamTx(t *testing.T) {
 	go func(conf *config.Config, server *grpc.Server) {
 		RandomSetUpConsensusServer(t, conf, s)
 	}(conf, s)
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 
-	client, err := NewConsensusGateClient(RandomFactory().NewPeer(conf.Peer.Id, "127.0.0.1:"+conf.Peer.Port, conf.Peer.PublicKeyBytes()), RandomFactory(), RandomCryptor())
+	client, err := NewConsensusClient(RandomFactory().NewPeer(conf.Peer.Id, "127.0.0.1:"+conf.Peer.Port, conf.Peer.PublicKeyBytes()), RandomFactory(), RandomCryptor())
 	require.NoError(t, err)
 	block, txList := RandomValidSignedBlockAndTxList(t)
 	require.NoError(t, client.PropagateBlockStreamTx(block, txList))

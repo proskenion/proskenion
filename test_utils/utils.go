@@ -5,7 +5,6 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -72,5 +71,5 @@ func AssertSetEqual(t *testing.T, actI interface{}, expI interface{}) {
 }
 
 func RandomLogger() log15.Logger {
-	return log15.New(context.TODO())
+	return log15.New("peerId", "RandomPeer")
 }

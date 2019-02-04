@@ -73,6 +73,18 @@ func (c *CommandValidator) AddPeer(wsv model.ObjectFinder, cmd model.Command) er
 	return nil
 }
 
+func (c *CommandValidator) ActivatePeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) SuspendPeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
+func (c *CommandValidator) BanPeer(model.ObjectFinder, model.Command) error {
+	return nil
+}
+
 func (c *CommandValidator) Consign(wsv model.ObjectFinder, cmd model.Command) error {
 	return nil
 }

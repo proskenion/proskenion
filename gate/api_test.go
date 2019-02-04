@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-func TestAPIGate_WriteAndRead(t *testing.T) {
+func TestAPI_WriteAndRead(t *testing.T) {
 	fc := RandomFactory()
 	conf := RandomConfig()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, RandomConfig())
@@ -24,7 +24,7 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(fc, RandomConfig())
 	qv := query.NewQueryValidator(fc, RandomConfig())
-	api := NewAPIGate(rp, queue, qp, qv, logger)
+	api := NewAPI(rp, queue, qp, qv, logger)
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, rp, conf)
 
 	// genesis Commit
@@ -86,17 +86,17 @@ func TestAPIGate_WriteAndRead(t *testing.T) {
 		{
 			GetAccountQuery(t, acs[0], "target6@com"),
 			[]model.PublicKey{},
-			core.ErrAPIGateQueryNotFound,
+			core.ErrAPIQueryNotFound,
 		},
 		{
 			GetAccountQuery(t, &AccountWithPri{acs[0].AccountId, acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			core.ErrAPIGateQueryValidateError,
+			core.ErrAPIQueryValidateError,
 		},
 		{
 			GetAccountQuery(t, &AccountWithPri{"auth@com", acs[1].Pubkey, acs[1].Prikey}, "target1@com"),
 			[]model.PublicKey{},
-			core.ErrAPIGateQueryValidateError,
+			core.ErrAPIQueryValidateError,
 		},
 	} {
 		res, err := api.Read(q.query)

@@ -32,7 +32,7 @@ func clearData(t *testing.T, conf *config.Config) {
 func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	clearData(t, conf)
 
-	logger := log15.New()
+	logger := log15.New("peerId",conf.Peer.Id)
 	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
@@ -60,7 +60,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	commitChan := make(chan struct{})
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
-	gossip := p2p.NewGossip(rp, fc, cf, cryptor, conf)
+	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
 	css := consensus.NewConsensus(rp, cs, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
@@ -80,10 +80,10 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", conf.Peer.Port))
 	require.NoError(t, err)
 
-	api := gate.NewAPIGate(rp, txQueue, qp, qv, logger)
-	proskenion.RegisterAPIGateServer(s, controller.NewAPIGateServer(fc, api, logger))
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, logger, conf)
-	proskenion.RegisterConsensusGateServer(s, controller.NewConsensusGateServer(fc, cg, cryptor, logger, conf))
+	api := gate.NewAPI(rp, txQueue, qp, qv, logger)
+	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
+	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 
 	logger.Info("================= Consensus Boot =================")
 	go func() {

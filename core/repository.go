@@ -14,6 +14,7 @@ var (
 
 	ErrBlockchainNotFound       = errors.Errorf("Failed Blockchain Get Not Found")
 	ErrBlockchainQueryUnmarshal = errors.Errorf("Failed Blocchain Get Unmarshal")
+	ErrBlockchainNextNotFound = errors.Errorf("Faild Blockchain Next NotFound")
 
 	ErrProposalBlockQueuePush = errors.Errorf("Failed ProposalBlockQueue Push")
 	ErrProposalTxListCacheSet = errors.Errorf("Failed ProposalTXListCache Set")
@@ -37,10 +38,12 @@ type TxListCache interface {
 }
 
 type ClientCache interface {
-	SetConsensus(peer Peer, client ConsensusGateClient) error
-	GetConsensus(Peer) (ConsensusGateClient, bool)
-	SetAPI(peer Peer, client APIGateClient) error
-	GetAPI(Peer) (APIGateClient, bool)
+	SetConsensus(peer Peer, client ConsensusClient) error
+	GetConsensus(Peer) (ConsensusClient, bool)
+	SetAPI(peer Peer, client APIClient) error
+	GetAPI(Peer) (APIClient, bool)
+	SetSync(peer Peer, client SyncClient) error
+	GetSync(peer Peer) (SyncClient, bool)
 }
 
 // WSV (MerklePatriciaTree で管理)
@@ -77,6 +80,8 @@ type TxHistory interface {
 
 // BlockChain
 type Blockchain interface {
+	// blockHash を指定して次の Block を取得
+	Next(blockHash Hash) (Block, error)
 	// blockHash を指定して Block を取得
 	Get(blockHash Hash) (Block, error)
 	// Commit block

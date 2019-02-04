@@ -1,7 +1,9 @@
 package convertor_test
 
 import (
+	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/proto"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -151,9 +153,12 @@ func TestTxModelBuilder(t *testing.T) {
 			AddObject("authorizer", "wallet_id", "key", RandomFactory().NewEmptyObject()).              // [11]
 			TransferObject("authorizer", "wallet_id", "dest", "key", RandomFactory().NewEmptyObject()). // [12]
 			AddPeer("authorizer", "account", "localhost", model.PublicKey{2, 2, 2}).                    // [13]
-			Consign("authorizer", "account", "peer").                                                   // [14]
+			ActivatePeer("authorizer", "peer").                                                         // [14]
+			SuspendPeer("authorizer", "peer").                                                          // [15]
+			BanPeer("authorizer", "peer").                                                              // [16]
+			Consign("authorizer", "account", "peer").                                                   // [17]
 			CheckAndCommitProsl("authorizer", "a@c/p",
-				map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[15]
+				map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[18]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
@@ -233,15 +238,30 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "localhost", tx.GetPayload().GetCommands()[13].GetAddPeer().GetAddress())
 		assert.EqualValues(t, model.PublicKey{2, 2, 2}, tx.GetPayload().GetCommands()[13].GetAddPeer().GetPublicKey())
 
-		// consign
+		// activate peer
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[14].GetAuthorizerId())
-		assert.Equal(t, "account", tx.GetPayload().GetCommands()[14].GetTargetId())
-		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetConsign().GetPeerId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[14].GetTargetId())
+		assert.IsType(t, &proskenion.Command_ActivatePeer{}, tx.GetPayload().GetCommands()[14].(*convertor.Command).GetCommand())
+
+		// suspend peer
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[15].GetAuthorizerId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[15].GetTargetId())
+		assert.IsType(t, &proskenion.Command_SuspendPeer{}, tx.GetPayload().GetCommands()[15].(*convertor.Command).GetCommand())
+
+		// ban peer
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[16].GetAuthorizerId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[16].GetTargetId())
+		assert.IsType(t, &proskenion.Command_BanPeer{}, tx.GetPayload().GetCommands()[16].(*convertor.Command).GetCommand())
+
+		// consign
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[17].GetAuthorizerId())
+		assert.Equal(t, "account", tx.GetPayload().GetCommands()[17].GetTargetId())
+		assert.Equal(t, "peer", tx.GetPayload().GetCommands()[17].GetConsign().GetPeerId())
 
 		// check and commit prosl
-		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[15].GetAuthorizerId())
-		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[15].GetTargetId())
-		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[15].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())
+		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[18].GetAuthorizerId())
+		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[18].GetTargetId())
+		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[18].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())
 	})
 }
 
@@ -370,6 +390,8 @@ func TestNewPeer(t *testing.T) {
 			peer := RandomFactory().NewPeer(c.id, c.address, c.pubkey)
 			assert.Equal(t, c.address, peer.GetAddress())
 			assert.Equal(t, c.pubkey, peer.GetPublicKey())
+			assert.Equal(t, false, peer.GetActive())
+			assert.Equal(t, false, peer.GetBan())
 		})
 	}
 }

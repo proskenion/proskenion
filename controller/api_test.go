@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIGateServer) {
+func initializeAPI(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, proskenion.APIServer) {
 	fc := RandomFactory()
 	conf := RandomConfig()
 	rp := repository.NewRepository(RandomDBA(), RandomCryptor(), fc, conf)
@@ -28,9 +28,9 @@ func initializeAPIGate(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, p
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor( fc, RandomConfig())
 	qv := query.NewQueryValidator( fc, conf)
-	api := gate.NewAPIGate(rp, queue, qp, qv, logger)
+	api := gate.NewAPI(rp, queue, qp, qv, logger)
 
-	server := NewAPIGateServer(fc, api, logger)
+	server := NewAPIServer(fc, api, logger)
 
 	// genesis Commit
 	acs := []*AccountWithPri{
@@ -48,8 +48,8 @@ func statusCheck(t *testing.T, err error, code codes.Code) {
 	assert.Equalf(t, status.Code(err), code, "expected: %s, atctual: %s, error: %s", status.Code(err).String(), code.String(), err.Error())
 }
 
-func TestAPIGateServer_Write(t *testing.T) {
-	acs, queue, server := initializeAPIGate(t)
+func TestAPIServer_Write(t *testing.T) {
+	acs, queue, server := initializeAPI(t)
 	for _, c := range []struct {
 		name string
 		tx   model.Transaction
@@ -94,8 +94,8 @@ func TestAPIGateServer_Write(t *testing.T) {
 	}
 }
 
-func TestAPIGateServer_Query(t *testing.T) {
-	acs, _, server := initializeAPIGate(t)
+func TestAPIServer_Query(t *testing.T) {
+	acs, _, server := initializeAPI(t)
 
 	for _, c := range []struct {
 		name    string

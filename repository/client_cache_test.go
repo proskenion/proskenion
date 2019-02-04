@@ -9,17 +9,6 @@ import (
 	"testing"
 )
 
-type MockAPIGateClient struct {
-	Id string
-}
-
-func (c *MockAPIGateClient) Write(in model.Transaction) error {
-	return nil
-}
-func (c *MockAPIGateClient) Read(in model.Query) (model.QueryResponse, error) {
-	return nil, nil
-}
-
 func TestClientCache_GetSetAPI(t *testing.T) {
 	conf := RandomConfig()
 	cc := NewClientCache(conf)
@@ -33,13 +22,13 @@ func TestClientCache_GetSetAPI(t *testing.T) {
 	}
 	t.Run("case 1 : no error", func(t *testing.T) {
 		for _, p := range ps {
-			err := cc.SetAPI(p, &MockAPIGateClient{Id: p.GetPeerId()})
+			err := cc.SetAPI(p, &MockAPIClient{Id: p.GetPeerId()})
 			require.NoError(t, err)
 		}
 		for _, p := range ps {
 			ret, ok := cc.GetAPI(p)
 			require.True(t, ok)
-			assert.Equal(t, p.GetPeerId(), ret.(*MockAPIGateClient).Id)
+			assert.Equal(t, p.GetPeerId(), ret.(*MockAPIClient).Id)
 		}
 
 	})
