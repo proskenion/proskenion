@@ -75,7 +75,7 @@ func (s *SyncServer) Sync(stream proskenion.Sync_SyncServer) error {
 				if err := stream.Send(s.newBlockResponse(newBlock)); err != nil {
 					return s.internalError(err)
 				}
-				newTxList := <-txListChan
+			case newTxList := <-txListChan:
 				for _, tx := range newTxList.List() {
 					if err := stream.Send(s.newTxResponse(tx)); err != nil {
 						return s.internalError(err)

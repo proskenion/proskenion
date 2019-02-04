@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"fmt"
 	. "github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core/model"
@@ -25,9 +26,10 @@ func newRandomConsensusServer() proskenion.ConsensusServer {
 }
 
 type MockConsensus_PropagateBlockServer struct {
-	Req chan *proskenion.PropagateBlockRequest
-	Res chan *proskenion.PropagateBlockResponse
-	Err chan error
+	Req    chan *proskenion.PropagateBlockRequest
+	Res    chan *proskenion.PropagateBlockResponse
+	Err    chan error
+	failed bool
 	grpc.ServerStream
 }
 
@@ -35,27 +37,35 @@ func newMockPropagateBlockServerStream() *MockConsensus_PropagateBlockServer {
 	return &MockConsensus_PropagateBlockServer{make(chan *proskenion.PropagateBlockRequest),
 		make(chan *proskenion.PropagateBlockResponse),
 		make(chan error),
+		false,
 		RandomMockServerStream()}
 }
 
 func (s *MockConsensus_PropagateBlockServer) Send(res *proskenion.PropagateBlockResponse) error {
-	select {
-	case err := <-s.Err:
-		return err
-	default:
-		break
+	if s.failed {
+		return fmt.Errorf("connection failed.")
 	}
 	s.Res <- res
 	return nil
 }
 
 func (s *MockConsensus_PropagateBlockServer) Recv() (*proskenion.PropagateBlockRequest, error) {
+	if s.failed {
+		return nil, fmt.Errorf("connection failed.")
+	}
 	select {
 	case req := <-s.Req:
 		return req, nil
 	case err := <-s.Err:
 		return nil, err
 	}
+}
+
+func (s *MockConsensus_PropagateBlockServer) _destructor() {
+	s.failed = true
+	close(s.Res)
+	close(s.Req)
+	close(s.Err)
 }
 
 func createRequestBlock(block model.Block) *proskenion.PropagateBlockRequest {

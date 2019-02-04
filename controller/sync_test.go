@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"fmt"
 	. "github.com/proskenion/proskenion/controller"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -16,9 +17,10 @@ import (
 )
 
 type MockSync_SyncServer struct {
-	Req chan *proskenion.SyncRequest
-	Res chan *proskenion.SyncResponse
-	Err chan error
+	Req    chan *proskenion.SyncRequest
+	Res    chan *proskenion.SyncResponse
+	Err    chan error
+	Failed bool
 	grpc.ServerStream
 }
 
@@ -36,27 +38,35 @@ func newMockSyncServerStream() *MockSync_SyncServer {
 	return &MockSync_SyncServer{make(chan *proskenion.SyncRequest),
 		make(chan *proskenion.SyncResponse),
 		make(chan error),
+		false,
 		RandomMockServerStream()}
 }
 
 func (s *MockSync_SyncServer) Send(res *proskenion.SyncResponse) error {
-	select {
-	case err := <-s.Err:
-		return err
-	default:
-		break
+	if s.Failed {
+		return fmt.Errorf("connection Failed.")
 	}
 	s.Res <- res
 	return nil
 }
 
 func (s *MockSync_SyncServer) Recv() (*proskenion.SyncRequest, error) {
+	if s.Failed {
+		return nil, fmt.Errorf("connection Failed.")
+	}
 	select {
 	case req := <-s.Req:
 		return req, nil
 	case err := <-s.Err:
 		return nil, err
 	}
+}
+
+func (s *MockSync_SyncServer) _destructor() {
+	s.Failed = true
+	close(s.Req)
+	close(s.Res)
+	close(s.Err)
 }
 
 func TestNewSyncServer(t *testing.T) {
@@ -68,10 +78,7 @@ func TestNewSyncServer(t *testing.T) {
 		limits := RandomConfig().Sync.Limits
 		stream := newMockSyncServerStream()
 		go func(t *testing.T, limits int) {
-			defer close(stream.Req)
-			defer close(stream.Res)
-			defer close(stream.Err)
-
+			defer stream._destructor()
 			for i := 0; i < limits*2; i += limits {
 				stream.Req <- &proskenion.SyncRequest{BlockHash: MusTop(rp).Hash()}
 				for j := 0; j < limits; j++ {
@@ -112,9 +119,7 @@ func TestNewSyncServer(t *testing.T) {
 		limits := RandomConfig().Sync.Limits
 		stream := newMockSyncServerStream()
 		go func(t *testing.T, limits int) {
-			defer close(stream.Req)
-			defer close(stream.Res)
-			defer close(stream.Err)
+			defer stream._destructor()
 
 			stream.Req <- &proskenion.SyncRequest{BlockHash: nil}
 			res := <-stream.Res
@@ -137,11 +142,6 @@ func TestNewSyncServer(t *testing.T) {
 			}
 			err := rp.Commit(modelBlock, txList)
 			assert.Error(t, err)
-			stream.Err <- err
-			select { // if send fast. ignore.
-			case <-stream.Res:
-			default:
-			}
 		}(t, limits)
 		err := ctrl.Sync(stream)
 		statusCheck(t, err, codes.Internal)
