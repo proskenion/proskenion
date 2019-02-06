@@ -87,6 +87,10 @@ message VerifyOperator {
     ValueOperator op = 1;
 }
 
+message PageRankOperator {
+    
+}
+
 // === ValueOperator ===
 message ValueOperator {
     oneof op {
@@ -115,6 +119,7 @@ message ValueOperator {
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
+        PageRankOperator pageRankOp = 32;
     }
 }
 

@@ -1,5 +1,5 @@
-hash: 1a3959246888f4f063ab05290508fcb65de4ef731a41e0921fd77462e635af5a
-updated: 2019-02-06T22:11:07.244865+09:00
+hash: fddae240caac67bb4c37040c175df9e0d9f1574bf57c679064895ce432909877
+updated: 2019-02-07T03:41:45.394487+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
@@ -54,6 +54,8 @@ imports:
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
+- name: github.com/satellitex/pagerank
+  version: 235861ad60c85f030eabbd91ce1c5035b521eedb
 - name: github.com/satellitex/protobuf
   version: 3e5f9f4dcc1bce9394a09da10a9cc242f578022f
   subpackages:
