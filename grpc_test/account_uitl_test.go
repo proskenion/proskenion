@@ -1,6 +1,7 @@
 package grpc_test
 
 import (
+	"fmt"
 	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -56,6 +57,28 @@ func (am *AccountManager) AddPeer(t *testing.T, peer model.Peer) {
 func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.Peer) {
 	tx := am.fc.NewTxBuilder().
 		Consign(am.authorizer.AccountId, ac.AccountId, peer.GetPeerId()).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+const (
+	TrustStorage = "trust"
+	TrustEdge    = "to"
+)
+
+func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountWithPri) {
+	obj := am.fc.NewObjectBuilder().Address(to.AccountId)
+	tx := am.fc.NewTxBuilder().
+		AddObject(am.authorizer.AccountId, fmt.Sprintf("%s/%s", ac.AccountId, TrustStorage), TrustEdge, obj).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+func (am *AccountManager) CreateEdgeStorage(t *testing.T, ac *AccountWithPri) {
+	tx := am.fc.NewTxBuilder().
+		CreateStorage(am.authorizer.AccountId, fmt.Sprintf("%s/%s", am.authorizer.AccountId, TrustStorage)).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -131,7 +154,7 @@ func (am *AccountManager) QueryAccountDegradedPassed(t *testing.T, ac *AccountWi
 	assert.Equal(t, retAc.GetDelegatePeerId(), peer.GetPeerId())
 }
 
-func (am *AccountManager) QueryPeersState(t *testing.T, peers []model.PeerWithPriKey) {
+func (am *AccountManager) QueryPeersStatePassed(t *testing.T, peers []model.PeerWithPriKey) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(am.authorizer.AccountId).
 		FromId("/" + model.PeerStorageName).
@@ -155,4 +178,36 @@ func (am *AccountManager) QueryPeersState(t *testing.T, peers []model.PeerWithPr
 		_, ok := pactive[p.GetPeerId()]
 		assert.True(t, ok)
 	}
+}
+
+func equalList(t *testing.T, os []model.Object, as []model.Object) {
+	h := make(map[string]struct{})
+	for _, o := range os {
+		h[string(o.Hash())] = struct{}{}
+	}
+	for _, a := range as {
+		_, ok := h[string(a.Hash())]
+		if !ok {
+			t.Fatalf("not exist hash: %x", a.Hash())
+		}
+	}
+}
+
+func (am *AccountManager) queryStorage(t *testing.T, fromId string) model.Storage {
+	query := am.fc.NewQueryBuilder().
+		AuthorizerId(am.authorizer.AccountId).
+		FromId(fromId).
+		CreatedTime(RandomNow()).
+		RequestCode(model.StorageAddressType).
+		Build()
+	assert.NoError(t, query.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+
+	res, err := am.client.Read(query)
+	require.NoError(t, err)
+	return res.GetObject().GetStorage()
+}
+
+func (am *AccountManager) QueryStorageEdgesPassed(t *testing.T, fromId string, os []model.Object) {
+	resSt := am.queryStorage(t, fromId)
+	equalList(t, resSt.GetFromKey(TrustEdge).GetList(), os)
 }

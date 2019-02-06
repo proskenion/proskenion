@@ -69,7 +69,7 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.DefineStorage(wsv, c)
 	case *proskenion.Command_CreateStorage:
 		return c.validator.CreateStorage(wsv, c)
-	case *proskenion.Command_UpdateObject:
+	case *proskenion.Command_AddObject:
 		return c.validator.AddObject(wsv, c)
 	case *proskenion.Command_TransferObject:
 		return c.validator.TransferObject(wsv, c)

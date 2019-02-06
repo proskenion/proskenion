@@ -3,6 +3,7 @@ package repository
 import (
 	"bytes"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -210,16 +211,19 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 		}
 		// tx を構築
 		if err := tx.Validate(wsv, txHistory); err != nil {
+			color.Red("CreateBlock ValidateErr : %s",err.Error())
 			goto txskip
 		}
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
+				color.Red("CreateBlock ValidateCmdErr : %s",err.Error())
 				goto txskip
 			}
 		}
 		// TODO Validate -> Execute -> Validate とやりたいけどTargetIdの情報だけOnMemoryに取り出して云々やる必要がある。
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Execute(wsv); err != nil {
+				color.Red("CreateBlock ExecuteCmdErr : %s",err.Error())
 				return nil, nil, core.RollBackTx(dtx, err)
 			}
 		}

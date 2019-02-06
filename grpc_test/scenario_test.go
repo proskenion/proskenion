@@ -130,7 +130,7 @@ func TestScenario(t *testing.T) {
 		am.AddPeer(t, serversPeer[i+4])
 	}
 	time.Sleep(time.Second * 3)
-	am.QueryPeersState(t, serversPeer)
+	am.QueryPeersStatePassed(t, serversPeer)
 	logger.Info(color.GreenString("Passed Scenario 3 : Sync another 4 Peers"))
 
 	// Scenario 4 ==== Degreade 5 Creators[0...4] -> 5 Peers[1...5] ======
@@ -152,6 +152,40 @@ func TestScenario(t *testing.T) {
 	}
 	w.Wait()
 	logger.Info(color.GreenString("Passed Scenario 4 : Degrade 5 Creators -> 5 Peers"))
+
+	// Scenario 5 ==== AcceptEdge Creator <-> Creator ========
+	for i, cm := range cms {
+		go cm.CreateEdgeStorage(t, creators[i])
+	}
+	time.Sleep(time.Second * 2)
+	edges := make([][]model.Object, 5)
+	for i, cm := range cms {
+		edges[i] = make([]model.Object, 0)
+		go cm.AddEdge(t, creators[i], creators[(i+1)%5])
+		edges[i] = append(edges[i], fc.NewObjectBuilder().Address(creators[(i+1)%5].AccountId))
+		if i < 4 {
+			go cm.AddEdge(t, creators[i], creators[(i+2)%5])
+			edges[i] = append(edges[i], fc.NewObjectBuilder().Address(creators[(i+2)%5].AccountId))
+		}
+		if i < 3 {
+			go cm.AddEdge(t, creators[i], creators[(i+3)%5])
+			edges[i] = append(edges[i], fc.NewObjectBuilder().Address(creators[(i+3)%5].AccountId))
+		}
+		if i < 2 {
+			go cm.AddEdge(t, creators[i], creators[(i+4)%5])
+			edges[i] = append(edges[i], fc.NewObjectBuilder().Address(creators[(i+4)%5].AccountId))
+		}
+	}
+	time.Sleep(time.Second * 3)
+	w = &sync.WaitGroup{}
+	for i, cm := range cms {
+		w.Add(1)
+		go func(cm *AccountManager, ac *AccountWithPri, es []model.Object) {
+			cm.QueryStorageEdgesPassed(t, fmt.Sprintf("%s/%s", ac.AccountId, TrustStorage), es)
+			w.Done()
+		}(cm, creators[i], edges[i])
+	}
+	w.Wait()
 
 	// server stop
 	for _, server := range servers {

@@ -100,5 +100,12 @@
               storage:
                 storage:
                   prosl_type: "none"
+          - define_storage:
+              authorizer_id: root@root
+              storage_id: /trust
+              storage:
+                storage:
+                  to:
+                    list: nil
 - return:
     variable: tx
