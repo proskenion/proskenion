@@ -33,3 +33,4 @@ import:
 - package: github.com/mattn/go-sqlite3
 - package: github.com/jessevdk/go-flags
 - package: github.com/mattn/go-colorable
+- package: github.com/fatih/color
