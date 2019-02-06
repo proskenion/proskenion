@@ -18,6 +18,7 @@ import (
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
+	"github.com/proskenion/proskenion/synchronize"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"net"
@@ -32,7 +33,8 @@ func clearData(t *testing.T, conf *config.Config) {
 func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	clearData(t, conf)
 
-	logger := log15.New("peerId",conf.Peer.Id)
+	logger := log15.New("peerId", conf.Peer.Id)
+	logger.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
 	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
@@ -61,7 +63,8 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	cs := commit.NewCommitSystem(fc, cryptor, txQueue, rp, conf)
 
 	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
-	css := consensus.NewConsensus(rp, cs, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
+	sync := synchronize.NewSynchronizer(rp, cf, fc)
+	css := consensus.NewConsensus(rp, fc, cs, sync, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
@@ -84,14 +87,13 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
+	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
+	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
 
-	logger.Info("================= Consensus Boot =================")
-	go func() {
-		css.Boot()
-	}()
-	go func() {
-		css.Receiver()
-	}()
+	// ==================== SetUp Consensus =======================
+	go css.Boot()
+	go css.Receiver()
+	go css.Patrol()
 
 	if err := s.Serve(l); err != nil {
 		require.NoError(t, err)

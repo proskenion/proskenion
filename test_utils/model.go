@@ -21,6 +21,10 @@ type PeerWithPri struct {
 	model.PrivateKey
 }
 
+func (p *PeerWithPri) GetPrivateKey() model.PrivateKey {
+	return p.PrivateKey
+}
+
 func NewTestFactories() (model.ModelFactory,
 	core.CommandExecutor, core.CommandValidator,
 	core.Cryptor, core.Repository, core.Prosl, *config.Config) {

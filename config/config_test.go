@@ -25,7 +25,12 @@ func TestNewConfig(t *testing.T) {
 
 	assert.Equal(t, conf.Peer.Port, "50023")
 	assert.Equal(t, conf.Peer.Host, "127.0.0.1")
+	assert.Equal(t, conf.Peer.Active, true)
 
+	assert.Equal(t, conf.Sync.Limits, 50)
+	assert.Equal(t, conf.Sync.From.Id, "root@pr")
+	assert.Equal(t, conf.Sync.From.Host, "127.0.0.1")
+	assert.Equal(t, conf.Sync.From.Port, "50023")
 
 	assert.Equal(t, conf.Prosl.Id, "/prosl")
 

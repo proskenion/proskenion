@@ -98,6 +98,9 @@ type OrderBy struct {
 }
 
 func (o *OrderBy) GetOrder() model.OrderCode {
+	if o.Query_OrderBy == nil {
+		return model.OrderCode(0)
+	}
 	return model.OrderCode(o.Order)
 }
 

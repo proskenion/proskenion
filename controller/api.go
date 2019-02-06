@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/convertor"
@@ -31,6 +32,7 @@ func (s *APIServer) Write(ctx context.Context, tx *proskenion.Transaction) (*pro
 	modelTx := s.fc.NewEmptyTx()
 	modelTx.(*convertor.Transaction).Transaction = tx
 
+	s.logger.Debug(fmt.Sprintf("API Server Write : %+v",tx))
 	err := s.api.Write(modelTx)
 	if err != nil {
 		s.logger.Error(err.Error())
@@ -49,6 +51,7 @@ func (s *APIServer) Read(ctx context.Context, query *proskenion.Query) (*prosken
 	modelQuery := s.fc.NewEmptyQuery()
 	modelQuery.(*convertor.Query).Query = query
 
+	s.logger.Debug(fmt.Sprintf("API Server Read : %+v", query))
 	res, err := s.api.Read(modelQuery)
 	if err != nil {
 		s.logger.Error(err.Error())

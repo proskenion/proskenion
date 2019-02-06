@@ -15,14 +15,32 @@ type Repository struct {
 	dba     core.DBA
 	cryptor core.Cryptor
 	fc      model.ModelFactory
-	conf    *config.Config
+	me      model.PeerWithPriKey
+
+	conf *config.Config
 
 	TopBlock model.Block
 	Height   int64
 }
 
+type PeerWithPriKey struct {
+	model.Peer
+	model.PrivateKey
+}
+
+func (p *PeerWithPriKey) GetPrivateKey() model.PrivateKey {
+	return p.PrivateKey
+}
+
 func NewRepository(dba core.DBA, cryptor core.Cryptor, fc model.ModelFactory, conf *config.Config) core.Repository {
-	return &Repository{dba, cryptor, fc, conf, nil, 0}
+	me := &PeerWithPriKey{
+		fc.NewPeer(conf.Peer.Id, model.MakeAddressFromHostAndPort(conf.Peer.Host, conf.Peer.Port), conf.Peer.PublicKeyBytes()),
+		conf.Peer.PrivateKeyBytes(),
+	}
+	if conf.Peer.Active {
+		me.Activate()
+	}
+	return &Repository{dba, cryptor, fc, me, conf, nil, 0}
 }
 
 func (r *Repository) Begin() (core.RepositoryTx, error) {
@@ -38,6 +56,10 @@ func (r *Repository) Top() (model.Block, bool) {
 		return nil, false
 	}
 	return r.TopBlock, true
+}
+
+func (r *Repository) Me() model.PeerWithPriKey {
+	return r.me
 }
 
 func (r *Repository) TopWSV() (core.WSV, error) {

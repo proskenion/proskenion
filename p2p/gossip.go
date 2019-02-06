@@ -39,7 +39,7 @@ func (g *BroadCastGossip) GossipBlock(block model.Block, txList core.TxList) err
 	wg := &sync.WaitGroup{}
 	for _, unmarshaler := range unmarshalers {
 		peer := unmarshaler.(model.Peer)
-		if peer.GetPeerId() == g.conf.Peer.Id {
+		if peer.GetPeerId() == g.rp.Me().GetPeerId() {
 			continue
 		}
 		client, err := g.cf.ConsensusClient(peer)

@@ -18,8 +18,13 @@ peer:
   private_key: 82d2750b9278d74cd492ba21ba5843655123f903f7fdadb654f6519bf1f9dea73788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
   host: 127.0.0.1
   port: 50023
+  active: true
 sync:
-  to: "root@pr"
+  from:
+    id: "root@pr"
+    public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+    host: 127.0.0.1
+    port: 50023
   limits: 50
 prosl:
   id: "/prosl"

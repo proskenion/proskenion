@@ -5,14 +5,17 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
+	"github.com/proskenion/proskenion/core/model"
 	"time"
 )
 
 type Consensus struct {
-	rp core.Repository
-	cs core.CommitSystem
-	bq core.ProposalBlockQueue
-	tc core.TxListCache
+	rp   core.Repository
+	fc   model.ModelFactory
+	cs   core.CommitSystem
+	sync core.Synchronizer
+	bq   core.ProposalBlockQueue
+	tc   core.TxListCache
 
 	gossip core.Gossip
 	logger log15.Logger
@@ -24,9 +27,9 @@ type Consensus struct {
 	WaitngInterval time.Duration
 }
 
-func NewConsensus(rp core.Repository, cs core.CommitSystem, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
+func NewConsensus(rp core.Repository, fc model.ModelFactory, cs core.CommitSystem, sync core.Synchronizer, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
 	logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
-	return &Consensus{rp, cs, bq, tc, gossip, logger, pr, conf,
+	return &Consensus{rp, fc, cs, sync, bq, tc, gossip, logger, pr, conf,
 		commitChan, time.Duration(conf.Commit.WaitInterval) * time.Millisecond}
 }
 
@@ -64,6 +67,7 @@ func (c *Consensus) isBlockCreator(round int) bool {
 }
 
 func (c *Consensus) Boot() {
+	c.logger.Info("================= Consensus Boot =================")
 	// Height - loop
 	for {
 		top, _ := c.rp.Top()
@@ -101,7 +105,30 @@ func (c *Consensus) Boot() {
 	}
 }
 
+func (c *Consensus) Patrol() {
+	c.logger.Info("================= Consensus Patrol =================")
+	for {
+		if c.rp.Me().GetActive() {
+			time.Sleep(time.Second)
+			continue
+		}
+
+		// start sync
+		// WIP : Initialize Sync only.
+		toPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.From)
+		c.logger.Info("================= Start Synchronize =================", "From:", toPeer.GetPeerId())
+		err := c.sync.Sync(toPeer)
+		if err != nil {
+			c.logger.Error(err.Error())
+		} else {
+			c.rp.Me().Activate()
+			c.logger.Info("============= Sucess SyncBlockChain !!! =============")
+		}
+	}
+}
+
 func (c *Consensus) Receiver() {
+	c.logger.Info("================= Consensus Receiver =================")
 	for {
 		c.logger.Info("============= Wait Receive Block =============")
 		c.bq.WaitPush()
@@ -130,5 +157,8 @@ func (c *Consensus) Receiver() {
 		}
 		c.logger.Info("============= Commit Received Block and TxList =============")
 		c.commitChan <- struct{}{}
+		if !c.rp.Me().GetActive() {
+			c.rp.Me().Activate()
+		}
 	}
 }
