@@ -33,7 +33,8 @@ func clearData(t *testing.T, conf *config.Config) {
 func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	clearData(t, conf)
 
-	logger := log15.New("peerId",conf.Peer.Id)
+	logger := log15.New("peerId", conf.Peer.Id)
+	logger.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
 	logger.Info(fmt.Sprintf("=================== boot proskenion %s ==========================", conf.Peer.Port))
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
@@ -63,7 +64,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 
 	gossip := p2p.NewBroadCastGossip(rp, fc, cf, cryptor, conf)
 	sync := synchronize.NewSynchronizer(rp, cf, fc)
-	css := consensus.NewConsensus(rp, fc, cs,sync, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
+	css := consensus.NewConsensus(rp, fc, cs, sync, blockQueue, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
@@ -86,6 +87,8 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
+	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
+	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
 
 	// ==================== SetUp Consensus =======================
 	go css.Boot()

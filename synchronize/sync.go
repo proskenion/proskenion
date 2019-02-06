@@ -71,7 +71,7 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 				errChan <- err
 			}
 		case err := <-retErrChan:
-			if err != nil {
+			if err != nil && err != io.EOF {
 				return err
 			}
 			goto afterSync

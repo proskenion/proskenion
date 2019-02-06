@@ -49,7 +49,7 @@ type PeerConfig struct {
 }
 
 type SyncConfig struct {
-	To     PeerConfig `yaml:"to"`
+	From     PeerConfig `yaml:"from"` // From
 	Limits int    `yaml:"limits"`
 }
 

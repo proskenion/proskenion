@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"fmt"
 	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/core"
@@ -39,7 +40,7 @@ func (a *API) Read(query model.Query) (model.QueryResponse, error) {
 	}
 	wsv, err := a.rp.TopWSV()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed APIGate Read, error top WSV: %s", err.Error())
 	}
 	defer wsv.Commit()
 	if err := a.qv.Validate(wsv, query); err != nil {

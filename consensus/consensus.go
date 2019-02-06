@@ -115,18 +115,20 @@ func (c *Consensus) Patrol() {
 
 		// start sync
 		// WIP : Initialize Sync only.
-		toPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.To)
+		toPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.From)
+		c.logger.Info("================= Start Synchronize =================", "From:", toPeer.GetPeerId())
 		err := c.sync.Sync(toPeer)
 		if err != nil {
 			c.logger.Error(err.Error())
 		} else {
+			c.rp.Me().Activate()
 			c.logger.Info("============= Sucess SyncBlockChain !!! =============")
 		}
 	}
 }
 
 func (c *Consensus) Receiver() {
-	c.logger.Info("================= Consensus Receiver	go css.Boot() =================")
+	c.logger.Info("================= Consensus Receiver =================")
 	for {
 		c.logger.Info("============= Wait Receive Block =============")
 		c.bq.WaitPush()

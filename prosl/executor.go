@@ -490,6 +490,8 @@ func ExecuteProslCmdOperator(op *proskenion.CommandOperator, state *ProslStateVa
 		return ExecuteProslAddPeer(op.GetParams(), state)
 	case "consign":
 		return ExecuteProslConsign(op.GetParams(), state)
+	case "activatepeer":
+		return ExecuteProslActivatePeer(op.GetParams(), state)
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented command : %s, %s", op.GetCommandName(), op.String()))
 	}

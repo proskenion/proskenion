@@ -108,6 +108,8 @@ func main() {
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
+	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
+	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
 
 	// SetUp Consensus Loop
 	go csc.Boot()

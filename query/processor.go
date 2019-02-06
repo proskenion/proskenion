@@ -14,7 +14,7 @@ type QueryProcessor struct {
 }
 
 func NewQueryProcessor(fc model.ModelFactory, conf *config.Config) core.QueryProcessor {
-	return &QueryProcessor{ fc, conf}
+	return &QueryProcessor{fc, conf}
 }
 
 func (q *QueryProcessor) Query(wsv model.ObjectFinder, query model.Query) (model.QueryResponse, error) {
@@ -137,7 +137,6 @@ func (q *QueryProcessor) selectStorage(storage model.Storage, query model.Query)
 	}
 	return builder.Storage(storage)
 }
-
 
 func (q *QueryProcessor) accountObjectQueryRange(qp model.QueryPayload, wsv model.ObjectFinder) ([]model.Account, error) {
 	acs := make([]model.Account, 0)

@@ -37,6 +37,9 @@ func NewRepository(dba core.DBA, cryptor core.Cryptor, fc model.ModelFactory, co
 		fc.NewPeer(conf.Peer.Id, model.MakeAddressFromHostAndPort(conf.Peer.Host, conf.Peer.Port), conf.Peer.PublicKeyBytes()),
 		conf.Peer.PrivateKeyBytes(),
 	}
+	if conf.Peer.Active {
+		me.Activate()
+	}
 	return &Repository{dba, cryptor, fc, me, conf, nil, 0}
 }
 

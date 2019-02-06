@@ -455,3 +455,27 @@ func ExecuteProslConsign(params map[string]*proskenion.ValueOperator, state *Pro
 	return ReturnCmdProslStateValue(state,
 		builder.Consign(authorizerId, targetId, peerId).Build().GetPayload().GetCommands()[0])
 }
+
+func ExecuteProslActivatePeer(params map[string]*proskenion.ValueOperator, state *ProslStateValue) *ProslStateValue {
+	builder := state.Fc.NewTxBuilder()
+	var authorizerId, targetId string
+	for key, value := range params {
+		switch key {
+		case "authorizer_id", "authoirzer":
+			state = ExecuteProslValueOperator(value, state)
+			if state.Err != nil {
+				return state
+			}
+			authorizerId = state.ReturnObject.GetAddress()
+
+		case "peer_id", "target_id", "target":
+			state = ExecuteProslValueOperator(value, state)
+			if state.Err != nil {
+				return state
+			}
+			targetId = state.ReturnObject.GetAddress()
+		}
+	}
+	return ReturnCmdProslStateValue(state,
+		builder.ActivatePeer(authorizerId, targetId).Build().GetPayload().GetCommands()[0])
+}
