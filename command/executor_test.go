@@ -535,6 +535,7 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 			fc.NewStorageBuilder().
 				Str("name", "account1").
 				Address("id", "account1@com").
+				Id("account1@com/wallet").
 				Build(),
 			nil,
 		},
@@ -546,6 +547,7 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 				Str("address", "1-1-1").
 				Address("owner", "account1@com").
 				Int64("value", 11111).
+				Id("account1@com/plane").
 				Build(),
 			nil,
 		},

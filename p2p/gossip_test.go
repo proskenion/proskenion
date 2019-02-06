@@ -1,7 +1,8 @@
-package p2p
+package p2p_test
 
 import (
 	"github.com/proskenion/proskenion/core/model"
+	. "github.com/proskenion/proskenion/p2p"
 	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

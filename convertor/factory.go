@@ -372,6 +372,11 @@ func (b *StorageBuilder) Dict(key string, value map[string]model.Object) model.S
 	return b
 }
 
+func (b *StorageBuilder) Id(id string) model.StorageBuilder {
+	b.Storage.Id = id
+	return b
+}
+
 func (b *StorageBuilder) Set(key string, value model.Object) model.StorageBuilder {
 	b.Object[key] = value.(*Object).Object
 	return b

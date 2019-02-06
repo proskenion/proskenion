@@ -535,6 +535,7 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 			Int64("int64", 64).
 			Uint32("uint32", 1).
 			Uint64("uint64", 2).
+			Id("target@account.com/wallet").
 			Build()
 
 		dict := storage.GetObject()
@@ -575,5 +576,8 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 
 		assert.Equal(t, uint64(2), dict["uint64"].GetU64())
 		assert.Equal(t, model.Uint64ObjectCode, dict["uint64"].GetType())
+
+		assert.Equal(t, "target@account.com/wallet", storage.GetId())
+		assert.Equal(t, "target@account.com/wallet", storage.GetFromKey("id").GetAddress())
 	})
 }

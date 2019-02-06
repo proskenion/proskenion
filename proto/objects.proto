@@ -58,7 +58,8 @@ message ObjectDict {
 }
 
 message Storage {
-    map<string, Object> object = 1;
+    string id = 1;
+    map<string, Object> object = 2;
 }
 
 message MegaStorage {

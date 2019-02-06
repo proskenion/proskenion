@@ -164,7 +164,8 @@ func (c *CommandExecutor) CreateStorage(wsv model.ObjectFinder, cmd model.Comman
 	if err := wsv.Query(model.MustAddress("/"+id.Storage()), mtSt); err != nil {
 		return errors.Wrapf(core.ErrCommandExecutorCreateStorageNotDefinedStorage, err.Error())
 	}
-	if err := wsv.Append(id, mtSt); err != nil {
+	newSt := c.factory.NewStorageBuilder().From(mtSt).Id(cmd.GetTargetId()).Build()
+	if err := wsv.Append(id, newSt); err != nil {
 		return err
 	}
 	return nil

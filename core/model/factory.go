@@ -76,6 +76,7 @@ type StorageBuilder interface {
 	List(key string, value []Object) StorageBuilder
 	Dict(key string, value map[string]Object) StorageBuilder
 	Set(key string, value Object) StorageBuilder
+	Id(id string) StorageBuilder
 	Build() Storage
 }
 
