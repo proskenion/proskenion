@@ -1,7 +1,6 @@
 package grpc_test
 
 import (
-	"fmt"
 	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -86,13 +85,11 @@ func (am *AccountManager) QueryPeersState(t *testing.T, peers []model.PeerWithPr
 	res, err := am.client.Read(query)
 	require.NoError(t, err)
 
-	fmt.Println("object:", res)
 	assert.Equal(t, len(res.GetObject().GetList()), len(peers))
 	pactive := make(map[string]bool)
 	for _, o := range res.GetObject().GetList() {
 		p := o.GetPeer()
 		pactive[p.GetPeerId()] = p.GetActive()
-		fmt.Println(p)
 		assert.True(t, p.GetActive())
 	}
 	for _, p := range peers {

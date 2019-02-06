@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"io"
 	"sync"
 	"testing"
 	"time"
@@ -43,7 +42,7 @@ func TestSynchronizer_Sync(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			err := syn.Sync(peer)
-			assert.Equal(t, io.EOF, err)
+			assert.NoError(t,err)
 			wg.Done()
 		}()
 
