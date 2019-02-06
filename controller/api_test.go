@@ -7,6 +7,7 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/gate"
+	"github.com/proskenion/proskenion/p2p"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
@@ -28,7 +29,7 @@ func initializeAPI(t *testing.T) ([]*AccountWithPri, core.ProposalTxQueue, prosk
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor( fc, RandomConfig())
 	qv := query.NewQueryValidator( fc, conf)
-	api := gate.NewAPI(rp, queue, qp, qv, logger)
+	api := gate.NewAPI(rp, queue, qp, qv, &p2p.MockGossip{}, logger)
 
 	server := NewAPIServer(fc, api, logger)
 

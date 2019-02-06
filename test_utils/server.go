@@ -13,6 +13,7 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/crypto"
 	"github.com/proskenion/proskenion/gate"
+	"github.com/proskenion/proskenion/p2p"
 	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
@@ -84,7 +85,7 @@ func RandomSetUpSyncServer(t *testing.T, conf *config.Config, rp core.Repository
 
 	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
 	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))
-	ap := gate.NewAPI(rp, qTx, qp, qv, logger)
+	ap := gate.NewAPI(rp, qTx, qp, qv, &p2p.MockGossip{},logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, ap, logger))
 
 	if err := s.Serve(l); err != nil {

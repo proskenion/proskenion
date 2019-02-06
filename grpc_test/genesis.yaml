@@ -60,10 +60,14 @@
               quorum: 1
           - create_account:
               authorizer_id: root@root
-              account_id: default@creator
+              account_id: default@root
               public_keys:
                 list: nil
               quorum: 0
+          - add_balance:
+              authorizer_id: root@root
+              account_id: default@root
+              balance: 10000LL
           - add_balance:
               authorizer_id: root@root
               account_id: account1@pr
@@ -78,7 +82,7 @@
               balance: 30000LL
           - consign:
               authorizer_id: root@root
-              account_id: default@creator
+              account_id: default@root
               peer_id: root@peer
           - define_storage:
               authorizer_id: root@root

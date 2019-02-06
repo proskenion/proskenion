@@ -16,13 +16,13 @@ type AccountManager struct {
 	fc         model.ModelFactory
 }
 
-func NewAccountManager(t *testing.T, server model.Peer) *AccountManager {
+func NewAccountManager(t *testing.T, authorizer *AccountWithPri, server model.Peer) *AccountManager {
 	fc := RandomFactory()
 	c, err := client.NewAPIClient(server, fc)
 	require.NoError(t, err)
 	return &AccountManager{
 		c,
-		NewAccountWithPri("authorizer@pr"),
+		authorizer,
 		fc,
 	}
 }
@@ -53,14 +53,22 @@ func (am *AccountManager) AddPeer(t *testing.T, peer model.Peer) {
 	require.NoError(t, am.client.Write(tx))
 }
 
+func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.Peer) {
+	tx := am.fc.NewTxBuilder().
+		Consign(am.authorizer.AccountId, ac.AccountId, peer.GetPeerId()).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
 func (am *AccountManager) QueryAccountPassed(t *testing.T, ac *AccountWithPri) {
 	query := am.fc.NewQueryBuilder().
-		AuthorizerId(ac.AccountId).
+		AuthorizerId(am.authorizer.AccountId).
 		FromId(model.MustAddress(ac.AccountId).AccountId()).
 		CreatedTime(RandomNow()).
 		RequestCode(model.AccountObjectCode).
 		Build()
-	assert.NoError(t, query.Sign(ac.Pubkey, ac.Prikey))
+	assert.NoError(t, query.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 
 	res, err := am.client.Read(query)
 	assert.NoError(t, err)
@@ -72,10 +80,61 @@ func (am *AccountManager) QueryAccountPassed(t *testing.T, ac *AccountWithPri) {
 	assert.Contains(t, retAc.GetPublicKeys(), ac.Pubkey)
 }
 
+func (am *AccountManager) queryRangeAccounts(t *testing.T, fromId string, limit int32) []model.Account {
+	query := am.fc.NewQueryBuilder().
+		AuthorizerId(am.authorizer.AccountId).
+		FromId(fromId).
+		CreatedTime(RandomNow()).
+		RequestCode(model.ListObjectCode).
+		Limit(limit).
+		Build()
+	assert.NoError(t, query.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+
+	res, err := am.client.Read(query)
+	require.NoError(t, err)
+
+	ret := make([]model.Account, 0)
+	for _, o := range res.GetObject().GetList() {
+		ret = append(ret, o.GetAccount())
+	}
+	return ret
+}
+
+func (am *AccountManager) QueryRangeAccountsPassed(t *testing.T, fromId string, acs []*AccountWithPri) {
+	res := am.queryRangeAccounts(t, fromId, 10)
+	assert.Equal(t, len(res), len(acs))
+	amap := make(map[string]struct{})
+	for _, ac := range res {
+		amap[ac.GetAccountId()] = struct{}{}
+	}
+	for _, ac := range acs {
+		_, ok := amap[ac.AccountId]
+		require.True(t, ok)
+	}
+}
+
+func (am *AccountManager) QueryAccountDegradedPassed(t *testing.T, ac *AccountWithPri, peer model.PeerWithPriKey) {
+	query := am.fc.NewQueryBuilder().
+		AuthorizerId(am.authorizer.AccountId).
+		FromId(model.MustAddress(ac.AccountId).AccountId()).
+		CreatedTime(RandomNow()).
+		RequestCode(model.AccountObjectCode).
+		Build()
+	assert.NoError(t, query.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+
+	res, err := am.client.Read(query)
+	assert.NoError(t, err)
+
+	assert.NoError(t, res.Verify())
+	retAc := res.GetObject().GetAccount()
+	assert.Equal(t, retAc.GetAccountId(), ac.AccountId)
+	assert.Equal(t, retAc.GetDelegatePeerId(), peer.GetPeerId())
+}
+
 func (am *AccountManager) QueryPeersState(t *testing.T, peers []model.PeerWithPriKey) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(am.authorizer.AccountId).
-		FromId("/peer").
+		FromId("/" + model.PeerStorageName).
 		CreatedTime(RandomNow()).
 		RequestCode(model.ListObjectCode).
 		Limit(10).
