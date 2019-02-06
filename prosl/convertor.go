@@ -511,6 +511,12 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_VerifyOp{op}}, nil
+			case "pagerank":
+				op, err := ParsePageRankOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_PageRankOp{op}}, nil
 			default: // another case, all command
 				op, err := ParseCommandOperator(v)
 				if err != nil {
@@ -997,6 +1003,37 @@ func ParseVerifyOperator(yaml interface{}) (*proskenion.VerifyOperator, error) {
 	}
 	ret := &proskenion.VerifyOperator{Op: op}
 	return ret, nil
+}
+
+func ParsePageRankOperator(yaml interface{}) (*proskenion.PageRankOperator, error) {
+	if yamap, ok := yaml.(map[interface{}]interface{}); ok {
+		ret := &proskenion.PageRankOperator{}
+		for key, value := range yamap {
+			switch key {
+			case "storages":
+				v, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.Storages = v
+			case "to_key", "toKey", "tokey":
+				v, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.ToKey = v
+			case "out_name", "outName", "outname":
+				v, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.OutName = v
+			}
+			return ret, nil
+		}
+		return ret, nil
+	}
+	return nil, ProslParseCastError(make(map[interface{}]interface{}), yaml, yaml)
 }
 
 func ParseListOperator(yaml interface{}) (*proskenion.ListOperator, error) {

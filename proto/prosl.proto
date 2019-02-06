@@ -98,8 +98,8 @@ message PageRankOperator {
      *          Storage has Id = "Address/outStorageName" and  "rank" = rank.
      **/
     ValueOperator storages = 1;
-    string toKey = 2;
-    string outStorageName = 3;
+    ValueOperator toKey = 2;
+    ValueOperator outName = 3;
 }
 
 // === ValueOperator ===
@@ -127,7 +127,6 @@ message ValueOperator {
         ListOperator listOp = 24;
         MapOperator mapOp = 25;
         CastOperator castOp = 26;
-        AccountIdOperator accountIdOp = 27;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
@@ -225,11 +224,6 @@ message MapOperator {
 message CastOperator {
     ObjectCode type = 1;
     ValueOperator object = 2;
-}
-
-message AccountIdOperator {
-    // Must be address object
-    ValueOperator address = 1;
 }
 
 // === CodntionalFormula ====

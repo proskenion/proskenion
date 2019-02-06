@@ -376,6 +376,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslIsDefinedOperator(op.GetIsDefinedOp(), state)
 	case *proskenion.ValueOperator_VerifyOp:
 		state = ExecuteProslVerifyOperator(op.GetVerifyOp(), state)
+	case *proskenion.ValueOperator_PageRankOp:
+		state = ExecuteProslPageRankOperator(op.GetPageRankOp(), state)
 	case *proskenion.ValueOperator_ListOp:
 		state = ExecuteProslListOperator(op.GetListOp(), state)
 	case *proskenion.ValueOperator_MapOp:
@@ -671,6 +673,11 @@ func ExecuteProslIsDefinedOperator(op *proskenion.IsDefinedOperator, state *Pros
 
 func ExecuteProslVerifyOperator(op *proskenion.VerifyOperator, state *ProslStateValue) *ProslStateValue {
 	// TODO : Signature verifier
+	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
+}
+
+func ExecuteProslPageRankOperator(op *proskenion.PageRankOperator, state *ProslStateValue) *ProslStateValue {
+	// TODO : PageRank
 	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
 }
 
