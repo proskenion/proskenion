@@ -64,6 +64,15 @@ func (s *MockSync_SyncServer) Recv() (*proskenion.SyncRequest, error) {
 
 func (s *MockSync_SyncServer) _destructor() {
 	s.Failed = true
+	for len(s.Req) > 0 {
+		<-s.Req
+	}
+	for len(s.Res) > 0 {
+		<-s.Res
+	}
+	for len(s.Err) > 0 {
+		<-s.Err
+	}
 	close(s.Req)
 	close(s.Res)
 	close(s.Err)
