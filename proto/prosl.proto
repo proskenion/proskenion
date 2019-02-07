@@ -84,7 +84,8 @@ message IsDefinedOperator {
 }
 
 message VerifyOperator {
-    ValueOperator op = 1;
+    ValueOperator sig = 1;
+    ValueOperator hash = 2;
 }
 
 message PageRankOperator {

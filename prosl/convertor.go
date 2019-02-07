@@ -997,12 +997,27 @@ func ParseIsDefinedOperator(yaml interface{}) (*proskenion.IsDefinedOperator, er
 }
 
 func ParseVerifyOperator(yaml interface{}) (*proskenion.VerifyOperator, error) {
-	op, err := ParseValueOperator(yaml)
-	if err != nil {
-		return nil, err
+	if yamap, ok := yaml.(map[interface{}]interface{}); ok {
+		ret := &proskenion.VerifyOperator{}
+		for key, value := range yamap {
+			switch key {
+			case "sig", "signature":
+				op, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.Sig = op
+			case "hash":
+				op, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.Hash = op
+			}
+		}
+		return ret, nil
 	}
-	ret := &proskenion.VerifyOperator{Op: op}
-	return ret, nil
+	return nil, ProslParseCastError(make(map[interface{}]interface{}), yaml, yaml)
 }
 
 func ParsePageRankOperator(yaml interface{}) (*proskenion.PageRankOperator, error) {

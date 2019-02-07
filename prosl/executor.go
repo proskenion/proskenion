@@ -9,6 +9,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
+	"github.com/satellitex/pagerank"
 	"strings"
 )
 
@@ -44,6 +45,7 @@ type ProslConstState struct {
 	Fc        model.ModelFactory
 	Wsv       model.ObjectFinder
 	Qc        core.Querycutor
+	C         core.Cryptor
 }
 
 type ProslStateValue struct {
@@ -54,7 +56,7 @@ type ProslStateValue struct {
 	Err          error
 }
 
-func InitProslStateValue(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, conf *config.Config) *ProslStateValue {
+func InitProslStateValue(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, c core.Cryptor, conf *config.Config) *ProslStateValue {
 	qc := struct {
 		core.QueryProcessor
 		core.QueryValidator
@@ -69,6 +71,7 @@ func InitProslStateValue(fc model.ModelFactory, wsv model.ObjectFinder, top mode
 			Fc:        fc,
 			Wsv:       wsv,
 			Qc:        qc,
+			C:         c,
 			Variables: variables,
 		},
 		ReturnObject: nil,
@@ -672,12 +675,72 @@ func ExecuteProslIsDefinedOperator(op *proskenion.IsDefinedOperator, state *Pros
 }
 
 func ExecuteProslVerifyOperator(op *proskenion.VerifyOperator, state *ProslStateValue) *ProslStateValue {
-	// TODO : Signature verifier
-	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
+	state = ExecuteProslValueOperator(op.GetSig(), state)
+	if state.Err != nil {
+		return state
+	}
+	sig := state.ReturnObject.GetSig()
+	if sig == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected signature type.")
+	}
+	state = ExecuteProslValueOperator(op.GetHash(), state)
+	if state.Err != nil {
+		return state
+	}
+	hasher := state.ReturnObject
+	if hasher == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected bytes data.")
+	}
+	if err := state.C.Verify(sig.GetPublicKey(), hasher, sig.GetSignature()); err != nil {
+		return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Bool(false))
+	}
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Bool(true))
 }
 
 func ExecuteProslPageRankOperator(op *proskenion.PageRankOperator, state *ProslStateValue) *ProslStateValue {
-	// TODO : PageRank
+	// storage
+	state = ExecuteProslValueOperator(op.GetStorages(), state)
+	if state.Err != nil {
+		return state
+	}
+	storages := state.ReturnObject.GetList()
+	if storages == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected List type.")
+	}
+
+	// toKey
+	state = ExecuteProslValueOperator(op.GetToKey(), state)
+	if state.Err != nil {
+		return state
+	}
+	toKey := state.ReturnObject.GetStr()
+	if toKey == "" {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected String type.")
+	}
+
+	// outName
+	state = ExecuteProslValueOperator(op.GetToKey(), state)
+	if state.Err != nil {
+		return state
+	}
+	outName := state.ReturnObject.GetStr()
+	if outName == "" {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected String type.")
+	}
+
+	graph := pagerank.New()
+	for _, o := range storages {
+		st := o.GetStorage()
+		if st == nil {
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected storage type. : %s", op.String())
+		}
+		to := st.GetFromKey(toKey).GetAddress()
+		graph.Link(model.MustAddress(st.GetId()).AccountId(), model.MustAddress(to).AccountId())
+	}
+	graph.Rank(85 * pagerank.Dot2ONE, 6 * pagerank.DotONE, func(label string, rank int64){
+		//TODO
+	})
+
 	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
 }
 
