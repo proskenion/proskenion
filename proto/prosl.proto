@@ -218,7 +218,7 @@ message ValuedOperator {
 message IndexedOperator {
     ValueOperator object = 1;
     ObjectCode type = 2;
-    int32 index = 3;
+    ValueOperator index = 3;
 }
 
 message ListOperator {

@@ -1166,7 +1166,9 @@ func TestCommandExecutor_ForceUpdateStorage(t *testing.T) {
 				st := fc.NewEmptyStorage()
 				err := wsv.Query(model.MustAddress(c.storageId), st)
 				require.NoError(t, err)
-				assert.Equal(t, c.storage.Hash(), st.Hash())
+				exSt := fc.NewStorageBuilder().From(st).
+					Id(c.storageId).Build()
+				assert.Equal(t, exSt.Hash(), st.Hash())
 			}
 		})
 	}

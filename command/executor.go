@@ -398,12 +398,13 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 	return nil
 }
 
-
 func (c *CommandExecutor) ForceUpdateStorage(wsv model.ObjectFinder, cmd model.Command) error {
 	fus := cmd.GetForceUpdateStorage()
 	st := fus.GetStorage()
 	id := model.MustAddress(cmd.GetTargetId())
-	if err := wsv.Append(id, st); err != nil {
+	newSt := c.factory.NewStorageBuilder().From(st).
+		Id(id.Id()).Build()
+	if err := wsv.Append(id, newSt); err != nil {
 		return err
 	}
 	return nil

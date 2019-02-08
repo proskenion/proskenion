@@ -976,12 +976,12 @@ func ParseIndexedOperator(yaml interface{}) (*proskenion.IndexedOperator, error)
 		}
 		ret.Type = t
 
-		// 2 - key operator
-		index, ok := yalist[2].(int)
-		if !ok {
-			return nil, ProslParseCastError(int(0), yalist, yaml)
+		// 2 - index operator
+		index, err := ParseValueOperator(yalist[2])
+		if err != nil {
+			return nil, err
 		}
-		ret.Index = int32(index)
+		ret.Index = index
 		return ret, nil
 	}
 	return nil, ProslParseCastError(make([]interface{}, 0), yaml, yaml)

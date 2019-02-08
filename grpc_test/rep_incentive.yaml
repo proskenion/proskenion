@@ -10,7 +10,7 @@
         - int32
         - mod:
             - variable: height
-            - 2ll
+            - 20ll
 - if: # 一周したら
     - eq:
         - variable: ind
@@ -44,18 +44,32 @@
                     - id
                 storages:
                   variable: rank
-    - set: # account List を取得
-        - acs
+    - set: # account id list を取得
+        - acids
         - query:
             authorizer: root@root
-            select: "*"
+            select: id
             type: List
-            from: pr/account
+            from: creator/rank
             order_by:
-              - balance
+              - rank
               - DESC
-            limit: 2
-    - set:
+            limit: 4
+    - set: # acs = List()
+        - acs
+        - list: nil
+    - each: # acs = List{acid[0], acid[1],...}
+        - acids
+        - acid
+        - concat:
+          - acs
+          - query:
+              authorizer: root@root
+              select: "*"
+              type: Account
+              from:
+                variable: acid
+    - set: # degreaders に保存
         - add_degrade
         - update_object:
             authorizer_id: root@root
@@ -63,7 +77,7 @@
             key: acs
             object:
               variable: acs
-    - return:
+    - return: # degreaders[0] に 報酬 + 10000
         transaction:
           commands:
             - variable: add_degrade
@@ -86,7 +100,7 @@
             select: acs
             type: List
             from: root@root/degraders
-    - return:
+    - return: # degreaders[i%4] に 報酬 + 10000
         transaction:
           commands:
             - add_balance:
@@ -96,7 +110,9 @@
                     - indexed:
                         - variable: acs
                         - account
-                        - 1
+                        - mod:
+                            - variable: ind
+                            - 4
                     - address
                     - id
                 balance: 10000ll

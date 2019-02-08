@@ -652,6 +652,7 @@ func ExecuteProslValuedOperator(op *proskenion.ValuedOperator, state *ProslState
 }
 
 func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslStateValue) *ProslStateValue {
+	// list
 	state = ExecuteProslValueOperator(op.GetObject(), state)
 	if state.Err != nil {
 		return state
@@ -664,12 +665,22 @@ func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslSta
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented,
 			fmt.Sprintf("unimplemented indexed type: %s, %s", object.GetType().String(), op.String()))
 	}
-	if len(object.GetList()) <= int(op.GetIndex()) {
+
+	// int32
+	state = ExecuteProslValueOperator(op.GetIndex(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.Int32ObjectCode {
+		ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, fmt.Sprintf("expected return Int32, but: %#v, %s", state.ReturnObject, op.String()))
+	}
+	index := state.ReturnObject.GetI32()
+	if len(object.GetList()) <= int(index) {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_OutOfRange,
 			"list object length is %d, but index is %d, %s", len(object.GetList()), op.GetIndex(), op)
 	}
 
-	ret := object.GetList()[op.GetIndex()]
+	ret := object.GetList()[index]
 	state = ExecuteAssertType(op, ret, model.ObjectCode(op.GetType()), state)
 	if state.Err != nil {
 		return state
