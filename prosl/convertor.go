@@ -231,6 +231,12 @@ func ParseProslOperator(yamap map[interface{}]interface{}) (*proskenion.ProslOpe
 				return nil, err
 			}
 			return &proskenion.ProslOperator{Op: &proskenion.ProslOperator_ReturnOp{ReturnOp: op}}, nil
+		case "each":
+			op, err := ParseEachOperator(value)
+			if err != nil {
+				return nil, err
+			}
+			return &proskenion.ProslOperator{Op: &proskenion.ProslOperator_EachOp{EachOp: op}}, nil
 		default:
 			return nil, ProslParseErrOperation(value.(string))
 		}
@@ -376,6 +382,35 @@ func ParseReturnOperator(yaml interface{}) (*proskenion.ReturnOperator, error) {
 	}
 	ret := &proskenion.ReturnOperator{Op: op}
 	return ret, nil
+}
+
+func ParseEachOperator(yaml interface{}) (*proskenion.EachOperator, error) {
+	if yalist, ok := yaml.([]interface{}); ok {
+		if len(yalist) < 2 {
+			return nil, ProslParseArgumentErrorMin(2, len(yalist), yaml)
+		}
+		ret := &proskenion.EachOperator{}
+		op, err := ParseValueOperator(yalist[0])
+		if err != nil {
+			return nil, err
+		}
+		ret.List = op
+
+		// variableName
+		if v, ok := yalist[1].(string); ok {
+			ret.VariableName = v
+		} else {
+			return nil, ProslParseCastError("", v, yaml)
+		}
+
+		prosl, err := ParseProsl(yalist[2:])
+		if err != nil {
+			return nil, err
+		}
+		ret.Do = prosl
+		return ret, nil
+	}
+	return nil, ProslParseCastError(make([]interface{}, 0), yaml, yaml)
 }
 
 func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
@@ -1025,19 +1060,19 @@ func ParsePageRankOperator(yaml interface{}) (*proskenion.PageRankOperator, erro
 		ret := &proskenion.PageRankOperator{}
 		for key, value := range yamap {
 			switch key {
-			case "storages":
+			case "storages", "edges":
 				v, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err
 				}
 				ret.Storages = v
-			case "to_key", "toKey", "tokey":
+			case "to_key", "toKey", "tokey", "key":
 				v, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err
 				}
 				ret.ToKey = v
-			case "out_name", "outName", "outname":
+			case "out_name", "outName", "outname", "name", "out":
 				v, err := ParseValueOperator(value)
 				if err != nil {
 					return nil, err

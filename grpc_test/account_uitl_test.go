@@ -63,7 +63,7 @@ func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.P
 }
 
 const (
-	TrustStorage = "trust"
+	TrustStorage = "follow"
 	TrustEdge    = "to"
 )
 

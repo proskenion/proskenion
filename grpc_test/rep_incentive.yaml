@@ -1,0 +1,88 @@
+- set:
+    - height
+    - valued:
+        - variable: top
+        - int64
+        - height
+- set: # height % 20 を取得、20回で周期的
+    - ind
+    - cast:
+        - int32
+        - mod:
+            - variable: height
+            - 2ll
+- if: # 一周したら
+    - eq:
+        - variable: ind
+        - 0
+    - set: # creator 間の信頼有効辺情報をとってくる
+      - edges
+      - query:
+          authorizer: root@root
+          select: "*"
+          type: List
+          from: creator/follow
+          limit: 100
+    - set: # ranks = pageranks(edges)
+      - ranks
+      - pagerank:
+          storages:
+            variable: edges
+          key: "key"
+          out: "rank"
+    - set: # account List を取得
+        - acs
+        - query:
+            authorizer: root@root
+            select: "*"
+            type: List
+            from: pr/account
+            order_by:
+              - balance
+              - DESC
+            limit: 2
+    - set:
+        - add_degrade
+        - update_object:
+            authorizer_id: root@root
+            wallet_id: root@root/degraders
+            key: acs
+            object:
+              variable: acs
+    - return:
+        transaction:
+          commands:
+            - variable: add_degrade
+            - add_balance:
+                authorizer_id: root@root
+                account_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - 0
+                    - address
+                    - id
+                balance: 10000ll
+- else:
+    - set:
+        - acs
+        - query:
+            authorizer: root@root
+            select: acs
+            type: List
+            from: root@root/degraders
+    - return:
+        transaction:
+          commands:
+            - add_balance:
+                authorizer_id: root@root
+                target_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - 1
+                    - address
+                    - id
+                balance: 10000ll

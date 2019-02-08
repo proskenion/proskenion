@@ -81,7 +81,7 @@ func InitProslStateValue(fc model.ModelFactory, wsv model.ObjectFinder, top mode
 	}
 }
 
-func InitProslStateValueWithPrams(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, conf *config.Config, params map[string]model.Object) *ProslStateValue {
+func InitProslStateValueWithPrams(fc model.ModelFactory, wsv model.ObjectFinder, top model.Block, c core.Cryptor, conf *config.Config, params map[string]model.Object) *ProslStateValue {
 	qc := struct {
 		core.QueryProcessor
 		core.QueryValidator
@@ -100,6 +100,7 @@ func InitProslStateValueWithPrams(fc model.ModelFactory, wsv model.ObjectFinder,
 			Fc:        fc,
 			Wsv:       wsv,
 			Qc:        qc,
+			C:         c,
 			Variables: variables,
 		},
 		ReturnObject: nil,
@@ -239,6 +240,8 @@ func ExecuteProslOpFormula(op *proskenion.ProslOperator, state *ProslStateValue)
 		state = ExecuteProslAssertOperator(op.GetAssertOp(), state)
 	case *proskenion.ProslOperator_ReturnOp:
 		state = ExecuteProslReturnOperator(op.GetReturnOp(), state)
+	case *proskenion.ProslOperator_EachOp:
+		state = ExecuteProslEachOperator(op.GetEachOp(), state)
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, "unimlemented operator")
 	}
@@ -337,6 +340,27 @@ func ExecuteProslReturnOperator(op *proskenion.ReturnOperator, state *ProslState
 		return state
 	}
 	return ReturnReturnProslStateValue(state)
+}
+
+func ExecuteProslEachOperator(op *proskenion.EachOperator, state *ProslStateValue) *ProslStateValue {
+	state = ExecuteProslValueOperator(op.GetList(), state)
+	if state.Err != nil {
+		return state
+	}
+
+	list := state.ReturnObject.GetList()
+	if list == nil {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return type, expected List. %+v", op)
+	}
+
+	for _, o := range list {
+		state.Variables[op.VariableName] = o
+		state = ExecuteProsl(op.GetDo(), state)
+		if state.Err != nil {
+			return state
+		}
+	}
+	return ReturnOpProslStateValue(state, AnotherOperator_State)
 }
 
 func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateValue) *ProslStateValue {
@@ -737,11 +761,15 @@ func ExecuteProslPageRankOperator(op *proskenion.PageRankOperator, state *ProslS
 		to := st.GetFromKey(toKey).GetAddress()
 		graph.Link(model.MustAddress(st.GetId()).AccountId(), model.MustAddress(to).AccountId())
 	}
-	graph.Rank(85 * pagerank.Dot2ONE, 6 * pagerank.DotONE, func(label string, rank int64){
-		//TODO
+	res := make([]model.Object, 0, len(storages))
+	graph.Rank(85*pagerank.Dot2ONE, 6*pagerank.DotONE, func(label string, rank int64) {
+		st := state.Fc.NewStorageBuilder().
+			Id(label+"/"+outName).
+			Int64("rank", rank).
+			Build()
+		res = append(res, state.Fc.NewObjectBuilder().Storage(st))
 	})
-
-	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented Verify Operator : %s", op.String()))
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(res))
 }
 
 func ExecuteProslListOperator(op *proskenion.ListOperator, state *ProslStateValue) *ProslStateValue {

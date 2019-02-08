@@ -36,6 +36,7 @@ message ProslOperator {
         RequireOperator requireOp = 6;
         AssertOperator assertOp = 7;
         ReturnOperator returnOp = 8;
+        EachOperator eachOp = 9;
     }
 }
 
@@ -73,6 +74,12 @@ message AssertOperator {
 
 message ReturnOperator {
     ValueOperator op = 1;
+}
+
+message EachOperator {
+    ValueOperator list = 1;
+    string variableName = 2;
+    Prosl do = 3;
 }
 
 message VariableOperator {

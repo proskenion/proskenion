@@ -102,7 +102,7 @@
                   prosl_type: "none"
           - define_storage:
               authorizer_id: root@root
-              storage_id: /trust
+              storage_id: /follow
               storage:
                 storage:
                   to:

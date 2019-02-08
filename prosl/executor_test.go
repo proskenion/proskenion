@@ -104,7 +104,7 @@ func testGenesisExecuteProsl(t *testing.T, filename string, fc model.ModelFactor
 	wsv, err := rp.TopWSV()
 	require.NoError(t, err)
 
-	value := InitProslStateValue(fc, wsv, top, conf)
+	value := InitProslStateValue(fc, wsv, top, RandomCryptor(), conf)
 
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
@@ -141,7 +141,7 @@ func testGetAccountsExecuteProsl(t *testing.T, filename string, fc model.ModelFa
 	wsv, err := rp.TopWSV()
 	require.NoError(t, err)
 
-	value := InitProslStateValue(fc, wsv, top, conf)
+	value := InitProslStateValue(fc, wsv, top, RandomCryptor(), conf)
 
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
@@ -171,7 +171,7 @@ func testIncentiveExecuteProsl(t *testing.T, filename string, fc model.ModelFact
 	wsv, err := rp.TopWSV()
 	require.NoError(t, err)
 
-	value := InitProslStateValue(fc, wsv, top, conf)
+	value := InitProslStateValue(fc, wsv, top, RandomCryptor(), conf)
 
 	prosl := testConvertProsl(t, filename)
 	state := ExecuteProsl(prosl, value)
