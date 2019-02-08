@@ -1120,3 +1120,55 @@ func TestCommandExecutor_CheckAndCommitProsl(t *testing.T) {
 	}
 	require.NoError(t, dtx.Commit())
 }
+
+func TestCommandExecutor_ForceUpdateStorage(t *testing.T) {
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+	preParaProslSave(t, fc, rp, RandomConfig())
+	prePareForUpdate(t, fc, rp)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		storageId    string
+		storage      model.Storage
+		err          error
+	}{
+		{
+			"case 1 : success",
+			authorizerId,
+			"account1@incentive.com/xxx",
+			RandomStorage(),
+			nil,
+		},
+		{
+			"case 2 : success overwrite",
+			authorizerId,
+			"account1@incentive.com/xxx",
+			RandomStorage(),
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := fc.NewTxBuilder().
+				ForceUpdateStorage(c.authorizerId, c.storageId, c.storage).
+				Build().
+				GetPayload().
+				GetCommands()[0]
+			err := ex.ForceUpdateStorage(wsv, cmd)
+			if c.err != nil {
+				assert.EqualErrorf(t, errors.Cause(err), c.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				st := fc.NewEmptyStorage()
+				err := wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				assert.Equal(t, c.storage.Hash(), st.Hash())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}

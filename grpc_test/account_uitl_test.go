@@ -63,14 +63,14 @@ func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.P
 }
 
 const (
-	TrustStorage = "follow"
-	TrustEdge    = "to"
+	FollowStorage = "follow"
+	FollowEdge    = "to"
 )
 
 func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountWithPri) {
 	obj := am.fc.NewObjectBuilder().Address(to.AccountId)
 	tx := am.fc.NewTxBuilder().
-		AddObject(am.authorizer.AccountId, fmt.Sprintf("%s/%s", ac.AccountId, TrustStorage), TrustEdge, obj).
+		AddObject(am.authorizer.AccountId, fmt.Sprintf("%s/%s", ac.AccountId, FollowStorage), FollowEdge, obj).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -78,7 +78,7 @@ func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountW
 
 func (am *AccountManager) CreateEdgeStorage(t *testing.T, ac *AccountWithPri) {
 	tx := am.fc.NewTxBuilder().
-		CreateStorage(am.authorizer.AccountId, fmt.Sprintf("%s/%s", am.authorizer.AccountId, TrustStorage)).
+		CreateStorage(am.authorizer.AccountId, fmt.Sprintf("%s/%s", am.authorizer.AccountId, FollowStorage)).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -209,5 +209,5 @@ func (am *AccountManager) queryStorage(t *testing.T, fromId string) model.Storag
 
 func (am *AccountManager) QueryStorageEdgesPassed(t *testing.T, fromId string, os []model.Object) {
 	resSt := am.queryStorage(t, fromId)
-	equalList(t, resSt.GetFromKey(TrustEdge).GetList(), os)
+	equalList(t, resSt.GetFromKey(FollowEdge).GetList(), os)
 }

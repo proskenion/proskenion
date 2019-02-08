@@ -68,6 +68,11 @@ var (
 	ErrCommandExecutorCheckAndCommitProslNotFound = fmt.Errorf("Failed Check And Commit Prosl not found target prosl")
 )
 
+// 	ForceUpdateStorage Err
+var (
+	ErrCommandValidatorForceUpdateStorageCanNotUsedDefault = fmt.Errorf("Failed FourceUpdateStorage Validate, can not use this commands. Please use force execute.")
+)
+
 // Transaction Err
 var (
 	ErrTxValidateNotFoundAuthorizer  = fmt.Errorf("Failed Transaction Validator Authorizer Not Found")
@@ -102,6 +107,8 @@ type CommandExecutor interface {
 	BanPeer(ObjectFinder, Command) error
 	Consign(ObjectFinder, Command) error
 	CheckAndCommitProsl(ObjectFinder, Command) error
+
+	ForceUpdateStorage(ObjectFinder, Command) error
 }
 
 type CommandValidator interface {
@@ -123,4 +130,6 @@ type CommandValidator interface {
 	Consign(ObjectFinder, Command) error
 	Tx(ObjectFinder, TxFinder, Transaction) error
 	CheckAndCommitProsl(ObjectFinder, Command) error
+
+	ForceUpdateStorage(ObjectFinder, Command) error
 }

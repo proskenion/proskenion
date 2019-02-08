@@ -8,7 +8,7 @@ func MakeEdgeStorageFromObjects(fc model.ModelFactory, objs []model.Object) mode
 		objList = append(objList, o)
 	}
 	st := fc.NewStorageBuilder().
-		List(TrustStorage, objList).
+		List(FollowStorage, objList).
 		Build()
 	return st
 }

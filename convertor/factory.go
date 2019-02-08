@@ -811,6 +811,18 @@ func (t *TxBuilder) CheckAndCommitProsl(authorizerId string, proslId string, par
 	return t
 }
 
+func (t *TxBuilder) ForceUpdateStorage(authorizerId string, targetId string, storage model.Storage) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_ForceUpdateStorage{
+				ForceUpdateStorage: &proskenion.ForceUpdateStorage{Storage: storage.(*Storage).Storage},
+			},
+			TargetId:     targetId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) AppendCommand(cmd model.Command) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands, cmd.(*Command).Command)
 	return t

@@ -48,6 +48,8 @@ func (c *Command) Execute(wsv model.ObjectFinder) error {
 		return c.executor.Consign(wsv, c)
 	case *proskenion.Command_CheckAndCommitProsl:
 		return c.executor.CheckAndCommitProsl(wsv, c)
+	case *proskenion.Command_ForceUpdateStorage:
+		return c.executor.ForceUpdateStorage(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -85,7 +87,8 @@ func (c *Command) Validate(wsv model.ObjectFinder) error {
 		return c.validator.Consign(wsv, c)
 	case *proskenion.Command_CheckAndCommitProsl:
 		return c.validator.CheckAndCommitProsl(wsv, c)
-
+	case *proskenion.Command_ForceUpdateStorage:
+		return c.validator.ForceUpdateStorage(wsv, c)
 	default:
 		return fmt.Errorf("Command has unexpected type %T", x)
 	}
@@ -245,4 +248,19 @@ func (c *Command) GetCheckAndCommitProsl() model.CheckAndCommitProsl {
 
 func (c *CheckAndCommitProsl) GetVariables() map[string]model.Object {
 	return ObjectMapsFromProslObjectMaps(c.c, c.e, c.v, c.CheckAndCommitProsl.Variables)
+}
+
+type ForceUpdateStorage struct {
+	c core.Cryptor
+	e core.CommandExecutor
+	v core.CommandValidator
+	*proskenion.ForceUpdateStorage
+}
+
+func (c *Command) GetForceUpdateStorage() model.ForceUpdateStorage {
+	return &ForceUpdateStorage{c.cryptor, c.executor, c.validator, c.Command.GetForceUpdateStorage()}
+}
+
+func (c *ForceUpdateStorage) GetStorage() model.Storage {
+	return &Storage{c.c, c.e, c.v, c.ForceUpdateStorage.Storage}
 }

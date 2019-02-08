@@ -181,7 +181,7 @@ func TestScenario(t *testing.T) {
 	for i, cm := range cms {
 		w.Add(1)
 		go func(cm *AccountManager, ac *AccountWithPri, es []model.Object) {
-			cm.QueryStorageEdgesPassed(t, fmt.Sprintf("%s/%s", ac.AccountId, TrustStorage), es)
+			cm.QueryStorageEdgesPassed(t, fmt.Sprintf("%s/%s", ac.AccountId, FollowStorage), es)
 			w.Done()
 		}(cm, creators[i], edges[i])
 	}

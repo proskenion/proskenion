@@ -22,6 +22,8 @@ type Command interface {
 	GetConsign() Consign
 	GetCheckAndCommitProsl() CheckAndCommitProsl
 
+	GetForceUpdateStorage() ForceUpdateStorage
+
 	Execute(ObjectFinder) error
 	Validate(ObjectFinder) error
 }
@@ -91,4 +93,8 @@ type Consign interface {
 
 type CheckAndCommitProsl interface {
 	GetVariables() map[string]Object
+}
+
+type ForceUpdateStorage interface {
+	GetStorage() Storage
 }
