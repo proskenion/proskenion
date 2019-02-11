@@ -251,6 +251,7 @@ message ConditionalFormula {
         GeFormula ge = 7; // >=
         LtFormula lt = 8; // <
         LeFormula le = 9; // <=
+        VerifyOperator verifyOp = 10;
     }
 }
 

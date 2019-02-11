@@ -1,10 +1,10 @@
 - set:
-    - edges
+    - acs
     - query:
         authorizer: root@root
         select: "*"
         type: List
-        from: creator/follow
+        from: creator/account
         limit: 100
 - return:
     variable: acs

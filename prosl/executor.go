@@ -679,7 +679,7 @@ func ExecuteProslIndexedOperator(op *proskenion.IndexedOperator, state *ProslSta
 	index := state.ReturnObject.GetI32()
 	if len(object.GetList()) <= int(index) {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_OutOfRange,
-			"list object length is %d, but index is %d, %s", len(object.GetList()), op.GetIndex(), op)
+			"list object length is %d, but index is %d, %s", len(object.GetList()), index, op)
 	}
 
 	ret := object.GetList()[index]
@@ -855,7 +855,10 @@ func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *Pr
 		state = ExecuteProslLtFormula(op.GetLt(), state)
 	case *proskenion.ConditionalFormula_Le:
 		state = ExecuteProslLeFormula(op.GetLe(), state)
+	case *proskenion.ConditionalFormula_VerifyOp:
+		state = ExecuteProslVerifyOperator(op.GetVerifyOp(), state)
 	default:
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, "undefined forumula: %s", op.String())
 	}
 	return state
 }

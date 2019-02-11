@@ -69,7 +69,7 @@ func (b *Block) GetFromKey(key string) model.Object {
 	case "round":
 		return Int32Object(b.GetPayload().GetRound(), b.cryptor)
 	}
-	return nil
+	return &Object{b.cryptor,nil,nil,&proskenion.Object{}}
 }
 
 type BlockPayload struct {

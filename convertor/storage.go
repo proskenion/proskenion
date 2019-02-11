@@ -59,7 +59,7 @@ func (s *Storage) GetFromKey(key string) model.Object {
 	if ret, ok := s.GetObject()[key]; ok {
 		return ret
 	} else {
-		return &Object{nil, nil, nil, &proskenion.Object{}}
+		return &Object{s.cryptor, nil, nil, &proskenion.Object{}}
 	}
 }
 

@@ -226,14 +226,19 @@ func TestScenario(t *testing.T) {
 	}
 	time.Sleep(time.Second * 2)
 
-	cms[0].QueryCollectSigsPassed(t, core.IncentiveKey, incStj)
-	cms[0].QueryCollectSigsPassed(t, core.ConsensusKey, conStj)
+	cms[0].QueryCollectSigsPassed(t, core.IncentiveKey, incStj, 4)
+	cms[0].QueryCollectSigsPassed(t, core.ConsensusKey, conStj, 4)
 	logger.Info(color.GreenString("Passed Scenario 7 : Verify Creators new Conensus Algorithm."))
 
 	// Senario 8 ===== CheckAndCommit new Consensus Algorithm =====
-
+	cms[0].CheckAndCommit(t)
+	time.Sleep(time.Second * 2)
+	cms[0].QueryRootProslPassed(t, incStj.GetStorage())
+	cms[0].QueryRootProslPassed(t, conStj.GetStorage())
 	logger.Info(color.GreenString("Passed Scenario 8 :  CheckAndCommit new Consensus Algorithm."))
 
+	// last...
+	time.Sleep(time.Second * 10)
 	// server stop
 	for _, server := range servers {
 		server.GracefulStop()

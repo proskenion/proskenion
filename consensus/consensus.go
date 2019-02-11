@@ -54,7 +54,7 @@ func (c *Consensus) waitUntilComeNextBlock() ConsensusWaitFlag {
 func (c *Consensus) isBlockCreator(round int) bool {
 	acs, err := c.rp.GetDelegatedAccounts()
 	if err != nil {
-		c.logger.Error("GetDelegatePeers error: %s", err.Error())
+		c.logger.Error(fmt.Sprintf("GetDelegatePeers error: %s", err.Error()))
 		return false
 	}
 	if len(acs) <= round {

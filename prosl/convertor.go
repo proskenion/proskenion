@@ -1200,10 +1200,16 @@ func ParseConditionalFormula(yaml interface{}) (*proskenion.ConditionalFormula, 
 					return nil, err
 				}
 				return &proskenion.ConditionalFormula{Op: &proskenion.ConditionalFormula_Le{Le: op}}, nil
+			case "verify":
+				op, err := ParseVerifyOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ConditionalFormula{Op: &proskenion.ConditionalFormula_VerifyOp{VerifyOp: op}}, nil
 			}
 		}
 	}
-	return nil, nil
+	return nil, ProslParseErrOperation(yaml, yaml)
 }
 
 func ParsePolynomialOperator(yaml interface{}) ([]*proskenion.ValueOperator, error) {

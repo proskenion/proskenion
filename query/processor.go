@@ -1,6 +1,7 @@
 package query
 
 import (
+	"bytes"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
@@ -20,15 +21,15 @@ func NewQueryProcessor(fc model.ModelFactory, conf *config.Config) core.QueryPro
 func (q *QueryProcessor) Query(wsv model.ObjectFinder, query model.Query) (model.QueryResponse, error) {
 	id := model.MustAddress(query.GetPayload().GetFromId())
 	var object model.Object
-	if id.Type() == model.WallettAddressType { // 単一検索
+	if id.Type() == model.WallettAddressType || query.GetPayload().GetRequestCode() != model.ListObjectCode {
 		switch id.Storage() {
-		case "account":
+		case model.AccountStorageName:
 			ac, err := q.accountObjectQuery(query.GetPayload(), wsv)
 			if err != nil {
 				return nil, err
 			}
 			object = q.selectAccount(ac, query)
-		case "peer":
+		case model.PeerStorageName:
 			peer, err := q.peerObjectQuery(query.GetPayload(), wsv)
 			if err != nil {
 				return nil, err
@@ -44,7 +45,7 @@ func (q *QueryProcessor) Query(wsv model.ObjectFinder, query model.Query) (model
 	} else { // Range 検索
 		obs := make([]model.Object, 0)
 		switch id.Storage() {
-		case "account":
+		case model.AccountStorageName:
 			acs, err := q.accountObjectQueryRange(query.GetPayload(), wsv)
 			if err != nil {
 				return nil, err
@@ -53,7 +54,7 @@ func (q *QueryProcessor) Query(wsv model.ObjectFinder, query model.Query) (model
 			for _, ac := range acs {
 				obs = append(obs, q.selectAccount(ac, query))
 			}
-		case "peer":
+		case model.PeerStorageName:
 			peers, err := q.peerObjectQueryRange(query.GetPayload(), wsv)
 			if err != nil {
 				return nil, err
@@ -112,7 +113,7 @@ func (q *QueryProcessor) selectAccount(ac model.Account, query model.Query) mode
 	builder := q.fc.NewObjectBuilder()
 	if query.GetPayload().GetSelect() != "*" {
 		ret := ac.GetFromKey(query.GetPayload().GetSelect())
-		if ret != nil {
+		if ret.GetType() != model.AnythingObjectCode {
 			return ret
 		}
 	}
@@ -123,7 +124,7 @@ func (q *QueryProcessor) selectPeer(peer model.Peer, query model.Query) model.Ob
 	builder := q.fc.NewObjectBuilder()
 	if query.GetPayload().GetSelect() != "*" {
 		ret := peer.GetFromKey(query.GetPayload().GetSelect())
-		if ret != nil {
+		if ret.GetType() != model.AnythingObjectCode {
 			return ret
 		}
 	}
@@ -196,17 +197,19 @@ func (a *Accounts) Len() int {
 }
 
 func (a *Accounts) Less(i, j int) bool {
-	switch a.key {
-	case "id":
-		return a.acs[i].GetAccountId() < a.acs[j].GetAccountId()
-	case "name":
-		return a.acs[i].GetAccountName() < a.acs[j].GetAccountName()
-	case "balance":
-		return a.acs[i].GetBalance() < a.acs[j].GetBalance()
-	case "quorum":
-		return a.acs[i].GetQuorum() < a.acs[j].GetQuorum()
-	case "peer":
-		return a.acs[i].GetDelegatePeerId() < a.acs[j].GetDelegatePeerId()
+	if !bytes.Equal(a.acs[i].GetFromKey(a.key).Hash(), a.acs[j].GetFromKey(a.key).Hash()) {
+		switch a.key {
+		case "id":
+			return a.acs[i].GetAccountId() < a.acs[j].GetAccountId()
+		case "name":
+			return a.acs[i].GetAccountName() < a.acs[j].GetAccountName()
+		case "balance":
+			return a.acs[i].GetBalance() < a.acs[j].GetBalance()
+		case "quorum":
+			return a.acs[i].GetQuorum() < a.acs[j].GetQuorum()
+		case "peer":
+			return a.acs[i].GetDelegatePeerId() < a.acs[j].GetDelegatePeerId()
+		}
 	}
 	return a.acs[i].GetAccountId() < a.acs[j].GetAccountId()
 }
@@ -236,11 +239,13 @@ func (a *Peers) Len() int {
 }
 
 func (a *Peers) Less(i, j int) bool {
-	switch a.key {
-	case "id":
-		return a.peers[i].GetPeerId() < a.peers[j].GetPeerId()
-	case "address":
-		return a.peers[i].GetAddress() < a.peers[j].GetAddress()
+	if !bytes.Equal(a.peers[i].GetFromKey(a.key).Hash(), a.peers[j].GetFromKey(a.key).Hash()) {
+		switch a.key {
+		case "id":
+			return a.peers[i].GetPeerId() < a.peers[j].GetPeerId()
+		case "address":
+			return a.peers[i].GetAddress() < a.peers[j].GetAddress()
+		}
 	}
 	return a.peers[i].GetPeerId() < a.peers[j].GetPeerId()
 }

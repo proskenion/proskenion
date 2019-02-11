@@ -14,14 +14,6 @@
         from:
           variable: target_id
 - set:
-    - prflag
-    - query:
-        authorizer: root@com
-        select: "*"
-        type: string
-        from:
-          variable: account_id
-- set:
     - sigs
     - query:
         authorizer: root@com

@@ -143,8 +143,8 @@ func (am *AccountManager) VoteNewConsensus(t *testing.T, dest *AccountWithPri, k
 		destWalletId = MakeIncentiveSigsId(dest)
 		srcWalletId = MakeIncentiveSigsId(am.authorizer)
 	case core.ConsensusKey:
-		destWalletId = MakeIncentiveSigsId(dest)
-		srcWalletId = MakeIncentiveSigsId(am.authorizer)
+		destWalletId = MakeConsensusSigsId(dest)
+		srcWalletId = MakeConsensusSigsId(am.authorizer)
 	default:
 		require.Failf(t, "Error pType: %s", key)
 	}
@@ -154,7 +154,24 @@ func (am *AccountManager) VoteNewConsensus(t *testing.T, dest *AccountWithPri, k
 		AddObject(am.authorizer.AccountId, srcWalletId.Id(), ProSignKey,
 			am.fc.NewObjectBuilder().Sig(signature)).
 		TransferObject(am.authorizer.AccountId, srcWalletId.Id(), destWalletId.Id(),
-			key, am.fc.NewObjectBuilder().Sig(signature)).
+			ProSignKey, am.fc.NewObjectBuilder().Sig(signature)).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+func (am *AccountManager) CheckAndCommit(t *testing.T) {
+	incId := MakeIncentiveWalletId(am.authorizer)
+	conId := MakeConsensusWalletId(am.authorizer)
+	tx := am.fc.NewTxBuilder().
+		CheckAndCommitProsl(am.authorizer.AccountId, incId.Id(),
+			map[string]model.Object{
+				"account_id": am.fc.NewObjectBuilder().Address(fmt.Sprintf("%s@%s", incId.Account(), incId.Domain())),
+			}).
+		CheckAndCommitProsl(am.authorizer.AccountId, conId.Id(),
+			map[string]model.Object{
+				"account_id": am.fc.NewObjectBuilder().Address(fmt.Sprintf("%s@%s", conId.Account(), conId.Domain())),
+			}).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -274,7 +291,7 @@ func (am *AccountManager) QueryStorage(t *testing.T, fromId string) model.Storag
 		AuthorizerId(am.authorizer.AccountId).
 		FromId(fromId).
 		CreatedTime(RandomNow()).
-		RequestCode(model.StorageAddressType).
+		RequestCode(model.StorageObjectCode).
 		Build()
 	assert.NoError(t, query.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 
@@ -303,7 +320,7 @@ func (am *AccountManager) QueryProslPassed(t *testing.T, pType string, prosl []b
 	assert.Equal(t, res.GetFromKey(core.ProslKey).GetData(), prosl)
 }
 
-func (am *AccountManager) QueryCollectSigsPassed(t *testing.T, pType string, prosl model.Object) {
+func (am *AccountManager) QueryCollectSigsPassed(t *testing.T, pType string, prosl model.Object, num int) {
 	var sigsId string
 	switch pType {
 	case core.IncentiveKey:
@@ -314,8 +331,25 @@ func (am *AccountManager) QueryCollectSigsPassed(t *testing.T, pType string, pro
 		require.Failf(t, "Error pType: %s", pType)
 	}
 	res := am.QueryStorage(t, sigsId).GetFromKey(ProSignKey)
+	assert.Equal(t, num, len(res.GetList()))
 	for _, o := range res.GetList() {
 		sig := o.GetSig()
 		RandomVerify(t, sig.GetPublicKey(), prosl, sig.GetSignature())
 	}
+}
+
+func (am *AccountManager) QueryRootProslPassed(t *testing.T, prosl model.Storage) {
+	var proslId string
+	pType := prosl.GetFromKey(core.ProslTypeKey).GetStr()
+	switch pType {
+	case core.IncentiveKey:
+		proslId = RandomConfig().Prosl.Incentive.Id
+	case core.ConsensusKey:
+		proslId = RandomConfig().Prosl.Consensus.Id
+	default:
+		require.Failf(t, "Error pType: %s", pType)
+	}
+	res := am.QueryStorage(t, proslId)
+	assert.Equal(t, prosl.Hash(), res.Hash())
+	fmt.Println("QueryRootProsl:", res)
 }
