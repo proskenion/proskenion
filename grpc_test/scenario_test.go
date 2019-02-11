@@ -7,6 +7,7 @@ import (
 	"github.com/inconshreveable/log15"
 	"github.com/mattn/go-colorable"
 	"github.com/proskenion/proskenion/config"
+	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/prosl"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -206,10 +207,15 @@ func TestScenario(t *testing.T) {
 	newInc, err := pr.Marshal()
 	require.NoError(t, err)
 
+	// proposer == cms[0]
 	cms[0].ProposeNewConsensus(t, newCon, newInc)
+	time.Sleep(time.Second * 2)
+
+	cms[0].QueryProslPassed(t, core.ConsensusKey, newCon)
+	cms[0].QueryProslPassed(t, core.IncentiveKey, newInc)
+	logger.Info(color.GreenString("Passed Scenario 6 : Propose NewConsensusAlgorithm"))
 
 	// Senario 7 ===== Propose NewIncentiveAlgorithm =====
-
 
 	// server stop
 	for _, server := range servers {

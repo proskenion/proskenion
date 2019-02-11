@@ -2,7 +2,6 @@ package prosl_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
@@ -182,8 +181,6 @@ func testIncentiveExecuteProsl(t *testing.T, filename string, fc model.ModelFact
 	require.NotNil(t, actualTx)
 
 	assert.Equal(t, expTx.Hash(), actualTx.Hash())
-	fmt.Println(expTx)
-	fmt.Println(actualTx)
 	CommitTxWrapBlock(t, rp, state.Fc, actualTx)
 }
 

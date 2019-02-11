@@ -91,6 +91,7 @@ func (am *AccountManager) ProposeNewConsensus(t *testing.T, consensus []byte, in
 	ConsensusId := fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage)
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.authorizer.AccountId, IncentiveId).
+		CreateStorage(am.authorizer.AccountId, ConsensusId).
 		UpdateObject(am.authorizer.AccountId, IncentiveId,
 			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(core.IncentiveKey)).
 		UpdateObject(am.authorizer.AccountId, ConsensusId,
@@ -230,4 +231,20 @@ func (am *AccountManager) queryStorage(t *testing.T, fromId string) model.Storag
 func (am *AccountManager) QueryStorageEdgesPassed(t *testing.T, fromId string, os []model.Object) {
 	resSt := am.queryStorage(t, fromId)
 	equalList(t, resSt.GetFromKey(FollowEdge).GetList(), os)
+}
+
+func (am *AccountManager) QueryProslPassed(t *testing.T, pType string, prosl []byte) {
+	id := model.MustAddress(am.authorizer.AccountId)
+	var proslId string
+	switch pType {
+	case core.IncentiveKey:
+		proslId = fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage)
+	case core.ConsensusKey:
+		proslId = fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage)
+	default:
+		require.Failf(t, "Error pType: %s", pType)
+	}
+	res := am.queryStorage(t, proslId)
+	assert.Equal(t, res.GetFromKey(core.ProslTypeKey).GetStr(), pType)
+	assert.Equal(t, res.GetFromKey(core.ProslKey).GetData(), prosl)
 }

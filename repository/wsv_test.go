@@ -54,11 +54,11 @@ func test_WSV(t *testing.T, wsv core.WSV) {
 		RandomAccount(),
 	}
 	ids := []model.Address{
-		model.MustAddress("targeta@a/account"),
-		model.MustAddress("tartb@a/account"),
-		model.MustAddress("tartbc@a/account"),
-		model.MustAddress("xyz@b/account"),
-		model.MustAddress("target@b/account"),
+		model.MustAddress("targeta@b.a/account"),
+		model.MustAddress("tartb@b.a/account"),
+		model.MustAddress("tartbc@b.a/account"),
+		model.MustAddress("xyz@b.b/account"),
+		model.MustAddress("target@b.b/account"),
 	}
 
 	for i, ac := range acs {

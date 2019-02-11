@@ -131,7 +131,6 @@ func (c *CommandValidator) Tx(wsv model.ObjectFinder, txh model.TxFinder, tx mod
 			return errors.Wrapf(core.ErrTxValidateNotFoundAuthorizer,
 				"authorizer : %s", cmd.GetAuthorizerId())
 		}
-		// TODO : sort すれば全体一致判定をO(nlogn)
 		if !containsPublicKeyInSignaturesForQuorum(tx.GetSignatures(), ac.GetPublicKeys(), ac.GetQuorum()) {
 			return errors.Wrapf(core.ErrTxValidateNotSignedAuthorizer,
 				"authorizer : %s, expect keys : %+v",

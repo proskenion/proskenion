@@ -343,9 +343,10 @@ func (r *Repository) genesisProslSetting() (model.Transaction, error) {
 		return nil, err
 	}
 	return r.fc.NewTxBuilder().
-		DefineStorage(r.conf.Root.Id, r.conf.Prosl.Incentive.Id, proSt).
-		DefineStorage(r.conf.Root.Id, r.conf.Prosl.Consensus.Id, proSt).
-		DefineStorage(r.conf.Root.Id, r.conf.Prosl.Update.Id, proSt).
+		DefineStorage(r.conf.Root.Id, r.conf.Prosl.Id, proSt).
+		CreateStorage(r.conf.Root.Id, r.conf.Prosl.Incentive.Id).
+		CreateStorage(r.conf.Root.Id, r.conf.Prosl.Consensus.Id).
+		CreateStorage(r.conf.Root.Id, r.conf.Prosl.Update.Id).
 		UpdateObject(r.conf.Root.Id, r.conf.Prosl.Incentive.Id, core.ProslKey,
 			r.fc.NewObjectBuilder().Data(incPr)).
 		UpdateObject(r.conf.Root.Id, r.conf.Prosl.Consensus.Id, core.ProslKey,
