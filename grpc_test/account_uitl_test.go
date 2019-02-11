@@ -63,10 +63,32 @@ func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.P
 }
 
 const (
-	FollowStorage = "follow"
-	FollowEdge    = "to"
-	ProslStorage  = "prosl"
+	FollowStorage  = "follow"
+	FollowEdge     = "to"
+	ProslStorage   = "prosl"
+	ProSignStorage = "prsign"
+	ProSignKey     = "sigs"
 )
+
+func MakeConsensusWalletId(ac *AccountWithPri) model.Address {
+	id := model.MustAddress(ac.AccountId)
+	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage))
+}
+
+func MakeIncentiveWalletId(ac *AccountWithPri) model.Address {
+	id := model.MustAddress(ac.AccountId)
+	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage))
+}
+
+func MakeConsensusSigsId(ac *AccountWithPri) model.Address {
+	id := model.MustAddress(ac.AccountId)
+	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProSignStorage))
+}
+
+func MakeIncentiveSigsId(ac *AccountWithPri) model.Address {
+	id := model.MustAddress(ac.AccountId)
+	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProSignStorage))
+}
 
 func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountWithPri) {
 	obj := am.fc.NewObjectBuilder().Address(to.AccountId)
@@ -86,9 +108,8 @@ func (am *AccountManager) CreateEdgeStorage(t *testing.T, ac *AccountWithPri) {
 }
 
 func (am *AccountManager) ProposeNewConsensus(t *testing.T, consensus []byte, incentive []byte) {
-	id := model.MustAddress(am.authorizer.AccountId)
-	IncentiveId := fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage)
-	ConsensusId := fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage)
+	IncentiveId := MakeIncentiveWalletId(am.authorizer).Id()
+	ConsensusId := MakeConsensusWalletId(am.authorizer).Id()
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.authorizer.AccountId, IncentiveId).
 		CreateStorage(am.authorizer.AccountId, ConsensusId).
@@ -100,6 +121,40 @@ func (am *AccountManager) ProposeNewConsensus(t *testing.T, consensus []byte, in
 			core.ProslKey, am.fc.NewObjectBuilder().Data(incentive)).
 		UpdateObject(am.authorizer.AccountId, ConsensusId,
 			core.ProslKey, am.fc.NewObjectBuilder().Data(consensus)).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+func (am *AccountManager) CreateProslSignStorage(t *testing.T) {
+	tx := am.fc.NewTxBuilder().
+		CreateStorage(am.authorizer.AccountId, MakeIncentiveSigsId(am.authorizer).Id()).
+		CreateStorage(am.authorizer.AccountId, MakeConsensusSigsId(am.authorizer).Id()).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+func (am *AccountManager) VoteNewConsensus(t *testing.T, dest *AccountWithPri, key string, prosl model.Object) {
+	var destWalletId model.Address
+	var srcWalletId model.Address
+	switch key {
+	case core.IncentiveKey:
+		destWalletId = MakeIncentiveSigsId(dest)
+		srcWalletId = MakeIncentiveSigsId(am.authorizer)
+	case core.ConsensusKey:
+		destWalletId = MakeIncentiveSigsId(dest)
+		srcWalletId = MakeIncentiveSigsId(am.authorizer)
+	default:
+		require.Failf(t, "Error pType: %s", key)
+	}
+	signature := ForceSignature(t, am.authorizer.Pubkey, am.authorizer.Prikey, prosl)
+	tx := am.fc.NewTxBuilder().
+		CreateStorage(am.authorizer.AccountId, srcWalletId.Id()).
+		AddObject(am.authorizer.AccountId, srcWalletId.Id(), ProSignKey,
+			am.fc.NewObjectBuilder().Sig(signature)).
+		TransferObject(am.authorizer.AccountId, srcWalletId.Id(), destWalletId.Id(),
+			key, am.fc.NewObjectBuilder().Sig(signature)).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))
@@ -214,7 +269,7 @@ func equalList(t *testing.T, os []model.Object, as []model.Object) {
 	}
 }
 
-func (am *AccountManager) queryStorage(t *testing.T, fromId string) model.Storage {
+func (am *AccountManager) QueryStorage(t *testing.T, fromId string) model.Storage {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(am.authorizer.AccountId).
 		FromId(fromId).
@@ -229,22 +284,38 @@ func (am *AccountManager) queryStorage(t *testing.T, fromId string) model.Storag
 }
 
 func (am *AccountManager) QueryStorageEdgesPassed(t *testing.T, fromId string, os []model.Object) {
-	resSt := am.queryStorage(t, fromId)
+	resSt := am.QueryStorage(t, fromId)
 	equalList(t, resSt.GetFromKey(FollowEdge).GetList(), os)
 }
 
 func (am *AccountManager) QueryProslPassed(t *testing.T, pType string, prosl []byte) {
-	id := model.MustAddress(am.authorizer.AccountId)
 	var proslId string
 	switch pType {
 	case core.IncentiveKey:
-		proslId = fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage)
+		proslId = MakeIncentiveWalletId(am.authorizer).Id()
 	case core.ConsensusKey:
-		proslId = fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage)
+		proslId = MakeConsensusWalletId(am.authorizer).Id()
 	default:
 		require.Failf(t, "Error pType: %s", pType)
 	}
-	res := am.queryStorage(t, proslId)
+	res := am.QueryStorage(t, proslId)
 	assert.Equal(t, res.GetFromKey(core.ProslTypeKey).GetStr(), pType)
 	assert.Equal(t, res.GetFromKey(core.ProslKey).GetData(), prosl)
+}
+
+func (am *AccountManager) QueryCollectSigsPassed(t *testing.T, pType string, prosl model.Object) {
+	var sigsId string
+	switch pType {
+	case core.IncentiveKey:
+		sigsId = MakeIncentiveSigsId(am.authorizer).Id()
+	case core.ConsensusKey:
+		sigsId = MakeConsensusSigsId(am.authorizer).Id()
+	default:
+		require.Failf(t, "Error pType: %s", pType)
+	}
+	res := am.QueryStorage(t, sigsId).GetFromKey(ProSignKey)
+	for _, o := range res.GetList() {
+		sig := o.GetSig()
+		RandomVerify(t, sig.GetPublicKey(), prosl, sig.GetSignature())
+	}
 }

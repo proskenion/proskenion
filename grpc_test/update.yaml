@@ -10,7 +10,7 @@
     - query:
         authorizer: root@com
         select: "*"
-        type: string
+        type: Storage
         from:
           variable: target_id
 - set:
@@ -30,7 +30,7 @@
         from:
           concat:
             - variable: account_id
-            - "/prflag"
+            - "/prsign"
 - set:
     - num_creator
     - len:

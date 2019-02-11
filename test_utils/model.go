@@ -119,12 +119,17 @@ func RandomTxs() []model.Transaction {
 
 func RandomAccount() model.Account {
 	return RandomFactory().NewAccount(RandomStr(), RandomStr(), []model.PublicKey{RandomByte()}, rand.Int31(), rand.Int63(), RandomStr())
-
 }
 
 func RandomPeer() model.Peer {
 	pub, _ := RandomKeyPairs()
 	return RandomFactory().NewPeer(RandomAccountId(), RandomStr(), pub)
+}
+
+func ForceSignature(t *testing.T,pubkey model.PublicKey, prikey model.PrivateKey, hasher model.Hasher) model.Signature {
+	signature, err := RandomCryptor().Sign(hasher, prikey)
+	require.NoError(t, err)
+	return RandomFactory().NewSignature(pubkey, signature)
 }
 
 func RandomBlock() model.Block {

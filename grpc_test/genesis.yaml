@@ -96,7 +96,7 @@
               wallet_id: root@root/degraders
           - define_storage:
               authorizer_id: root@root
-              storage_id: /prflag
+              storage_id: /prsign
               storage:
                 storage:
                   sigs:

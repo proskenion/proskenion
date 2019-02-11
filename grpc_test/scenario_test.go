@@ -209,13 +209,30 @@ func TestScenario(t *testing.T) {
 
 	// proposer == cms[0]
 	cms[0].ProposeNewConsensus(t, newCon, newInc)
+	cms[0].CreateProslSignStorage(t)
 	time.Sleep(time.Second * 2)
 
 	cms[0].QueryProslPassed(t, core.ConsensusKey, newCon)
 	cms[0].QueryProslPassed(t, core.IncentiveKey, newInc)
-	logger.Info(color.GreenString("Passed Scenario 6 : Propose NewConsensusAlgorithm"))
+	logger.Info(color.GreenString("Passed Scenario 6 : Propose NewConsensusAlgorithm."))
 
-	// Senario 7 ===== Propose NewIncentiveAlgorithm =====
+	// Senario 7 ===== Verify Creators new Conensus Algorithm =====
+	incStj := fc.NewObjectBuilder().Storage(cms[0].QueryStorage(t, MakeIncentiveWalletId(cms[0].authorizer).Id()))
+	conStj := fc.NewObjectBuilder().Storage(cms[0].QueryStorage(t, MakeConsensusWalletId(cms[0].authorizer).Id()))
+
+	for _, cm := range cms[1:] {
+		cm.VoteNewConsensus(t, cms[0].authorizer, core.IncentiveKey, incStj)
+		cm.VoteNewConsensus(t, cms[0].authorizer, core.ConsensusKey, conStj)
+	}
+	time.Sleep(time.Second * 2)
+
+	cms[0].QueryCollectSigsPassed(t, core.IncentiveKey, incStj)
+	cms[0].QueryCollectSigsPassed(t, core.ConsensusKey, conStj)
+	logger.Info(color.GreenString("Passed Scenario 7 : Verify Creators new Conensus Algorithm."))
+
+	// Senario 8 ===== CheckAndCommit new Consensus Algorithm =====
+
+	logger.Info(color.GreenString("Passed Scenario 8 :  CheckAndCommit new Consensus Algorithm."))
 
 	// server stop
 	for _, server := range servers {
