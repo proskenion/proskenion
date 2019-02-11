@@ -8,8 +8,11 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core/model"
+	"github.com/proskenion/proskenion/prosl"
 	. "github.com/proskenion/proskenion/test_utils"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"sync"
 	"testing"
 	"time"
@@ -153,7 +156,7 @@ func TestScenario(t *testing.T) {
 	w.Wait()
 	logger.Info(color.GreenString("Passed Scenario 4 : Degrade 5 Creators -> 5 Peers"))
 
-	// Scenario 5 ==== AcceptEdge Creator <-> Creator ========
+	// Scenario 5 ===== AcceptEdge Creator <-> Creator ========
 	for i, cm := range cms {
 		go cm.CreateEdgeStorage(t, creators[i])
 	}
@@ -186,6 +189,27 @@ func TestScenario(t *testing.T) {
 		}(cm, creators[i], edges[i])
 	}
 	w.Wait()
+	logger.Info(color.GreenString("Passed Scenario 5 : Follow Edge Creator <-> Creator"))
+
+	// Scenario 6 ===== Propose NewConsensusAlgorithm =====
+	pr := prosl.NewProsl(fc, RandomCryptor(), confs[0])
+	newConY, err := ioutil.ReadFile("rep_consensus.yaml")
+	require.NoError(t, err)
+	err = pr.ConvertFromYaml(newConY)
+	newCon, err := pr.Marshal()
+	require.NoError(t, err)
+
+	newIncY, err := ioutil.ReadFile("rep_incentive.yaml")
+	require.NoError(t, err)
+	err = pr.ConvertFromYaml(newIncY)
+	require.NoError(t, err)
+	newInc, err := pr.Marshal()
+	require.NoError(t, err)
+
+	cms[0].ProposeNewConsensus(t, newCon, newInc)
+
+	// Senario 7 ===== Propose NewIncentiveAlgorithm =====
+
 
 	// server stop
 	for _, server := range servers {

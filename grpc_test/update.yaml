@@ -6,28 +6,63 @@
           - is_defined: account_id
     - return: False
 - set:
-    - prflag
+    - prosl
     - query:
         authorizer: root@com
-        select: "prosl_type"
-        type: string
-        from:
-          concat:
-            - cast:
-                - address
-                - variable: account_id
-            - "/prflag"
-- set:
-    - prtype
-    - query:
-        authorizer: root@com
-        select: "prosl_type"
+        select: "*"
         type: string
         from:
           variable: target_id
-- if:
-    - eq:
-        - variable: prflag
-        - variable: prtype
+- set:
+    - prflag
+    - query:
+        authorizer: root@com
+        select: "*"
+        type: string
+        from:
+          variable: account_id
+- set:
+    - sigs
+    - query:
+        authorizer: root@com
+        select: "sigs"
+        type: List
+        from:
+          concat:
+            - variable: account_id
+            - "/prflag"
+- set:
+    - num_creator
+    - len:
+        query:
+          authorizer: root@com
+          select: "*"
+          type: List
+          from: "creator/account"
+- set:
+    - num
+    - 0
+- each: # verified な署名の数を++
+    - variable: sigs
+    - sig
+    - if:
+        - verify:
+            sig:
+              variable: sig
+            hasher:
+              variable: prosl
+        - set:
+            - num
+            - plus:
+                - variable: num
+                - 1
+- if: # verifiedな署名の数 >= creatorの数/3*2 ならば True
+    - ge:
+        - variable: num
+        - mult:
+            - div:
+                - variable: num_creator
+                - 3
+            - 2
     - return: True
 - return: False

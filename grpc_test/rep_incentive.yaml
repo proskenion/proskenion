@@ -59,16 +59,18 @@
         - acs
         - list: nil
     - each: # acs = List{acid[0], acid[1],...}
-        - acids
+        - variable: acids
         - acid
-        - concat:
-          - acs
-          - query:
-              authorizer: root@root
-              select: "*"
-              type: Account
-              from:
-                variable: acid
+        - set:
+            - acs
+            - concat:
+                - variable: acs
+                - query:
+                    authorizer: root@root
+                    select: "*"
+                    type: Account
+                    from:
+                      variable: acid
     - set: # degreaders に保存
         - add_degrade
         - update_object:

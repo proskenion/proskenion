@@ -99,7 +99,8 @@
               storage_id: /prflag
               storage:
                 storage:
-                  prosl_type: "none"
+                  sigs:
+                    list: nil
           - define_storage:
               authorizer_id: root@root
               storage_id: /follow

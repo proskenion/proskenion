@@ -411,6 +411,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslMapOperator(op.GetMapOp(), state)
 	case *proskenion.ValueOperator_CastOp:
 		state = ExecuteProslCastOperator(op.GetCastOp(), state)
+	case *proskenion.ValueOperator_LenOp:
+		state = ExecuteProslLenOperator(op.GetLenOp(), state)
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, "unimlemented value operator, %s", op.String())
 	}
@@ -822,6 +824,15 @@ func ExecuteProslCastOperator(op *proskenion.CastOperator, state *ProslStateValu
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_CastType, "Can not cast %s to %s, %s", object.GetType().String(), op.GetType().String(), op.String())
 	}
 	return ReturnProslStateValue(state, ret)
+}
+
+func ExecuteProslLenOperator(op *proskenion.LenOperator, state *ProslStateValue) *ProslStateValue {
+	state = ExecuteProslValueOperator(op.GetList(), state)
+	if state.Err != nil {
+		return state
+	}
+	list := state.ReturnObject.GetList()
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Int32(int32(len(list))))
 }
 
 func ExecuteProslConditionalFormula(op *proskenion.ConditionalFormula, state *ProslStateValue) *ProslStateValue {

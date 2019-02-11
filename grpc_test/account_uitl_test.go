@@ -65,6 +65,7 @@ func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.P
 const (
 	FollowStorage = "follow"
 	FollowEdge    = "to"
+	ProslStorage  = "prosl"
 )
 
 func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountWithPri) {
@@ -79,6 +80,25 @@ func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountW
 func (am *AccountManager) CreateEdgeStorage(t *testing.T, ac *AccountWithPri) {
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.authorizer.AccountId, fmt.Sprintf("%s/%s", am.authorizer.AccountId, FollowStorage)).
+		Build()
+	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
+	require.NoError(t, am.client.Write(tx))
+}
+
+func (am *AccountManager) ProposeNewConsensus(t *testing.T, consensus []byte, incentive []byte) {
+	id := model.MustAddress(am.authorizer.AccountId)
+	IncentiveId := fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage)
+	ConsensusId := fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage)
+	tx := am.fc.NewTxBuilder().
+		CreateStorage(am.authorizer.AccountId, IncentiveId).
+		UpdateObject(am.authorizer.AccountId, IncentiveId,
+			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(core.IncentiveKey)).
+		UpdateObject(am.authorizer.AccountId, ConsensusId,
+			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(core.ConsensusKey)).
+		UpdateObject(am.authorizer.AccountId, IncentiveId,
+			core.ProslKey, am.fc.NewObjectBuilder().Data(incentive)).
+		UpdateObject(am.authorizer.AccountId, ConsensusId,
+			core.ProslKey, am.fc.NewObjectBuilder().Data(consensus)).
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))

@@ -110,6 +110,10 @@ message PageRankOperator {
     ValueOperator outName = 3;
 }
 
+message LenOperator {
+    ValueOperator list = 1;
+}
+
 // === ValueOperator ===
 message ValueOperator {
     oneof op {
@@ -139,6 +143,7 @@ message ValueOperator {
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
         PageRankOperator pageRankOp = 32;
+        LenOperator lenOp = 33;
     }
 }
 
@@ -237,15 +242,15 @@ message CastOperator {
 // === CodntionalFormula ====
 message ConditionalFormula {
     oneof op {
-        OrFormula or = 1;
-        AndFormula and = 2;
-        NotFormula not = 3;
-        EqFormula eq = 4;
-        NeFormula ne = 5;
-        GtFormula gt = 6;
-        GeFormula ge = 7;
-        LtFormula lt = 8;
-        LeFormula le = 9;
+        OrFormula or = 1; // ||
+        AndFormula and = 2; // &&
+        NotFormula not = 3; // !
+        EqFormula eq = 4; // ==
+        NeFormula ne = 5; // !=
+        GtFormula gt = 6; // >
+        GeFormula ge = 7; // >=
+        LtFormula lt = 8; // <
+        LeFormula le = 9; // <=
     }
 }
 
