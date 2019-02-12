@@ -411,6 +411,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslMapOperator(op.GetMapOp(), state)
 	case *proskenion.ValueOperator_CastOp:
 		state = ExecuteProslCastOperator(op.GetCastOp(), state)
+	case *proskenion.ValueOperator_ListComprehensionOp:
+		state = ExecuteProslListComprehensionOperator(op.GetListComprehensionOp(), state)
 	case *proskenion.ValueOperator_LenOp:
 		state = ExecuteProslLenOperator(op.GetLenOp(), state)
 	default:
@@ -471,7 +473,7 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 	}
 	if ret.GetObject().GetType() != model.ObjectCode(op.GetType()) {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type,
-			fmt.Sprintf("unexpected type, expected: %d, actual: %d", op.GetType(), ret.GetObject().GetType()))
+			fmt.Sprintf("unexpected type, expected: %s, actual: %s", op.GetType().String(), ret.GetObject().GetType().String()))
 	}
 	return ReturnProslStateValue(state, ret.GetObject())
 }
@@ -824,6 +826,38 @@ func ExecuteProslCastOperator(op *proskenion.CastOperator, state *ProslStateValu
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_CastType, "Can not cast %s to %s, %s", object.GetType().String(), op.GetType().String(), op.String())
 	}
 	return ReturnProslStateValue(state, ret)
+}
+
+func ExecuteProslListComprehensionOperator(op *proskenion.ListComprehensionOperator, state *ProslStateValue) *ProslStateValue {
+	state = ExecuteProslValueOperator(op.GetList(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.ListObjectCode {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "Return Object type expected: %s,but actual: %s\n%s",
+			model.ListObjectCode.String(), state.ReturnObject.GetType(), op.String())
+	}
+	list := state.ReturnObject.GetList()
+
+	ret := make([]model.Object, 0)
+	for _, o := range list {
+		state.Variables[op.GetVariableName()] = o
+		if op.GetIf() != nil {
+			state = ExecuteProslConditionalFormula(op.GetIf(), state)
+			if state.Err != nil {
+				return state
+			}
+			if !state.ReturnObject.GetBoolean() {
+				break
+			}
+		}
+		state = ExecuteProslValueOperator(op.GetElement(), state)
+		if state.Err != nil {
+			return state
+		}
+		ret = append(ret, state.ReturnObject)
+	}
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(ret))
 }
 
 func ExecuteProslLenOperator(op *proskenion.LenOperator, state *ProslStateValue) *ProslStateValue {

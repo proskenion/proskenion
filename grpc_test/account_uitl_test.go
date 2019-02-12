@@ -40,6 +40,7 @@ func (am *AccountManager) SetAuthorizer(t *testing.T) {
 func (am *AccountManager) CreateAccount(t *testing.T, ac *AccountWithPri) {
 	tx := am.fc.NewTxBuilder().
 		CreateAccount(am.authorizer.AccountId, ac.AccountId, []model.PublicKey{ac.Pubkey}, 1).
+		Consign(am.authorizer.AccountId, ac.AccountId, "root@peer").
 		Build()
 	require.NoError(t, tx.Sign(am.authorizer.Pubkey, am.authorizer.Prikey))
 	require.NoError(t, am.client.Write(tx))

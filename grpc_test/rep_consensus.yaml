@@ -2,9 +2,9 @@
     - acs
     - query:
         authorizer: root@root
-        select: "*"
+        select: acs
         type: List
-        from: creator/account
+        from: root@root/degraders
         limit: 100
 - return:
     variable: acs

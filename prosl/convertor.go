@@ -522,7 +522,7 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_IndexedOp{op}}, nil
-			case "variable":
+			case "variable", "var":
 				op, err := ParseVariableOperator(value)
 				if err != nil {
 					return nil, err
@@ -534,6 +534,12 @@ func ParseValueOperator(yaml interface{}) (*proskenion.ValueOperator, error) {
 					return nil, err
 				}
 				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_CastOp{op}}, nil
+			case "list_comprehension", "list_comp", "comprehension", "comp":
+				op, err := ParseListComprehensionOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				return &proskenion.ValueOperator{Op: &proskenion.ValueOperator_ListComprehensionOp{op}}, nil
 			case "is_defined":
 				op, err := ParseIsDefinedOperator(value)
 				if err != nil {
@@ -1004,7 +1010,7 @@ func ParseVariableOperator(yaml interface{}) (*proskenion.VariableOperator, erro
 func ParseCastOperator(yaml interface{}) (*proskenion.CastOperator, error) {
 	if yalist, ok := yaml.([]interface{}); ok {
 		if len(yalist) != 2 {
-			return nil, ProslParseArgumentError(3, len(yalist), yaml)
+			return nil, ProslParseArgumentError(2, len(yalist), yaml)
 		}
 		ret := &proskenion.CastOperator{}
 
@@ -1016,7 +1022,7 @@ func ParseCastOperator(yaml interface{}) (*proskenion.CastOperator, error) {
 			}
 			ret.Type = types
 		} else {
-			return nil, ProslParseCastError("", yalist, yaml)
+			return nil, ProslParseCastError("", yalist[0], yaml)
 		}
 
 		// 1 - value operator
@@ -1026,6 +1032,45 @@ func ParseCastOperator(yaml interface{}) (*proskenion.CastOperator, error) {
 		}
 		ret.Object = value
 		return ret, nil
+	}
+	return nil, ProslParseCastError(make([]interface{}, 0), yaml, yaml)
+}
+
+func ParseListComprehensionOperator(yaml interface{}) (*proskenion.ListComprehensionOperator, error) {
+	if yamap, ok := yaml.(map[interface{}]interface{}); ok {
+		if len(yamap) < 3 {
+			return nil, ProslParseArgumentErrorMin(3, len(yamap), yaml)
+		}
+		ret := &proskenion.ListComprehensionOperator{}
+		for key, value := range yamap {
+			switch key {
+			case "list":
+				list, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.List = list
+			case "var", "variable", "variable_name":
+				variable, ok := value.(string)
+				if !ok {
+					return nil, ProslParseCastError("", value, yaml)
+				}
+				ret.VariableName = variable
+			case "if":
+				condIF, err := ParseConditionalFormula(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.If = condIF
+			case "element", "elem", "value":
+				element, err := ParseValueOperator(value)
+				if err != nil {
+					return nil, err
+				}
+				ret.Element = element
+			}
+			return ret, nil
+		}
 	}
 	return nil, ProslParseCastError(make([]interface{}, 0), yaml, yaml)
 }

@@ -139,6 +139,7 @@ message ValueOperator {
         ListOperator listOp = 24;
         MapOperator mapOp = 25;
         CastOperator castOp = 26;
+        ListComprehensionOperator listComprehensionOp = 27;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
@@ -237,6 +238,13 @@ message MapOperator {
 message CastOperator {
     ObjectCode type = 1;
     ValueOperator object = 2;
+}
+
+message ListComprehensionOperator {
+    ValueOperator list = 1;
+    string variableName = 2;
+    ConditionalFormula if = 3;
+    ValueOperator element = 4;
 }
 
 // === CodntionalFormula ====

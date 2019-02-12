@@ -4,13 +4,13 @@
         - variable: top
         - int64
         - height
-- set: # height % 20 を取得、20回で周期的
+- set: # height % 8 を取得、8回で周期的
     - ind
     - cast:
         - int32
         - mod:
             - variable: height
-            - 20ll
+            - 8ll
 - if: # 一周したら
     - eq:
         - variable: ind
