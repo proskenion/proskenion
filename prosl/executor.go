@@ -142,6 +142,10 @@ func ReturnUnExpectedRetrunValue(state *ProslStateValue, exp Stringer, act Strin
 	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "Return Object type expected: %s, but %s\n %s", exp.String(), act.String(), op.String())
 }
 
+func ReturnErrObjectCodeRetrunValue(state *ProslStateValue, exp Stringer, act Stringer, op Stringer) *ProslStateValue {
+	return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type, "Expected type: %s, but %s\n%s", exp.String(), act.String(), op.String())
+}
+
 func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode, format string, a ...interface{}) *ProslStateValue {
 	message := fmt.Sprintf(format, a...)
 	var err error
@@ -420,6 +424,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslListComprehensionOperator(op.GetListComprehensionOp(), state)
 	case *proskenion.ValueOperator_SortOp:
 		state = ExecuteProslSortOperator(op.GetSortOp(), state)
+	case *proskenion.ValueOperator_SliceOp:
+		state = ExecuteProslSliceOperator(op.GetSliceOp(), state)
 	case *proskenion.ValueOperator_LenOp:
 		state = ExecuteProslLenOperator(op.GetLenOp(), state)
 	default:
@@ -487,15 +493,19 @@ func ExecuteProslQueryOperator(op *proskenion.QueryOperator, state *ProslStateVa
 
 func ExecuteProslTxOperator(op *proskenion.TxOperator, state *ProslStateValue) *ProslStateValue {
 	builder := state.Fc.NewTxBuilder()
-	for _, cmd := range op.GetCommands() {
-		state = ExecuteProslValueOperator(cmd, state)
-		if state.Err != nil {
-			return state
+	state = ExecuteProslValueOperator(op.GetCommands(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.ListObjectCode {
+		return ReturnUnExpectedRetrunValue(state, model.ListObjectCode, state.ReturnObject.GetType(), op)
+	}
+	list := state.ReturnObject.GetList()
+	for _, o := range list {
+		if o.GetType() != model.CommandObjectCode {
+			return ReturnErrObjectCodeRetrunValue(state, model.CommandObjectCode, state.ReturnObject.GetType(), op)
 		}
-		if state.ReturnObject.GetCommand() == nil {
-			return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type, "expected type: command, but not command object")
-		}
-		builder = builder.AppendCommand(state.ReturnObject.GetCommand())
+		builder = builder.AppendCommand(o.GetCommand())
 	}
 	builder = builder.CreatedTime(0)
 	return ReturnTxProslStateValue(state, builder.Build())
@@ -532,6 +542,8 @@ func ExecuteProslCmdOperator(op *proskenion.CommandOperator, state *ProslStateVa
 		return ExecuteProslConsign(op.GetParams(), state)
 	case "activatepeer":
 		return ExecuteProslActivatePeer(op.GetParams(), state)
+	case "forceupdate", "forceupdatestorage", "updatestorage":
+		return ExecuteProslForceUpdateStorage(op.GetParams(), state)
 	default:
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnImplemented, fmt.Sprintf("unimplemented command : %s, %s", op.GetCommandName(), op.String()))
 	}
@@ -765,7 +777,7 @@ func ExecuteProslPageRankOperator(op *proskenion.PageRankOperator, state *ProslS
 	}
 
 	// outName
-	state = ExecuteProslValueOperator(op.GetToKey(), state)
+	state = ExecuteProslValueOperator(op.GetOutName(), state)
 	if state.Err != nil {
 		return state
 	}
@@ -780,13 +792,26 @@ func ExecuteProslPageRankOperator(op *proskenion.PageRankOperator, state *ProslS
 		if st == nil {
 			return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "unexpected return object. expected storage type. : %s", op.String())
 		}
-		to := st.GetFromKey(toKey).GetAddress()
-		graph.Link(model.MustAddress(st.GetId()).AccountId(), model.MustAddress(to).AccountId())
+		edges := st.GetFromKey(toKey).GetList()
+		if len(edges) == 0 {
+			return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type, "edge: \"%s\", unexpected type. expected list type. : %s", toKey, op.String())
+		}
+		stId := model.MustAddress(st.GetId())
+		for _, o := range edges {
+			to := o.GetAddress()
+			if to == "" {
+				return ReturnErrorProslStateValue(state, proskenion.ErrCode_Type, "edge: \"%s\", unexpected type. expected address type. : %s", toKey, op.String())
+			}
+			toId := model.MustAddress(to)
+			graph.Link(fmt.Sprintf("%s@%s", stId.Account(), stId.Domain()),
+				fmt.Sprintf("%s@%s", toId.Account(), toId.Domain()))
+		}
 	}
 	res := make([]model.Object, 0, len(storages))
 	graph.Rank(85*pagerank.Dot2ONE, 6*pagerank.DotONE, func(label string, rank int64) {
 		st := state.Fc.NewStorageBuilder().
-			Id(label+"/"+outName).
+			Id(fmt.Sprintf("%s/%s", label, outName)).
+			Address("account_id", label).
 			Int64("rank", rank).
 			Build()
 		res = append(res, state.Fc.NewObjectBuilder().Storage(st))
@@ -916,7 +941,7 @@ func ExecuteProslSortOperator(op *proskenion.SortOperator, state *ProslStateValu
 	}
 	if state.ReturnObject.GetType() != model.ListObjectCode {
 		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue,
-			"Return Object type expected: %s,but actual: %s\n%s", model.ListObjectCode.String(), state.ReturnObject.GetType(), op.String())
+			"Return Object type expected: %s,but actual: %s\n%s", model.ListObjectCode.String(), state.ReturnObject.GetType().String(), op.String())
 	}
 	list := state.ReturnObject.GetList()
 
@@ -941,6 +966,56 @@ func ExecuteProslSortOperator(op *proskenion.SortOperator, state *ProslStateValu
 	}
 	limit := state.ReturnObject.GetI32()
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(ret.objs[:int(limit)]))
+}
+
+func ExecuteProslSliceOperator(op *proskenion.SliceOperator, state *ProslStateValue) *ProslStateValue {
+	// list : getList
+	state = ExecuteProslValueOperator(op.GetList(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.ListObjectCode {
+		return ReturnUnExpectedRetrunValue(state, model.ListObjectCode, state.ReturnObject.GetType(), op)
+	}
+	list := state.ReturnObject.GetList()
+
+	// left [left, right)
+	left := 0
+	if op.GetLeft() != nil {
+		state = ExecuteProslValueOperator(op.GetLeft(), state)
+		if state.Err != nil {
+			return state
+		}
+		if state.ReturnObject.GetType() != model.Int32ObjectCode {
+			return ReturnUnExpectedRetrunValue(state, model.Int32ObjectCode, state.ReturnObject.GetType(), op)
+		}
+		left = int(state.ReturnObject.GetI32())
+	}
+	if left < 0 {
+		left = 0
+	}
+
+	// right [left, right)
+	right := len(list)
+	if op.GetRight() != nil {
+		state = ExecuteProslValueOperator(op.GetRight(), state)
+		if state.Err != nil {
+			return state
+		}
+		if state.ReturnObject.GetType() != model.Int32ObjectCode {
+			return ReturnUnExpectedRetrunValue(state, model.Int32ObjectCode, state.ReturnObject.GetType(), op)
+		}
+		right = int(state.ReturnObject.GetI32())
+	}
+	if right > len(list) {
+		right = len(list)
+	}
+
+	if len(list) <= left || left > right {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_OutOfRange,
+			"SliceOperator invalid range left: %d, right: %d, len(list): %d\n%s", left, right, len(list), op.String())
+	}
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(list[left:right]))
 }
 
 func ExecuteProslLenOperator(op *proskenion.LenOperator, state *ProslStateValue) *ProslStateValue {

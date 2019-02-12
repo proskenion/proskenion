@@ -28,50 +28,44 @@
       - pagerank:
           storages:
             variable: edges
-          key: "key"
-          out: "rank"
-    - set: # update_storage command 列を生成
-        - cmds
-        - list_comp:
-            var: rank
-            list: ranks
-            element:
-              update_storage:
-                authorizer: root@root
-                storage_id:
-                  valued:
-                    - variable: rank
-                    - address
-                    - id
-                storages:
-                  variable: rank
-    - set: # account id list を取得
-        - acids
-        - query:
-            authorizer: root@root
-            select: id
-            type: List
-            from: creator/rank
+          key: to
+          out: rank
+    - set:
+        - sorted_ranks
+        - sort:
+            list:
+              variable: ranks
             order_by:
               - rank
               - DESC
+            code: Storage
             limit: 4
+    - set: # account id list を取得
+        - acids
+        - list_comp:
+            var: rank
+            list:
+              var: sorted_ranks
+            element:
+              valued:
+                - var: rank
+                - address
+                - account_id
     - set: # acs = List()
         - acs
-        - list: nil
-    - each: # acs = List{acid[0], acid[1],...}
-        - variable: acids
-        - acid
-        - set:
-            - acs
-            - concat:
-                - variable: acs
-                - query:
-                    authorizer: root@root
-                    select: "*"
-                    type: Account
-                    from:
-                      variable: acid
+        - list_comp:
+            var: acid
+            list:
+              var: acids
+            element:
+              query:
+                authorizer: root@root
+                select: "*"
+                type: Account
+                from:
+                  concat:
+                    - variable: acid
+                    - /account
     - set: # degreaders に保存
         - add_degrade
         - update_object:
@@ -83,7 +77,7 @@
     - return: # degreaders[0] に 報酬 + 10000
         transaction:
           commands:
-            - variable: add_degrade
+            - var: add_degrade
             - add_balance:
                 authorizer_id: root@root
                 account_id:

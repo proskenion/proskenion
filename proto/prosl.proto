@@ -141,6 +141,7 @@ message ValueOperator {
         CastOperator castOp = 26;
         ListComprehensionOperator listComprehensionOp = 27;
         SortOperator sortOp = 28;
+        SliceOperator sliceOp = 29;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
@@ -165,7 +166,7 @@ message CommandOperator {
 }
 
 message TxOperator {
-    repeated ValueOperator commands = 1;
+    ValueOperator commands = 1;
 }
 
 message StorageOperator {
@@ -245,6 +246,13 @@ message SortOperator {
     OrderBy orderBy = 2;
     ObjectCode type = 3;
     ValueOperator limit = 4;
+}
+
+// return ListObeject[left, right) : left == nil: left is 0, right == nil: right is len(list).
+message SliceOperator {
+    ValueOperator list = 1;
+    ValueOperator left = 2;
+    ValueOperator right = 3;
 }
 
 // === CodntionalFormula ====

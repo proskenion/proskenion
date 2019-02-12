@@ -479,3 +479,34 @@ func ExecuteProslActivatePeer(params map[string]*proskenion.ValueOperator, state
 	return ReturnCmdProslStateValue(state,
 		builder.ActivatePeer(authorizerId, targetId).Build().GetPayload().GetCommands()[0])
 }
+
+func ExecuteProslForceUpdateStorage(params map[string]*proskenion.ValueOperator, state *ProslStateValue) *ProslStateValue {
+	builder := state.Fc.NewTxBuilder()
+	var authorizerId, targetId string
+	var storage model.Storage
+	for key, value := range params {
+		switch key {
+		case "authorizer_id", "authoirzer":
+			state = ExecuteProslValueOperator(value, state)
+			if state.Err != nil {
+				return state
+			}
+			authorizerId = state.ReturnObject.GetAddress()
+
+		case "peer_id", "target_id", "target":
+			state = ExecuteProslValueOperator(value, state)
+			if state.Err != nil {
+				return state
+			}
+			targetId = state.ReturnObject.GetAddress()
+		case "storage":
+			state = ExecuteProslValueOperator(value, state)
+			if state.Err != nil {
+				return state
+			}
+			storage = state.ReturnObject.GetStorage()
+		}
+	}
+	return ReturnCmdProslStateValue(state,
+		builder.ForceUpdateStorage(authorizerId, targetId, storage).Build().GetPayload().GetCommands()[0])
+}

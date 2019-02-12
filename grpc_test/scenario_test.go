@@ -48,6 +48,12 @@ func TestScenario(t *testing.T) {
 			confs[i].Peer.PrivateKey = strPri
 		}
 	}
+	confs[1].Peer.PublicKey = "7ae0937f747fff11760db2f1a08d2e1892a25fdc7adb39714fb596081478d0a7"
+	confs[1].Peer.PrivateKey = "03bc00e4e618de88a9f3148c53855284e46275367d57cb7357107c00624431977ae0937f747fff11760db2f1a08d2e1892a25fdc7adb39714fb596081478d0a7"
+	confs[2].Peer.PublicKey = "f7dc24e3ac16779f071cc0bcc4971f0bc9d2ca3bf78047282796a0dcb9da7278"
+	confs[2].Peer.PrivateKey = "67806d47c7b782d2691fa87cf1b45ceb38f32d187062120ff3d6f599068ace6df7dc24e3ac16779f071cc0bcc4971f0bc9d2ca3bf78047282796a0dcb9da7278"
+	confs[3].Peer.PublicKey = "b3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635"
+	confs[3].Peer.PrivateKey = "6fd47967cc1389e7e0c7838f35a8d5d42277a931c072251f7478a2544592c21db3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635"
 
 	fc := RandomFactory()
 	servers := make([]*grpc.Server, 0)
@@ -237,8 +243,6 @@ func TestScenario(t *testing.T) {
 	cms[0].QueryRootProslPassed(t, conStj.GetStorage())
 	logger.Info(color.GreenString("Passed Scenario 8 :  CheckAndCommit new Consensus Algorithm."))
 
-	// last...
-	time.Sleep(time.Second * 10)
 	// server stop
 	for _, server := range servers {
 		server.GracefulStop()
