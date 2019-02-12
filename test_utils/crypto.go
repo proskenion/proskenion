@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/crypto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -17,6 +18,10 @@ type Randomer interface {
 
 func RandomCryptor() core.Cryptor {
 	return crypto.NewEd25519Sha256Cryptor()
+}
+
+func RandomVerify(t *testing.T, pubkey model.PublicKey, hasher model.Hasher, sig []byte) {
+	assert.NoError(t, RandomCryptor().Verify(pubkey, hasher, sig))
 }
 
 func RandomKeyPairs() (model.PublicKey, model.PrivateKey) {

@@ -259,14 +259,22 @@ func (a *AddressConv) Account() string {
 	return a.account
 }
 
+func reverse(s string) string {
+	runes := []byte(s)
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
+}
+
 func (a *AddressConv) GetBytes() []byte {
 	ret := make([]byte, 0)
 	if a.domain == "" && a.account == "" {
 		ret = append(ret, a.storage...)
 	} else if a.account == "" {
-		ret = append(ret, (a.storage + dividedChar + a.domain)...)
+		ret = append(ret, (a.storage + dividedChar + reverse(a.domain))...)
 	} else {
-		ret = append(ret, (a.storage + dividedChar + a.domain + dividedChar + a.account)...)
+		ret = append(ret, (a.storage + dividedChar + reverse(a.domain) + dividedChar + a.account)...)
 	}
 	return ret
 }

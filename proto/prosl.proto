@@ -36,6 +36,7 @@ message ProslOperator {
         RequireOperator requireOp = 6;
         AssertOperator assertOp = 7;
         ReturnOperator returnOp = 8;
+        EachOperator eachOp = 9;
     }
 }
 
@@ -75,6 +76,12 @@ message ReturnOperator {
     ValueOperator op = 1;
 }
 
+message EachOperator {
+    ValueOperator list = 1;
+    string variableName = 2;
+    Prosl do = 3;
+}
+
 message VariableOperator {
     string variableName = 1;
 }
@@ -84,7 +91,27 @@ message IsDefinedOperator {
 }
 
 message VerifyOperator {
-    ValueOperator op = 1;
+    ValueOperator sig = 1;
+    ValueOperator hash = 2;
+}
+
+message PageRankOperator {
+    /**
+     *  List Obejct and each object is Storage Object.
+     * Storage.Id is vertex id.
+     *  toKey is Storage[toKey] = ObjectList<AddressObject>
+     * Allowed edges inputs Storage.Id -> Storage[toKey]...
+     *
+     * Output : ObjectList<StorageObject>
+     *          Storage has Id = "Address/outStorageName" and  "rank" = rank.
+     **/
+    ValueOperator storages = 1;
+    ValueOperator toKey = 2;
+    ValueOperator outName = 3;
+}
+
+message LenOperator {
+    ValueOperator list = 1;
 }
 
 // === ValueOperator ===
@@ -112,21 +139,18 @@ message ValueOperator {
         ListOperator listOp = 24;
         MapOperator mapOp = 25;
         CastOperator castOp = 26;
+        ListComprehensionOperator listComprehensionOp = 27;
+        SortOperator sortOp = 28;
+        SliceOperator sliceOp = 29;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
+        PageRankOperator pageRankOp = 32;
+        LenOperator lenOp = 33;
     }
 }
 
 message QueryOperator {
-    enum Order {
-        DESC = 0;
-        ASC = 1;
-    }
-    message OrderBy {
-        string key = 1;
-        Order order = 2;
-    }
     ValueOperator authorizerId = 1;
     string select = 2;
     ObjectCode type = 3;
@@ -142,7 +166,7 @@ message CommandOperator {
 }
 
 message TxOperator {
-    repeated ValueOperator commands = 1;
+    ValueOperator commands = 1;
 }
 
 message StorageOperator {
@@ -194,7 +218,7 @@ message ValuedOperator {
 message IndexedOperator {
     ValueOperator object = 1;
     ObjectCode type = 2;
-    int32 index = 3;
+    ValueOperator index = 3;
 }
 
 message ListOperator {
@@ -210,18 +234,40 @@ message CastOperator {
     ValueOperator object = 2;
 }
 
+message ListComprehensionOperator {
+    ValueOperator list = 1;
+    string variableName = 2;
+    ConditionalFormula if = 3;
+    ValueOperator element = 4;
+}
+
+message SortOperator {
+    ValueOperator list = 1;
+    OrderBy orderBy = 2;
+    ObjectCode type = 3;
+    ValueOperator limit = 4;
+}
+
+// return ListObeject[left, right) : left == nil: left is 0, right == nil: right is len(list).
+message SliceOperator {
+    ValueOperator list = 1;
+    ValueOperator left = 2;
+    ValueOperator right = 3;
+}
+
 // === CodntionalFormula ====
 message ConditionalFormula {
     oneof op {
-        OrFormula or = 1;
-        AndFormula and = 2;
-        NotFormula not = 3;
-        EqFormula eq = 4;
-        NeFormula ne = 5;
-        GtFormula gt = 6;
-        GeFormula ge = 7;
-        LtFormula lt = 8;
-        LeFormula le = 9;
+        OrFormula or = 1; // ||
+        AndFormula and = 2; // &&
+        NotFormula not = 3; // !
+        EqFormula eq = 4; // ==
+        NeFormula ne = 5; // !=
+        GtFormula gt = 6; // >
+        GeFormula ge = 7; // >=
+        LtFormula lt = 8; // <
+        LeFormula le = 9; // <=
+        VerifyOperator verifyOp = 10;
     }
 }
 

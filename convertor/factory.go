@@ -372,6 +372,11 @@ func (b *StorageBuilder) Dict(key string, value map[string]model.Object) model.S
 	return b
 }
 
+func (b *StorageBuilder) Id(id string) model.StorageBuilder {
+	b.Storage.Id = id
+	return b
+}
+
 func (b *StorageBuilder) Set(key string, value model.Object) model.StorageBuilder {
 	b.Object[key] = value.(*Object).Object
 	return b
@@ -806,6 +811,18 @@ func (t *TxBuilder) CheckAndCommitProsl(authorizerId string, proslId string, par
 	return t
 }
 
+func (t *TxBuilder) ForceUpdateStorage(authorizerId string, targetId string, storage model.Storage) model.TxBuilder {
+	t.Payload.Commands = append(t.Payload.Commands,
+		&proskenion.Command{
+			Command: &proskenion.Command_ForceUpdateStorage{
+				ForceUpdateStorage: &proskenion.ForceUpdateStorage{Storage: storage.(*Storage).Storage},
+			},
+			TargetId:     targetId,
+			AuthorizerId: authorizerId,
+		})
+	return t
+}
+
 func (t *TxBuilder) AppendCommand(cmd model.Command) model.TxBuilder {
 	t.Payload.Commands = append(t.Payload.Commands, cmd.(*Command).Command)
 	return t
@@ -843,9 +860,9 @@ func (q *QueryBuilder) Where(where string) model.QueryBuilder {
 }
 
 func (q *QueryBuilder) OrderBy(key string, order model.OrderCode) model.QueryBuilder {
-	q.Payload.OrderBy = &proskenion.Query_OrderBy{
+	q.Payload.OrderBy = &proskenion.OrderBy{
 		Key:   key,
-		Order: proskenion.Query_Order(order),
+		Order: proskenion.OrderCode(order),
 	}
 	return q
 }

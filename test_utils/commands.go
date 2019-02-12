@@ -5,6 +5,7 @@ import (
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/proskenion/proskenion/repository"
 	"github.com/stretchr/testify/require"
+	"math/rand"
 	"testing"
 )
 
@@ -25,7 +26,7 @@ type AccountWithPri struct {
 }
 
 func GenesisCommitFromAccounts(t *testing.T, rp core.Repository, acs []*AccountWithPri) {
-	txList, err := repository.GenesisTxListFromConf(RandomCryptor(),RandomFactory(), RandomRepository(),RandomProsl(), RandomConfig())
+	txList, err := repository.GenesisTxListFromConf(RandomCryptor(), RandomFactory(), RandomRepository(), RandomProsl(), RandomConfig())
 	require.NoError(t, err)
 
 	builder := RandomFactory().NewTxBuilder()
@@ -52,5 +53,12 @@ func RandomLandStorage(address string, id string, value int64, list []model.Obje
 		Address("owner", id).
 		Int64("value", value).
 		List("list", list).
+		Build()
+}
+
+func RandomStorage() model.Storage {
+	return RandomFactory().NewStorageBuilder().
+		Str(RandomStr(), RandomStr()).
+		Int64(RandomStr(), rand.Int63()).
 		Build()
 }

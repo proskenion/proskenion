@@ -164,7 +164,8 @@ func (c *CommandExecutor) CreateStorage(wsv model.ObjectFinder, cmd model.Comman
 	if err := wsv.Query(model.MustAddress("/"+id.Storage()), mtSt); err != nil {
 		return errors.Wrapf(core.ErrCommandExecutorCreateStorageNotDefinedStorage, err.Error())
 	}
-	if err := wsv.Append(id, mtSt); err != nil {
+	newSt := c.factory.NewStorageBuilder().From(mtSt).Id(cmd.GetTargetId()).Build()
+	if err := wsv.Append(id, newSt); err != nil {
 		return err
 	}
 	return nil
@@ -392,6 +393,18 @@ func (c *CommandExecutor) CheckAndCommitProsl(wsv model.ObjectFinder, cmd model.
 		return errors.Errorf("not found key %s, or unexpected value: %s", core.ProslKey, t)
 	}
 	if err := wsv.Append(destId, proSt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CommandExecutor) ForceUpdateStorage(wsv model.ObjectFinder, cmd model.Command) error {
+	fus := cmd.GetForceUpdateStorage()
+	st := fus.GetStorage()
+	id := model.MustAddress(cmd.GetTargetId())
+	newSt := c.factory.NewStorageBuilder().From(st).
+		Id(id.Id()).Build()
+	if err := wsv.Append(id, newSt); err != nil {
 		return err
 	}
 	return nil

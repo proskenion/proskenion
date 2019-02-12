@@ -76,6 +76,7 @@ type StorageBuilder interface {
 	List(key string, value []Object) StorageBuilder
 	Dict(key string, value map[string]Object) StorageBuilder
 	Set(key string, value Object) StorageBuilder
+	Id(id string) StorageBuilder
 	Build() Storage
 }
 
@@ -120,6 +121,7 @@ type TxBuilder interface {
 	BanPeer(authorizerId string, peerId string) TxBuilder
 	Consign(authorizerId string, accountId string, peerId string) TxBuilder
 	CheckAndCommitProsl(authorizerId string, proslId string, params map[string]Object) TxBuilder
+	ForceUpdateStorage(authorizerId string, targetId string, storage Storage) TxBuilder
 	AppendCommand(cmd Command) TxBuilder
 	Build() Transaction
 }

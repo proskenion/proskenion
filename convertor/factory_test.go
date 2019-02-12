@@ -136,6 +136,7 @@ func TestSignatureFactory(t *testing.T) {
 
 func TestTxModelBuilder(t *testing.T) {
 	t.Run("case transfer", func(t *testing.T) {
+		testSt19 := RandomStorage()
 		txBuilder := RandomFactory().NewTxBuilder()
 		tx := txBuilder.CreatedTime(10).
 			TransferBalance("au", "a", "b", 10).                                           // [0]
@@ -158,7 +159,8 @@ func TestTxModelBuilder(t *testing.T) {
 			BanPeer("authorizer", "peer").                                                              // [16]
 			Consign("authorizer", "account", "peer").                                                   // [17]
 			CheckAndCommitProsl("authorizer", "a@c/p",
-				map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[18]
+										map[string]model.Object{"key": RandomFactory().NewObjectBuilder().Str("yyy")}). //[18]
+			ForceUpdateStorage("authorizer19", "a@b/p", testSt19). //[19]
 			Build()
 		assert.Equal(t, int64(10), tx.GetPayload().GetCreatedTime())
 
@@ -262,6 +264,11 @@ func TestTxModelBuilder(t *testing.T) {
 		assert.Equal(t, "authorizer", tx.GetPayload().GetCommands()[18].GetAuthorizerId())
 		assert.Equal(t, "a@c/p", tx.GetPayload().GetCommands()[18].GetTargetId())
 		assert.Equal(t, "yyy", tx.GetPayload().GetCommands()[18].GetCheckAndCommitProsl().GetVariables()["key"].GetStr())
+
+		// forceUpdateStorage
+		assert.Equal(t, "authorizer19", tx.GetPayload().GetCommands()[19].GetAuthorizerId())
+		assert.Equal(t, "a@b/p", tx.GetPayload().GetCommands()[19].GetTargetId())
+		assert.Equal(t, testSt19.Hash(), tx.GetPayload().GetCommands()[19].GetForceUpdateStorage().GetStorage().Hash())
 	})
 }
 
@@ -535,6 +542,7 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 			Int64("int64", 64).
 			Uint32("uint32", 1).
 			Uint64("uint64", 2).
+			Id("target@account.com/wallet").
 			Build()
 
 		dict := storage.GetObject()
@@ -575,5 +583,8 @@ func TestNewObjectFactory_NewStorageBuilder(t *testing.T) {
 
 		assert.Equal(t, uint64(2), dict["uint64"].GetU64())
 		assert.Equal(t, model.Uint64ObjectCode, dict["uint64"].GetType())
+
+		assert.Equal(t, "target@account.com/wallet", storage.GetId())
+		assert.Equal(t, "target@account.com/wallet", storage.GetFromKey("id").GetAddress())
 	})
 }

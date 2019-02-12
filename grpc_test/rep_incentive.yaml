@@ -1,0 +1,115 @@
+- set:
+    - height
+    - valued:
+        - variable: top
+        - int64
+        - height
+- set: # height % 8 を取得、8回で周期的
+    - ind
+    - cast:
+        - int32
+        - mod:
+            - variable: height
+            - 8ll
+- if: # 一周したら
+    - eq:
+        - variable: ind
+        - 0
+    - set: # creator 間の信頼有効辺情報をとってくる
+      - edges
+      - query:
+          authorizer: root@root
+          select: "*"
+          type: List
+          from: creator/follow
+          limit: 100
+    - set: # ranks = pageranks(edges)
+      - ranks
+      - pagerank:
+          storages:
+            variable: edges
+          key: to
+          out: rank
+    - set:
+        - sorted_ranks
+        - sort:
+            list:
+              variable: ranks
+            order_by:
+              - rank
+              - DESC
+            code: Storage
+            limit: 4
+    - set: # account id list を取得
+        - acids
+        - list_comp:
+            var: rank
+            list:
+              var: sorted_ranks
+            element:
+              valued:
+                - var: rank
+                - address
+                - account_id
+    - set: # acs = List()
+        - acs
+        - list_comp:
+            var: acid
+            list:
+              var: acids
+            element:
+              query:
+                authorizer: root@root
+                select: "*"
+                type: Account
+                from:
+                  concat:
+                    - variable: acid
+                    - /account
+    - set: # degreaders に保存
+        - add_degrade
+        - update_object:
+            authorizer_id: root@root
+            wallet_id: root@root/degraders
+            key: acs
+            object:
+              variable: acs
+    - return: # degreaders[0] に 報酬 + 10000
+        transaction:
+          commands:
+            - var: add_degrade
+            - add_balance:
+                authorizer_id: root@root
+                account_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - 0
+                    - address
+                    - id
+                balance: 10000ll
+- else:
+    - set:
+        - acs
+        - query:
+            authorizer: root@root
+            select: acs
+            type: List
+            from: root@root/degraders
+    - return: # degreaders[i%4] に 報酬 + 10000
+        transaction:
+          commands:
+            - add_balance:
+                authorizer_id: root@root
+                target_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - mod:
+                            - variable: ind
+                            - 4
+                    - address
+                    - id
+                balance: 10000ll

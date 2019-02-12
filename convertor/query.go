@@ -76,7 +76,7 @@ func (p *QueryPaylaod) GetRequestCode() model.ObjectCode {
 
 func (p *QueryPaylaod) GetOrderBy() model.OrderBy {
 	if p.Query_Payload == nil {
-		return &OrderBy{&proskenion.Query_OrderBy{}}
+		return &OrderBy{&proskenion.OrderBy{}}
 	}
 	return &OrderBy{p.OrderBy}
 }
@@ -94,11 +94,11 @@ func (p *QueryPaylaod) Hash() model.Hash {
 }
 
 type OrderBy struct {
-	*proskenion.Query_OrderBy
+	*proskenion.OrderBy
 }
 
 func (o *OrderBy) GetOrder() model.OrderCode {
-	if o.Query_OrderBy == nil {
+	if o.OrderBy == nil {
 		return model.OrderCode(0)
 	}
 	return model.OrderCode(o.Order)

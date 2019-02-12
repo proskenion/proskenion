@@ -64,3 +64,47 @@ func (g *BroadCastGossip) GossipBlock(block model.Block, txList core.TxList) err
 	}
 	return nil
 }
+
+func (g *BroadCastGossip) GossipTx(tx model.Transaction) error {
+	wsv, err := g.rp.TopWSV()
+	if err != nil {
+		return err
+	}
+	unmarshalers, err := wsv.QueryAll(model.MustAddress("/"+model.PeerStorageName), model.NewPeerUnmarshalerFactory(g.fc))
+	if err != nil {
+		return err
+	}
+	if err := core.CommitTx(wsv); err != nil {
+		return err
+	}
+
+	var errs error
+	mutex := &sync.Mutex{}
+	wg := &sync.WaitGroup{}
+	for _, unmarshaler := range unmarshalers {
+		peer := unmarshaler.(model.Peer)
+		if peer.GetPeerId() == g.rp.Me().GetPeerId() {
+			continue
+		}
+		client, err := g.cf.ConsensusClient(peer)
+		if err != nil {
+			errs = multierr.Append(errs, err)
+			continue
+		}
+		wg.Add(1)
+		go func(tx model.Transaction) {
+			err := client.PropagateTx(tx)
+			if err != nil {
+				mutex.Lock()
+				errs = multierr.Append(errs, err)
+				mutex.Unlock()
+			}
+			wg.Done()
+		}(tx)
+	}
+	wg.Wait()
+	if errs != nil {
+		return errs
+	}
+	return nil
+}

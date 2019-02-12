@@ -535,6 +535,7 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 			fc.NewStorageBuilder().
 				Str("name", "account1").
 				Address("id", "account1@com").
+				Id("account1@com/wallet").
 				Build(),
 			nil,
 		},
@@ -546,6 +547,7 @@ func TestCommandExecutor_CreateStorage(t *testing.T) {
 				Str("address", "1-1-1").
 				Address("owner", "account1@com").
 				Int64("value", 11111).
+				Id("account1@com/plane").
 				Build(),
 			nil,
 		},
@@ -1113,6 +1115,60 @@ func TestCommandExecutor_CheckAndCommitProsl(t *testing.T) {
 				err = wsv.Query(model.MustAddress(RandomConfig().Prosl.Incentive.Id), st)
 				require.NoError(t, err)
 				assert.Equal(t, c.expCpr, st.GetFromKey(core.ProslKey).GetData())
+			}
+		})
+	}
+	require.NoError(t, dtx.Commit())
+}
+
+func TestCommandExecutor_ForceUpdateStorage(t *testing.T) {
+	fc, ex, rp := prePareCommandExecutor(t)
+	prePareCreateAccounts(t, fc, rp)
+	prePareAddPeer(t, fc, rp)
+	preParaProslSave(t, fc, rp, RandomConfig())
+	prePareForUpdate(t, fc, rp)
+
+	dtx, wsv := prePareGetDtxWSV(t, rp)
+	for _, c := range []struct {
+		name         string
+		authorizerId string
+		storageId    string
+		storage      model.Storage
+		err          error
+	}{
+		{
+			"case 1 : success",
+			authorizerId,
+			"account1@incentive.com/xxx",
+			RandomStorage(),
+			nil,
+		},
+		{
+			"case 2 : success overwrite",
+			authorizerId,
+			"account1@incentive.com/xxx",
+			RandomStorage(),
+			nil,
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cmd := fc.NewTxBuilder().
+				ForceUpdateStorage(c.authorizerId, c.storageId, c.storage).
+				Build().
+				GetPayload().
+				GetCommands()[0]
+			err := ex.ForceUpdateStorage(wsv, cmd)
+			if c.err != nil {
+				assert.EqualErrorf(t, errors.Cause(err), c.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+
+				st := fc.NewEmptyStorage()
+				err := wsv.Query(model.MustAddress(c.storageId), st)
+				require.NoError(t, err)
+				exSt := fc.NewStorageBuilder().From(st).
+					Id(c.storageId).Build()
+				assert.Equal(t, exSt.Hash(), st.Hash())
 			}
 		})
 	}

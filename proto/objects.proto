@@ -23,6 +23,16 @@ enum ObjectCode {
     BlockObjectCode = 18;
 }
 
+enum OrderCode {
+    DESC = 0;
+    ASC = 1;
+}
+
+message OrderBy {
+    string key = 1;
+    OrderCode order = 2;
+}
+
 message Address {
     string address = 1;
 }
@@ -58,7 +68,8 @@ message ObjectDict {
 }
 
 message Storage {
-    map<string, Object> object = 1;
+    string id = 1;
+    map<string, Object> object = 2;
 }
 
 message MegaStorage {
@@ -101,6 +112,8 @@ message Command {
         BanPeer banPeer = 17;
         Consign consign = 18;
         CheckAndCommitProsl checkAndCommitProsl = 19;
+
+        ForceUpdateStorage forceUpdateStorage = 30;
    }
 }
 
@@ -233,6 +246,14 @@ message Consign {
  **/
 message CheckAndCommitProsl {
     map<string, Object> variables = 2;
+}
+
+/**
+ * ForceUpdateStorage は target_id で指定した Storage を強制上書きする。
+ *  ForceUpdateStorage は Validate で必ず false が返る。
+ **/
+message ForceUpdateStorage {
+    Storage storage = 1;
 }
 
 /**

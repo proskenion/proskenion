@@ -7,6 +7,7 @@ import (
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	. "github.com/proskenion/proskenion/gate"
+	"github.com/proskenion/proskenion/p2p"
 	"github.com/proskenion/proskenion/query"
 	"github.com/proskenion/proskenion/repository"
 	. "github.com/proskenion/proskenion/test_utils"
@@ -24,7 +25,7 @@ func TestAPI_WriteAndRead(t *testing.T) {
 	logger := log15.New(context.TODO())
 	qp := query.NewQueryProcessor(fc, RandomConfig())
 	qv := query.NewQueryValidator(fc, RandomConfig())
-	api := NewAPI(rp, queue, qp, qv, logger)
+	api := NewAPI(rp, queue, qp, qv, &p2p.MockGossip{}, logger)
 	cm := commit.NewCommitSystem(fc, RandomCryptor(), queue, rp, conf)
 
 	// genesis Commit

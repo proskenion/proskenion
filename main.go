@@ -104,7 +104,7 @@ func main() {
 			grpc_recovery.UnaryServerInterceptor(),
 		)),
 	}...)
-	api := gate.NewAPI(rp, txQueue, qp, qv, logger)
+	api := gate.NewAPI(rp, txQueue, qp, qv, gossip, logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))

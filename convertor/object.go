@@ -140,7 +140,7 @@ func (a *Account) GetFromKey(key string) model.Object {
 	case "peer_id", "delegate_peer_id", "peer", "delegate_peer":
 		return AddressObject(a.GetDelegatePeerId(), a.cryptor)
 	}
-	return nil
+	return &Object{a.cryptor, nil, nil, &proskenion.Object{}}
 }
 
 func (a *Account) Marshal() ([]byte, error) {
@@ -183,7 +183,7 @@ func (a *Peer) GetFromKey(key string) model.Object {
 	case "ban":
 		return BoolObject(a.GetBan(), a.cryptor)
 	}
-	return nil
+	return &Object{a.cryptor, nil, nil, &proskenion.Object{}}
 }
 
 func (a *Peer) Activate() {

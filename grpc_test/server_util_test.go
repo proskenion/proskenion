@@ -83,7 +83,7 @@ func SetUpTestServer(t *testing.T, conf *config.Config, s *grpc.Server) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", conf.Peer.Port))
 	require.NoError(t, err)
 
-	api := gate.NewAPI(rp, txQueue, qp, qv, logger)
+	api := gate.NewAPI(rp, txQueue, qp, qv, gossip, logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
 	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))

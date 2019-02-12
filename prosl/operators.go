@@ -153,10 +153,17 @@ func ExecuteXor(a model.Object, b model.Object, fc model.ModelFactory) model.Obj
 }
 
 func ExecuteConcat(a model.Object, b model.Object, fc model.ModelFactory) model.Object {
-	if a == nil || b == nil || a.GetType() != b.GetType() {
+	if a == nil || b == nil {
 		return nil
 	}
 	builder := fc.NewObjectBuilder()
+	if a.GetType() != b.GetType() && a.GetType() == model.ListObjectCode {
+		return builder.List(append(a.GetList(), b))
+	}
+	if a.GetType() != b.GetType() {
+		return nil
+	}
+
 	switch a.GetType() {
 	case model.StringObjectCode:
 		return builder.Str(a.GetStr() + b.GetStr())

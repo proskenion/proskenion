@@ -9,6 +9,7 @@ import (
 var (
 	ErrAPIWriteVerifyError    = fmt.Errorf("Failed API Write Stateless Verify Error")
 	ErrAPIWriteTxAlreadyExist = fmt.Errorf("Failed API Write Transaction is already exists")
+	ErrAPIWriteGossipTxError = fmt.Errorf("Failed API Write Gossip Tx occures error")
 
 	ErrAPIQueryVerifyError   = fmt.Errorf("Failed API Read query Verify Error")
 	ErrAPIQueryValidateError = fmt.Errorf("Failed API Read query Validate Error")

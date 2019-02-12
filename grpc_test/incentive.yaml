@@ -25,7 +25,7 @@
             order_by:
               - balance
               - DESC
-            limit: 2
+            limit: 4
     - set:
         - add_degrade
         - update_object:

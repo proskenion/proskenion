@@ -54,7 +54,7 @@ func (c *Consensus) waitUntilComeNextBlock() ConsensusWaitFlag {
 func (c *Consensus) isBlockCreator(round int) bool {
 	acs, err := c.rp.GetDelegatedAccounts()
 	if err != nil {
-		c.logger.Error("GetDelegatePeers error: %s", err.Error())
+		c.logger.Error(fmt.Sprintf("GetDelegatePeers error: %s", err.Error()))
 		return false
 	}
 	if len(acs) <= round {
@@ -83,7 +83,7 @@ func (c *Consensus) Boot() {
 
 			// 1. 自分が i(i<=round) 番目の Block 生成者か判定
 			if c.isBlockCreator(round) {
-				c.logger.Info("============= Create Block =============")
+				c.logger.Info(fmt.Sprintf("============= Create Block : height %d, round %d =============", top.GetPayload().GetHeight()+1, round))
 				// 2. block を生成
 				block, txList, err := c.cs.CreateBlock(int32(round))
 				if err != nil {

@@ -37,7 +37,7 @@ func (p *Prosl) Execute(wsv model.ObjectFinder, top model.Block) (model.Object, 
 	if p.prosl == nil {
 		return nil, nil, errors.Errorf("Must be prosl setting, from yaml or protobuf binary")
 	}
-	state := ExecuteProsl(p.prosl, InitProslStateValue(p.fc, wsv, top, p.conf))
+	state := ExecuteProsl(p.prosl, InitProslStateValue(p.fc, wsv, top, p.c, p.conf))
 	if state.Err != nil {
 		return nil, state.Variables, state.Err
 	}
@@ -48,7 +48,7 @@ func (p *Prosl) ExecuteWithParams(wsv model.ObjectFinder, top model.Block, param
 	if p.prosl == nil {
 		return nil, nil, errors.Errorf("Must be prosl setting, from yaml or protobuf binary")
 	}
-	state := ExecuteProsl(p.prosl, InitProslStateValueWithPrams(p.fc, wsv, top, p.conf, params))
+	state := ExecuteProsl(p.prosl, InitProslStateValueWithPrams(p.fc, wsv, top, p.c, p.conf, params))
 	if state.Err != nil {
 		return nil, state.Variables, state.Err
 	}

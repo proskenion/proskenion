@@ -1,0 +1,36 @@
+- set:
+    - height
+    - valued:
+        - variable: top
+        - int64
+        - height
+- set: # height % 8 を取得、8回で周期的
+    - ind
+    - cast:
+        - int32
+        - mod:
+            - variable: height
+            - 4ll
+- set:
+    - acs
+    - query:
+        authorizer: root@root
+        select: acs
+        type: List
+        from: root@root/degraders
+        limit: 100
+- set:
+    - res
+    - concat:
+        - slice:
+            list:
+              var: acs
+            left:
+              var: ind
+        - slice:
+            list:
+              var: acs
+            right:
+              var: ind
+- return:
+    variable: res

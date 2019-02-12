@@ -53,10 +53,13 @@ func (s *Storage) GetObject() map[string]model.Object {
 }
 
 func (s *Storage) GetFromKey(key string) model.Object {
+	if key == "id" {
+		return AddressObject(s.GetId(), s.cryptor)
+	}
 	if ret, ok := s.GetObject()[key]; ok {
 		return ret
 	} else {
-		return &Object{nil, nil, nil, &proskenion.Object{}}
+		return &Object{s.cryptor, nil, nil, &proskenion.Object{}}
 	}
 }
 

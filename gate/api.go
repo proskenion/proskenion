@@ -15,10 +15,11 @@ type API struct {
 	logger log15.Logger
 	qp     core.QueryProcessor
 	qv     core.QueryValidator
+	gs     core.Gossip
 }
 
-func NewAPI(rp core.Repository, queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, logger log15.Logger) core.API {
-	return &API{rp, queue, logger, qp, qv}
+func NewAPI(rp core.Repository, queue core.ProposalTxQueue, qp core.QueryProcessor, qv core.QueryValidator, gs core.Gossip, logger log15.Logger) core.API {
+	return &API{rp, queue, logger, qp, qv, gs}
 }
 
 func (a *API) Write(tx model.Transaction) error {
@@ -30,6 +31,9 @@ func (a *API) Write(tx model.Transaction) error {
 			return errors.Wrap(core.ErrAPIWriteTxAlreadyExist, err.Error())
 		}
 		return errors.Wrapf(repository.ErrProposalTxQueuePush, err.Error())
+	}
+	if err := a.gs.GossipTx(tx); err != nil {
+		return errors.Wrap(core.ErrAPIWriteGossipTxError, err.Error())
 	}
 	return nil
 }
