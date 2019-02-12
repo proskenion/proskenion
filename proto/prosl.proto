@@ -140,6 +140,7 @@ message ValueOperator {
         MapOperator mapOp = 25;
         CastOperator castOp = 26;
         ListComprehensionOperator listComprehensionOp = 27;
+        SortOperator sortOp = 28;
 
         IsDefinedOperator isDefinedOp = 30;
         VerifyOperator verifyOp = 31;
@@ -149,14 +150,6 @@ message ValueOperator {
 }
 
 message QueryOperator {
-    enum Order {
-        DESC = 0;
-        ASC = 1;
-    }
-    message OrderBy {
-        string key = 1;
-        Order order = 2;
-    }
     ValueOperator authorizerId = 1;
     string select = 2;
     ObjectCode type = 3;
@@ -245,6 +238,13 @@ message ListComprehensionOperator {
     string variableName = 2;
     ConditionalFormula if = 3;
     ValueOperator element = 4;
+}
+
+message SortOperator {
+    ValueOperator list = 1;
+    OrderBy orderBy = 2;
+    ObjectCode type = 3;
+    ValueOperator limit = 4;
 }
 
 // === CodntionalFormula ====

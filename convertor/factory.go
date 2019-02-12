@@ -860,9 +860,9 @@ func (q *QueryBuilder) Where(where string) model.QueryBuilder {
 }
 
 func (q *QueryBuilder) OrderBy(key string, order model.OrderCode) model.QueryBuilder {
-	q.Payload.OrderBy = &proskenion.Query_OrderBy{
+	q.Payload.OrderBy = &proskenion.OrderBy{
 		Key:   key,
-		Order: proskenion.Query_Order(order),
+		Order: proskenion.OrderCode(order),
 	}
 	return q
 }

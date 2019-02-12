@@ -2,17 +2,8 @@ syntax = "proto3";
 package proskenion;
 
 import "objects.proto";
-import "prosl.proto";
 
 message Query {
-    enum Order {
-        DESC = 0;
-        ASC = 1;
-    }
-    message OrderBy {
-        string key = 1;
-        Order order = 2;
-    }
     message Payload {
         string authorizerId = 1;
         string select = 2;

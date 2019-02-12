@@ -23,6 +23,16 @@ enum ObjectCode {
     BlockObjectCode = 18;
 }
 
+enum OrderCode {
+    DESC = 0;
+    ASC = 1;
+}
+
+message OrderBy {
+    string key = 1;
+    OrderCode order = 2;
+}
+
 message Address {
     string address = 1;
 }

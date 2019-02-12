@@ -10,6 +10,7 @@ import (
 	"github.com/proskenion/proskenion/proto"
 	"github.com/proskenion/proskenion/query"
 	"github.com/satellitex/pagerank"
+	"sort"
 	"strings"
 )
 
@@ -135,6 +136,10 @@ func ReturnProslStateValue(state *ProslStateValue, value model.Object) *ProslSta
 
 func ReturnTxProslStateValue(state *ProslStateValue, value model.Transaction) *ProslStateValue {
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().Transaction(value))
+}
+
+func ReturnUnExpectedRetrunValue(state *ProslStateValue, exp Stringer, act Stringer, op Stringer) *ProslStateValue {
+	return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue, "Return Object type expected: %s, but %s\n %s", exp.String(), act.String(), op.String())
 }
 
 func ReturnErrorProslStateValue(state *ProslStateValue, code proskenion.ErrCode, format string, a ...interface{}) *ProslStateValue {
@@ -413,6 +418,8 @@ func ExecuteProslValueOperator(op *proskenion.ValueOperator, state *ProslStateVa
 		state = ExecuteProslCastOperator(op.GetCastOp(), state)
 	case *proskenion.ValueOperator_ListComprehensionOp:
 		state = ExecuteProslListComprehensionOperator(op.GetListComprehensionOp(), state)
+	case *proskenion.ValueOperator_SortOp:
+		state = ExecuteProslSortOperator(op.GetSortOp(), state)
 	case *proskenion.ValueOperator_LenOp:
 		state = ExecuteProslLenOperator(op.GetLenOp(), state)
 	default:
@@ -858,6 +865,82 @@ func ExecuteProslListComprehensionOperator(op *proskenion.ListComprehensionOpera
 		ret = append(ret, state.ReturnObject)
 	}
 	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(ret))
+}
+
+type ComparedObjects struct {
+	objs []model.Object
+	code model.ObjectCode
+	key  string
+}
+
+func (a *ComparedObjects) Len() int {
+	return len(a.objs)
+}
+
+type GetFromKeyer interface {
+	GetFromKey(string) model.Object
+}
+
+func lessGetFromKey(l GetFromKeyer, r GetFromKeyer, key string) bool {
+	if l == nil || r == nil {
+		return false
+	}
+	return model.ObjectLess(l.GetFromKey(key), r.GetFromKey(key))
+}
+
+func (a *ComparedObjects) Less(i, j int) bool {
+	if a.key == "" {
+		return model.ObjectLess(a.objs[i], a.objs[j])
+	}
+	switch a.code {
+	case model.AccountObjectCode:
+		return lessGetFromKey(a.objs[i].GetAccount(), a.objs[j].GetAccount(), a.key)
+	case model.PeerObjectCode:
+		return lessGetFromKey(a.objs[i].GetPeer(), a.objs[j].GetPeer(), a.key)
+	case model.StorageObjectCode:
+		return lessGetFromKey(a.objs[i].GetStorage(), a.objs[j].GetStorage(), a.key)
+	default:
+		return model.ObjectLess(a.objs[i], a.objs[j])
+	}
+}
+
+func (a *ComparedObjects) Swap(i, j int) {
+	a.objs[i], a.objs[j] = a.objs[j], a.objs[i]
+}
+
+func ExecuteProslSortOperator(op *proskenion.SortOperator, state *ProslStateValue) *ProslStateValue {
+	// list : getList
+	state = ExecuteProslValueOperator(op.GetList(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.ListObjectCode {
+		return ReturnErrorProslStateValue(state, proskenion.ErrCode_UnExpectedReturnValue,
+			"Return Object type expected: %s,but actual: %s\n%s", model.ListObjectCode.String(), state.ReturnObject.GetType(), op.String())
+	}
+	list := state.ReturnObject.GetList()
+
+	// Execute sort with list
+	ret := &ComparedObjects{list, model.ObjectCode(op.GetType()), op.GetOrderBy().GetKey()}
+	if op.GetOrderBy().GetOrder() == model.DESC {
+		sort.Sort(sort.Reverse(ret))
+	} else {
+		sort.Sort(ret)
+	}
+
+	// limit check
+	if op.GetLimit() == nil {
+		return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(ret.objs))
+	}
+	state = ExecuteProslValueOperator(op.GetLimit(), state)
+	if state.Err != nil {
+		return state
+	}
+	if state.ReturnObject.GetType() != model.Int32ObjectCode {
+		return ReturnUnExpectedRetrunValue(state, model.Int32ObjectCode, state.ReturnObject.GetType(), op)
+	}
+	limit := state.ReturnObject.GetI32()
+	return ReturnProslStateValue(state, state.Fc.NewObjectBuilder().List(ret.objs[:int(limit)]))
 }
 
 func ExecuteProslLenOperator(op *proskenion.LenOperator, state *ProslStateValue) *ProslStateValue {

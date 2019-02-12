@@ -32,10 +32,11 @@
           out: "rank"
     - set: # update_storage command 列を生成
         - cmds
-        - each:
-            - variable: ranks
-            - rank
-            - update_storage:
+        - list_comp:
+            var: rank
+            list: ranks
+            element:
+              update_storage:
                 authorizer: root@root
                 storage_id:
                   valued:
