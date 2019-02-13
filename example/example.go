@@ -188,5 +188,6 @@ func main() {
 	for {
 		WaitSecond(5)
 		authorizer.QueryAccountsBalances()
+		logger.Info(color.GreenString("===================== :: Waiting 5 seconds :: ====================="))
 	}
 }

@@ -415,6 +415,6 @@ func (am *SenderManager) QueryAccountsBalances() {
 	acs := am.queryRangeAccounts("creator.pr/account", 100)
 
 	for _, ac := range acs {
-		color.Yellow(ac.GetAccountId(), ac.GetBalance())
+		fmt.Println(color.YellowString("id: %s, balance: %d", ac.GetAccountId(), ac.GetBalance()))
 	}
 }
