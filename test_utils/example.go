@@ -2,6 +2,7 @@ package test_utils
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/config"
@@ -408,4 +409,12 @@ func (am *SenderManager) QueryRootProslPassed(prosl model.Storage) {
 	res := am.QueryStorage(proslId)
 	AssertEqual(prosl.Hash(), res.Hash())
 	fmt.Println("QueryRootProsl:", res)
+}
+
+func (am *SenderManager) QueryAccountsBalances() {
+	acs := am.queryRangeAccounts("creator.pr/account", 100)
+
+	for _, ac := range acs {
+		color.Yellow(ac.GetAccountId(), ac.GetBalance())
+	}
 }

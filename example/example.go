@@ -185,4 +185,8 @@ func main() {
 	logger.Info(color.GreenString("===================== :: Passed Scenario 6 :: ====================="))
 
 	// 9. 合意形成を行うPeerが切り替わる. fin
+	for {
+		WaitSecond(5)
+		authorizer.QueryAccountsBalances()
+	}
 }
