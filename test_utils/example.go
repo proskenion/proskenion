@@ -1,13 +1,13 @@
-package main
+package test_utils
 
 import (
 	"fmt"
-	"github.com/proskenion/proskenion/Client"
+	"github.com/pkg/errors"
+	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
-	. "github.com/proskenion/proskenion/test_utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"reflect"
 )
 
 type SenderManager struct {
@@ -22,8 +22,54 @@ func RequireNoError(err error) {
 	}
 }
 
-func NewSenderManager(authorizer *AccountWithPri, server model.Peer) *SenderManager {
-	fc := RandomFactory()
+func validateEqualArgs(expected, actual interface{}) error {
+	if isFunction(expected) || isFunction(actual) {
+		return errors.New("cannot take func type as argument")
+	}
+	return nil
+}
+
+func isFunction(arg interface{}) bool {
+	if arg == nil {
+		return false
+	}
+	return reflect.TypeOf(arg).Kind() == reflect.Func
+}
+
+func formatUnequalValues(expected, actual interface{}) (e string, a string) {
+	if reflect.TypeOf(expected) != reflect.TypeOf(actual) {
+		return fmt.Sprintf("%T(%#v)", expected, expected),
+			fmt.Sprintf("%T(%#v)", actual, actual)
+	}
+
+	return fmt.Sprintf("%#v", expected),
+		fmt.Sprintf("%#v", actual)
+}
+
+func AssertEqual(expected interface{}, actual interface{}) {
+	if err := validateEqualArgs(expected, actual); err != nil {
+		panic(fmt.Sprintf("Invalid operation: %#v == %#v (%s)", expected, actual, err))
+	}
+	if !assert.ObjectsAreEqual(expected, actual) {
+		expected, actual = formatUnequalValues(expected, actual)
+		panic(fmt.Sprintf("Not equal: \n"+
+			"expected: %s\n"+
+			"actual  : %s\n", expected, actual))
+	}
+}
+
+func ForceVerify(pubkey model.PublicKey, hasher model.Hasher, sig []byte) {
+	RequireNoError(RandomCryptor().Verify(pubkey, hasher, sig))
+}
+
+func ForceSign(pubkey model.PublicKey, prikey model.PrivateKey, hasher model.Hasher) model.Signature {
+	signature, err := RandomCryptor().Sign(hasher, prikey)
+	RequireNoError(err)
+	return RandomFactory().NewSignature(pubkey, signature)
+}
+
+func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.ModelFactory) *SenderManager {
+	fmt.Println("New Sender Manger :", authorizer)
 	c, err := client.NewAPIClient(server, fc)
 	RequireNoError(err)
 	return &SenderManager{
@@ -34,6 +80,7 @@ func NewSenderManager(authorizer *AccountWithPri, server model.Peer) *SenderMana
 }
 
 func (am *SenderManager) SetAuthorizer() {
+	fmt.Println("Set Authorizer: ", am.Authorizer)
 	tx := am.fc.NewTxBuilder().
 		AddPublicKeys(am.Authorizer.AccountId, am.Authorizer.AccountId, []model.PublicKey{am.Authorizer.Pubkey}).
 		SetQuorum(am.Authorizer.AccountId, am.Authorizer.AccountId, 1).
@@ -154,9 +201,7 @@ func (am *SenderManager) VoteNewConsensus(dest *AccountWithPri, key string, pros
 	default:
 		panic(fmt.Sprintf("Error pType: %s", key))
 	}
-	sign, err := RandomCryptor().Sign(prosl, am.Authorizer.Prikey)
-	RequireNoError(err)
-	signature := am.fc.NewSignature(am.Authorizer.Pubkey, sign)
+	signature := ForceSign(am.Authorizer.Pubkey, am.Authorizer.Prikey, prosl)
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.Authorizer.AccountId, srcWalletId.Id()).
 		AddObject(am.Authorizer.AccountId, srcWalletId.Id(), ProSignKey,
@@ -199,6 +244,9 @@ func (am *SenderManager) QueryAccountPassed(ac *AccountWithPri) {
 
 	RequireNoError(res.Verify())
 	retAc := res.GetObject().GetAccount()
+
+	AssertEqual(retAc.GetAccountId(), ac.AccountId)
+	//assert.Contains(t, retAc.GetPublicKeys(), ac.Pubkey)
 }
 
 func (am *SenderManager) queryRangeAccounts(fromId string, limit int32) []model.Account {
@@ -222,15 +270,15 @@ func (am *SenderManager) queryRangeAccounts(fromId string, limit int32) []model.
 }
 
 func (am *SenderManager) QueryRangeAccountsPassed(fromId string, acs []*AccountWithPri) {
-	res := am.queryRangeAccounts(t, fromId, 10)
-	assert.Equal(t, len(res), len(acs))
+	res := am.queryRangeAccounts(fromId, 10)
+	AssertEqual(len(res), len(acs))
 	amap := make(map[string]struct{})
 	for _, ac := range res {
 		amap[ac.GetAccountId()] = struct{}{}
 	}
 	for _, ac := range acs {
 		_, ok := amap[ac.AccountId]
-		require.True(t, ok)
+		AssertEqual(true, ok)
 	}
 }
 
@@ -248,8 +296,8 @@ func (am *SenderManager) QueryAccountDegradedPassed(ac *AccountWithPri, peer mod
 
 	RequireNoError(res.Verify())
 	retAc := res.GetObject().GetAccount()
-	assert.Equal(t, retAc.GetAccountId(), ac.AccountId)
-	assert.Equal(t, retAc.GetDelegatePeerId(), peer.GetPeerId())
+	AssertEqual(retAc.GetAccountId(), ac.AccountId)
+	AssertEqual(retAc.GetDelegatePeerId(), peer.GetPeerId())
 }
 
 func (am *SenderManager) QueryPeersStatePassed(peers []model.PeerWithPriKey) {
@@ -265,16 +313,16 @@ func (am *SenderManager) QueryPeersStatePassed(peers []model.PeerWithPriKey) {
 	res, err := am.Client.Read(query)
 	RequireNoError(err)
 
-	assert.Equal(t, len(res.GetObject().GetList()), len(peers))
+	AssertEqual(len(res.GetObject().GetList()), len(peers))
 	pactive := make(map[string]bool)
 	for _, o := range res.GetObject().GetList() {
 		p := o.GetPeer()
 		pactive[p.GetPeerId()] = p.GetActive()
-		assert.True(t, p.GetActive())
+		AssertEqual(true, p.GetActive())
 	}
 	for _, p := range peers {
 		_, ok := pactive[p.GetPeerId()]
-		assert.True(t, ok)
+		AssertEqual(true, ok)
 	}
 }
 
@@ -286,7 +334,7 @@ func equalList(os []model.Object, as []model.Object) {
 	for _, a := range as {
 		_, ok := h[string(a.Hash())]
 		if !ok {
-			t.Fatalf("not exist hash: %x", a.Hash())
+			panic(fmt.Sprintf("not exist hash: %x", a.Hash()))
 		}
 	}
 }
@@ -306,8 +354,8 @@ func (am *SenderManager) QueryStorage(fromId string) model.Storage {
 }
 
 func (am *SenderManager) QueryStorageEdgesPassed(fromId string, os []model.Object) {
-	resSt := am.QueryStorage(t, fromId)
-	equalList(t, resSt.GetFromKey(FollowEdge).GetList(), os)
+	resSt := am.QueryStorage(fromId)
+	equalList(resSt.GetFromKey(FollowEdge).GetList(), os)
 }
 
 func (am *SenderManager) QueryProslPassed(pType string, prosl []byte) {
@@ -318,11 +366,11 @@ func (am *SenderManager) QueryProslPassed(pType string, prosl []byte) {
 	case core.ConsensusKey:
 		proslId = MakeConsensusWalletId(am.Authorizer).Id()
 	default:
-		require.Failf(t, "Error pType: %s", pType)
+		panic(fmt.Sprintf("Error pType: %s", pType))
 	}
-	res := am.QueryStorage(t, proslId)
-	assert.Equal(t, res.GetFromKey(core.ProslTypeKey).GetStr(), pType)
-	assert.Equal(t, res.GetFromKey(core.ProslKey).GetData(), prosl)
+	res := am.QueryStorage(proslId)
+	AssertEqual(res.GetFromKey(core.ProslTypeKey).GetStr(), pType)
+	AssertEqual(res.GetFromKey(core.ProslKey).GetData(), prosl)
 }
 
 func (am *SenderManager) QueryCollectSigsPassed(pType string, prosl model.Object, num int) {
@@ -333,13 +381,13 @@ func (am *SenderManager) QueryCollectSigsPassed(pType string, prosl model.Object
 	case core.ConsensusKey:
 		sigsId = MakeConsensusSigsId(am.Authorizer).Id()
 	default:
-		require.Failf(t, "Error pType: %s", pType)
+		panic(fmt.Sprintf("Error pType: %s", pType))
 	}
-	res := am.QueryStorage(t, sigsId).GetFromKey(ProSignKey)
-	assert.Equal(t, num, len(res.GetList()))
+	res := am.QueryStorage(sigsId).GetFromKey(ProSignKey)
+	AssertEqual(num, len(res.GetList()))
 	for _, o := range res.GetList() {
 		sig := o.GetSig()
-		RandomVerify(t, sig.GetPublicKey(), prosl, sig.GetSignature())
+		ForceVerify(sig.GetPublicKey(), prosl, sig.GetSignature())
 	}
 }
 
@@ -352,9 +400,9 @@ func (am *SenderManager) QueryRootProslPassed(prosl model.Storage) {
 	case core.ConsensusKey:
 		proslId = RandomConfig().Prosl.Consensus.Id
 	default:
-		require.Failf(t, "Error pType: %s", pType)
+		panic(fmt.Sprintf("Error pType: %s", pType))
 	}
-	res := am.QueryStorage(t, proslId)
-	assert.Equal(t, prosl.Hash(), res.Hash())
+	res := am.QueryStorage(proslId)
+	AssertEqual(prosl.Hash(), res.Hash())
 	fmt.Println("QueryRootProsl:", res)
 }
