@@ -2,6 +2,7 @@ package synchronize
 
 import (
 	"fmt"
+	"github.com/proskenion/proskenion/commit"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"io"
@@ -25,10 +26,12 @@ func (s *Synchronizer) activate(peer model.Peer) error {
 	me := s.rp.Me()
 	in := s.fc.NewTxBuilder().
 		ActivatePeer(me.GetPeerId(), me.GetPeerId()).
+		CreatedTime(commit.Now()).
 		Build()
 	if err := in.Sign(me.GetPublicKey(), me.GetPrivateKey()); err != nil {
 		return err
 	}
+	fmt.Println("activate: ",me.GetPublicKey(),in.GetSignatures()[0].GetPublicKey())
 	return client.Write(in)
 }
 

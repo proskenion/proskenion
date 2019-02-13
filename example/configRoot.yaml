@@ -16,14 +16,14 @@ peer:
   id: root@peer
   public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
   private_key: 82d2750b9278d74cd492ba21ba5843655123f903f7fdadb654f6519bf1f9dea73788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
-  host: 192.168.1.251
+  host: 192.168.100.117
   port: 50052
   active: true
 sync:
   from:
     id: "root@peer"
     public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
-    host: 192.168.1.251
+    host: 192.168.100.117
     port: 50052
   limits: 50
 prosl:

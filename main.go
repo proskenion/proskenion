@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -48,21 +46,15 @@ func main() {
 	if opts.ConfigPath != "" {
 		configFile = opts.ConfigPath
 	}
-	fmt.Println("configPath:", configFile)
 	conf := config.NewConfig(configFile)
 
 	// ========= loger setting ===========
 	logger := log15.New("peerId", conf.Peer.Id)
-	logger.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, log15.StreamHandler(colorable.NewColorableStdout(), log15.TerminalFormat())))
+	logger.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StreamHandler(colorable.NewColorableStdout(), log15.TerminalFormat())))
 
 	logger.Info("=================== boot proskenion ==========================")
 
 	cryptor := crypto.NewEd25519Sha256Cryptor()
-
-	// WIP : set public key and private key, this peer
-	pub, pri := cryptor.NewKeyPairs()
-	conf.Peer.PublicKey = hex.EncodeToString(pub)
-	conf.Peer.PrivateKey = hex.EncodeToString(pri)
 
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor(conf)
@@ -72,7 +64,6 @@ func main() {
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	txQueue := repository.NewProposalTxQueueOnMemory(conf)
-	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
 	bq := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
@@ -124,7 +115,7 @@ func main() {
 	}...)
 	api := gate.NewAPI(rp, txQueue, qp, qv, gossip, logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, bq, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
 	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))

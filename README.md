@@ -18,8 +18,7 @@ docker run proskenion
 ### Example
 ```$xslt
 make example
-docker network create pros_nw
-docker run --net=pros_nw --hostname=prosl_root --ip=192.168.56.2 -p 127.0.0.1:50052:50052 proskenion -c example/configRoot.yaml
+docker run -p 127.0.0.1:50052:50052 proskenion -c example/configRoot.yaml
 ```
 ```
 docker run proskenion:latest -c example/config1.yaml

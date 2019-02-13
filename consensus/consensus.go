@@ -96,7 +96,6 @@ func (c *Consensus) Boot() {
 				err = c.gossip.GossipBlock(block, txList)
 				if err != nil {
 					c.logger.Error(err.Error())
-					continue
 				}
 				c.logger.Info("============= Finish Gossiped  =============")
 				break

@@ -210,16 +210,19 @@ func (r *Repository) CreateBlock(queue core.ProposalTxQueue, round int32, now in
 		}
 		// tx を構築
 		if err := tx.Validate(wsv, txHistory); err != nil {
+			fmt.Println("CreateBlock.TxValidate Error", err)
 			goto txskip
 		}
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Validate(wsv); err != nil {
+				fmt.Println("CreateBlock.CommandValidate Error", err)
 				goto txskip
 			}
 		}
 		// TODO Validate -> Execute -> Validate とやりたいけどTargetIdの情報だけOnMemoryに取り出して云々やる必要がある。
 		for _, cmd := range tx.GetPayload().GetCommands() {
 			if err := cmd.Execute(wsv); err != nil {
+				fmt.Println("CreateBlock.ExecuteValidate Error", err)
 				return nil, nil, core.RollBackTx(dtx, err)
 			}
 		}
