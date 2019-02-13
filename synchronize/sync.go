@@ -32,7 +32,30 @@ func (s *Synchronizer) activate(peer model.Peer) error {
 	return client.Write(in)
 }
 
-func (s *Synchronizer) Sync(peer model.Peer) error {
+func (s *Synchronizer) suspend(peer model.Peer) error {
+	client, err := s.cf.APIClient(peer)
+	if err != nil {
+		return err
+	}
+	me := s.rp.Me()
+	in := s.fc.NewTxBuilder().
+		SuspendPeer(me.GetPeerId(), me.GetPeerId()).
+		Build()
+	if err := in.Sign(me.GetPublicKey(), me.GetPrivateKey()); err != nil {
+		return err
+	}
+	return client.Write(in)
+}
+
+func (s *Synchronizer) Sync(peer model.Peer) (err error) {
+	defer func() {
+		if err != nil {
+			s.suspend(peer)
+		}
+	}()
+	if err = s.activate(peer); err != nil {
+		return err
+	}
 	top, ok := s.rp.Top()
 	if !ok {
 		return fmt.Errorf("Failed Sync top block nil error.")
@@ -54,7 +77,7 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 		defer close(blockChan)
 		defer close(txListChan)
 		defer close(errChan)
-		err := client.Sync(blockHash, blockChan, txListChan, errChan)
+		err = client.Sync(blockHash, blockChan, txListChan, errChan)
 		retErrChan <- err
 	}()
 
@@ -64,13 +87,13 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 		select {
 		case newBlock = <-blockChan:
 		case newTxList = <-txListChan:
-			err := s.rp.Commit(newBlock, newTxList)
+			err = s.rp.Commit(newBlock, newTxList)
 			if s.rp.Me().GetActive() {
 				errChan <- io.EOF
 			} else {
 				errChan <- err
 			}
-		case err := <-retErrChan:
+		case err = <-retErrChan:
 			if err != nil && err != io.EOF {
 				return err
 			}
@@ -79,5 +102,5 @@ func (s *Synchronizer) Sync(peer model.Peer) error {
 	}
 
 afterSync:
-	return s.activate(peer)
+	return nil
 }

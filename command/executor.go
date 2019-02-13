@@ -290,6 +290,15 @@ func (c *CommandExecutor) AddPeer(wsv model.ObjectFinder, cmd model.Command) err
 	if err := wsv.Append(id, newPeer); err != nil {
 		return err
 	}
+
+	newAc := c.factory.NewAccountBuilder().
+		AccountId(id.Account() + "@" + id.Domain()).
+		PublicKeys([]model.PublicKey{ap.GetPublicKey()}).
+		Quorum(1).
+		Build()
+	if err := wsv.Append(model.MustAddress(id.AccountId()), newAc); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -853,6 +853,14 @@ func TestCommandExecutor_AddPeer(t *testing.T) {
 				assert.Equal(t, c.peerId, pr.GetPeerId())
 				assert.Equal(t, c.address, pr.GetAddress())
 				assert.Equal(t, c.publicKey, pr.GetPublicKey())
+
+				ac := fc.NewEmptyAccount()
+				id := model.MustAddress(c.peerId)
+				err = wsv.Query(model.MustAddress(model.MustAddress(c.peerId).AccountId()), ac)
+				require.NoError(t, err)
+				assert.Equal(t, id.Account()+"@"+id.Domain(), ac.GetAccountId())
+				assert.Equal(t, c.publicKey, ac.GetPublicKeys()[0])
+				assert.Equal(t, int32(1), ac.GetQuorum())
 			}
 		})
 	}

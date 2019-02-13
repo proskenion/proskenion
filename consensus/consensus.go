@@ -27,8 +27,8 @@ type Consensus struct {
 	WaitngInterval time.Duration
 }
 
-func NewConsensus(rp core.Repository, fc model.ModelFactory, cs core.CommitSystem, sync core.Synchronizer, bq core.ProposalBlockQueue, tc core.TxListCache, gossip core.Gossip, pr core.Prosl,
-	logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
+func NewConsensus(rp core.Repository, fc model.ModelFactory, cs core.CommitSystem, sync core.Synchronizer, bq core.ProposalBlockQueue, tc core.TxListCache,
+	gossip core.Gossip, pr core.Prosl, logger log15.Logger, conf *config.Config, commitChan chan struct{}) core.Consensus {
 	return &Consensus{rp, fc, cs, sync, bq, tc, gossip, logger, pr, conf,
 		commitChan, time.Duration(conf.Commit.WaitInterval) * time.Millisecond}
 }
@@ -105,8 +105,25 @@ func (c *Consensus) Boot() {
 	}
 }
 
+func (c *Consensus) syncFrom(fromPeer model.Peer) {
+	c.logger.Info("================= Start Synchronize =================", "From:", fromPeer.GetPeerId())
+	err := c.sync.Sync(fromPeer)
+	if err != nil {
+		c.logger.Error(err.Error())
+	} else {
+		c.rp.Me().Activate()
+		c.logger.Info("============= Sucess SyncBlockChain !!! =============")
+	}
+}
+
 func (c *Consensus) Patrol() {
 	c.logger.Info("================= Consensus Patrol =================")
+	// start sync
+	// WIP : Initialize Sync only.
+	if !c.rp.Me().GetActive() {
+		fromPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.From)
+		c.syncFrom(fromPeer)
+	}
 	for {
 		if c.rp.Me().GetActive() {
 			time.Sleep(time.Second)
@@ -115,15 +132,8 @@ func (c *Consensus) Patrol() {
 
 		// start sync
 		// WIP : Initialize Sync only.
-		toPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.From)
-		c.logger.Info("================= Start Synchronize =================", "From:", toPeer.GetPeerId())
-		err := c.sync.Sync(toPeer)
-		if err != nil {
-			c.logger.Error(err.Error())
-		} else {
-			c.rp.Me().Activate()
-			c.logger.Info("============= Sucess SyncBlockChain !!! =============")
-		}
+		fromPeer := config.NewPeerFromConf(c.fc, c.conf.Sync.From)
+		c.syncFrom(fromPeer)
 	}
 }
 
