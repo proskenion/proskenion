@@ -21,7 +21,7 @@
           authorizer: root@root
           select: "*"
           type: List
-          from: creator/follow
+          from: creator.pr/follow
           limit: 100
     - set: # ranks = pageranks(edges)
       - ranks

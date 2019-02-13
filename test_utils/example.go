@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/proskenion/proskenion/client"
+	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/core"
 	"github.com/proskenion/proskenion/core/model"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +15,7 @@ type SenderManager struct {
 	Client     core.APIClient
 	Authorizer *AccountWithPri
 	fc         model.ModelFactory
+	conf       *config.Config
 }
 
 func RequireNoError(err error) {
@@ -62,13 +64,13 @@ func ForceVerify(pubkey model.PublicKey, hasher model.Hasher, sig []byte) {
 	RequireNoError(RandomCryptor().Verify(pubkey, hasher, sig))
 }
 
-func ForceSign(pubkey model.PublicKey, prikey model.PrivateKey, hasher model.Hasher) model.Signature {
+func ForceSign(fc model.ModelFactory, pubkey model.PublicKey, prikey model.PrivateKey, hasher model.Hasher) model.Signature {
 	signature, err := RandomCryptor().Sign(hasher, prikey)
 	RequireNoError(err)
-	return RandomFactory().NewSignature(pubkey, signature)
+	return fc.NewSignature(pubkey, signature)
 }
 
-func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.ModelFactory) *SenderManager {
+func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.ModelFactory, conf *config.Config) *SenderManager {
 	fmt.Println("New Sender Manger :", authorizer)
 	c, err := client.NewAPIClient(server, fc)
 	RequireNoError(err)
@@ -76,6 +78,7 @@ func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.Mo
 		c,
 		authorizer,
 		fc,
+		conf,
 	}
 }
 
@@ -201,7 +204,7 @@ func (am *SenderManager) VoteNewConsensus(dest *AccountWithPri, key string, pros
 	default:
 		panic(fmt.Sprintf("Error pType: %s", key))
 	}
-	signature := ForceSign(am.Authorizer.Pubkey, am.Authorizer.Prikey, prosl)
+	signature := ForceSign(am.fc, am.Authorizer.Pubkey, am.Authorizer.Prikey, prosl)
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.Authorizer.AccountId, srcWalletId.Id()).
 		AddObject(am.Authorizer.AccountId, srcWalletId.Id(), ProSignKey,
@@ -282,7 +285,7 @@ func (am *SenderManager) QueryRangeAccountsPassed(fromId string, acs []*AccountW
 	}
 }
 
-func (am *SenderManager) QueryAccountDegradedPassed(ac *AccountWithPri, peer model.PeerWithPriKey) {
+func (am *SenderManager) QueryAccountDegradedPassed(ac *AccountWithPri, peer model.Peer) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(am.Authorizer.AccountId).
 		FromId(model.MustAddress(ac.AccountId).AccountId()).
@@ -300,7 +303,7 @@ func (am *SenderManager) QueryAccountDegradedPassed(ac *AccountWithPri, peer mod
 	AssertEqual(retAc.GetDelegatePeerId(), peer.GetPeerId())
 }
 
-func (am *SenderManager) QueryPeersStatePassed(peers []model.PeerWithPriKey) {
+func (am *SenderManager) QueryPeersStatePassed(peers []model.Peer) {
 	query := am.fc.NewQueryBuilder().
 		AuthorizerId(am.Authorizer.AccountId).
 		FromId("/" + model.PeerStorageName).
@@ -396,9 +399,9 @@ func (am *SenderManager) QueryRootProslPassed(prosl model.Storage) {
 	pType := prosl.GetFromKey(core.ProslTypeKey).GetStr()
 	switch pType {
 	case core.IncentiveKey:
-		proslId = RandomConfig().Prosl.Incentive.Id
+		proslId = am.conf.Prosl.Incentive.Id
 	case core.ConsensusKey:
-		proslId = RandomConfig().Prosl.Consensus.Id
+		proslId = am.conf.Prosl.Consensus.Id
 	default:
 		panic(fmt.Sprintf("Error pType: %s", pType))
 	}

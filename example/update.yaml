@@ -30,7 +30,7 @@
           authorizer: root@com
           select: "*"
           type: List
-          from: "creator/account"
+          from: creator.pr/account
 - set:
     - num
     - 0
