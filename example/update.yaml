@@ -1,0 +1,60 @@
+# default variables: target_id, account_id
+- if:
+    - not:
+        and:
+          - is_defined: target_id
+          - is_defined: account_id
+    - return: False
+- set:
+    - prosl
+    - query:
+        authorizer: root@com
+        select: "*"
+        type: Storage
+        from:
+          variable: target_id
+- set:
+    - sigs
+    - query:
+        authorizer: root@com
+        select: "sigs"
+        type: List
+        from:
+          concat:
+            - variable: account_id
+            - "/prsign"
+- set:
+    - num_creator
+    - len:
+        query:
+          authorizer: root@com
+          select: "*"
+          type: List
+          from: "creator/account"
+- set:
+    - num
+    - 0
+- each: # verified な署名の数を++
+    - variable: sigs
+    - sig
+    - if:
+        - verify:
+            sig:
+              variable: sig
+            hasher:
+              variable: prosl
+        - set:
+            - num
+            - plus:
+                - variable: num
+                - 1
+- if: # verifiedな署名の数 >= creatorの数/3*2 ならば True
+    - ge:
+        - variable: num
+        - mult:
+            - div:
+                - variable: num_creator
+                - 3
+            - 2
+    - return: True
+- return: False

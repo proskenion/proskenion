@@ -8,6 +8,7 @@ proto:
 build:
 	go build -o ./bin/proskenion main.go
 	go build -o ./bin/keygen ./script/keygen.go
+	go build -o ./bin/example ./example/sender.go
 
 .PHONY: build-osx
 build-osx:
@@ -25,3 +26,13 @@ test:
 .PHONY: test-ci
 test-ci:
 	go test -v $(shell glide novendor)
+
+.PHONY: dockerup
+dockerup:
+	docker build . -t proskenion
+
+.PHONY: build-docker
+build-docker: build-linux dockerup
+
+.PHONY: example
+example: build build-docker

@@ -1,0 +1,43 @@
+# config.yaml grpctest
+db:
+  path: database
+  kind: sqlite3
+  name: testdb
+queue:
+  txs_limits: 2000
+  block_limits: 30
+cache:
+  client_limits: 500
+  tx_list_limits: 100
+commit:
+  wait_interval: 1000
+  num_tx_in_block: 99
+peer:
+  id: peer3@peer
+  public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+  private_key: 82d2750b9278d74cd492ba21ba5843655123f903f7fdadb654f6519bf1f9dea73788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+  host: 127.0.0.1
+  port: 50052
+  active: false
+sync:
+  from:
+    id: "root@peer"
+    public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
+    host: 127.0.0.1
+    port: 50052
+  limits: 50
+prosl:
+  id: "/prosl"
+  genesis:
+    path: example/genesis.yaml
+  incentive:
+    path: example/incentive.yaml
+    id: incentive/prosl
+  consensus:
+    path: example/consensus.yaml
+    id: consensus/prosl
+  update:
+    path: example/update.yaml
+    id: update/prosl
+root:
+  id: root@root

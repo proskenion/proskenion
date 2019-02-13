@@ -14,3 +14,22 @@ Blockchain project for creators.
 docker build -t proskenion .
 docker run proskenion
 ```
+
+### Example
+```$xslt
+make example
+docker run proskenion:latest -c example/configRoot.yaml
+```
+```
+docker run proskenion:latest -c example/config1.yaml
+```
+```
+docker run proskenion:latest -c example/config2.yaml
+```
+```
+docker run proskenion:latest -c example/config3.yaml
+```
+```$xslt
+./bin/example
+```
+
