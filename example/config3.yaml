@@ -16,14 +16,14 @@ peer:
   id: peer3@peer
   public_key: b3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635
   private_key: 6fd47967cc1389e7e0c7838f35a8d5d42277a931c072251f7478a2544592c21db3918c70db7e308d6b686c01ab0e08f3f677066eb8aba72c33f22b2798799635
-  host: 192.168.100.3
+  host: 192.168.100.117
   port: 50055
   active: false
 sync:
   from:
     id: "root@peer"
     public_key: 3788ef7f97cbc4bda223add5ea147fa3e8a096ad4f27b0dcf247e9fb9443060e
-    host: 192.168.100.3
+    host: 192.168.100.117
     port: 50052
   limits: 50
 prosl:

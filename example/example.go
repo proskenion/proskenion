@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/inconshreveable/log15"
+	"github.com/jessevdk/go-flags"
 	"github.com/proskenion/proskenion/config"
 	"github.com/proskenion/proskenion/convertor"
 	"github.com/proskenion/proskenion/core"
@@ -12,7 +13,9 @@ import (
 	"github.com/proskenion/proskenion/prosl"
 	"github.com/proskenion/proskenion/query"
 	. "github.com/proskenion/proskenion/test_utils"
+	"github.com/satellitex/pagerank"
 	"io/ioutil"
+	"log"
 	"sync"
 	"time"
 )
@@ -23,7 +26,81 @@ func WaitSecond(second int) {
 
 const NUM_CREATORS = 10
 
+var opts struct {
+	// save to file name
+	PagerankFlag string `short:"p" long:"pagerank" description:"A pagerank flag." value-name:"false"`
+}
+
+func viewDot(edges [][]int, nodes []string) {
+	pg := pagerank.New()
+	for i, edge := range edges {
+		for _, to := range edge {
+			pg.Link(nodes[i], nodes[to])
+		}
+	}
+
+	fmt.Println("digraph pg {")
+	pg.Rank(85*pagerank.Dot2ONE, 6*pagerank.DotONE, func(label string, rank int64) {
+		fcolor := "#FFFFFF"
+		if rank/pagerank.Dot2ONE > 10 {
+			fcolor = "#FF4444"
+		}
+		fmt.Printf("\t%s [shape = circle, width = %f, style=filled, fillcolor = \"%s\", fontsize=%d];\n",
+			label, float64(rank/pagerank.Dot2ONE)/5.0, fcolor, rank/pagerank.Dot2ONE*7)
+	})
+	for i, edge := range edges {
+		for _, to := range edge {
+			fmt.Printf("\t%s -> %s;\n", nodes[i], nodes[to])
+		}
+	}
+	fmt.Println("}")
+}
+
 func main() {
+	// ======= Arguents =======
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if opts.PagerankFlag == "Unk" {
+		fc := convertor.NewModelFactory(RandomCryptor(), nil, nil, query.NewQueryVerifier())
+		conf := config.NewConfig("example/configRoot.yaml")
+		pr := prosl.NewProsl(fc, RandomCryptor(), conf)
+		newIncY2, err := ioutil.ReadFile("example/new_rep_incentive.yaml")
+		RequireNoError(err)
+		err = pr.ConvertFromYaml(newIncY2)
+		RequireNoError(err)
+		return
+	}
+	if opts.PagerankFlag == "True" {
+		edges := make([][]int, NUM_CREATORS)
+		creators := make([]string, 0, NUM_CREATORS)
+		for i := 0; i < NUM_CREATORS; i++ {
+			creators = append(creators, fmt.Sprintf("%d", i))
+		}
+		for i, _ := range creators {
+			edges[i] = make([]int, 0)
+			edges[i] = append(edges[i], (i+1)%NUM_CREATORS)
+			if i < 8 {
+				edges[i] = append(edges[i], (i+2)%NUM_CREATORS)
+			}
+			if i < 6 {
+				edges[i] = append(edges[i], (i+3)%NUM_CREATORS)
+			}
+			if i < 4 {
+				edges[i] = append(edges[i], (i+4)%NUM_CREATORS)
+			}
+		}
+
+		viewDot(edges, creators)
+
+		for i, _ := range creators {
+			edges[i] = append(edges[i], 2)
+		}
+		viewDot(edges, creators)
+		return
+	}
+
 	cryptor := crypto.NewEd25519Sha256Cryptor()
 	fc := convertor.NewModelFactory(cryptor, nil, nil, query.NewQueryVerifier())
 
@@ -104,7 +181,8 @@ func main() {
 	for _, cm := range creators {
 		go cm.CreateEdgeStorage(cm.Authorizer)
 	}
-	time.Sleep(time.Second * 2)
+
+	WaitSecond(2)
 	edges := make([][]model.Object, NUM_CREATORS)
 	for i, cm := range creators {
 		edges[i] = make([]model.Object, 0)
@@ -152,7 +230,8 @@ func main() {
 	newInc, err := pr.Marshal()
 	RequireNoError(err)
 
-	creators[0].ProposeNewConsensus(newCon, newInc) // proposer is creators[0]
+	creators[0].ProposeNewAlgorithm(core.IncentiveKey, newInc) // proposer is creators[0]
+	creators[0].ProposeNewAlgorithm(core.ConsensusKey, newCon)
 	creators[0].CreateProslSignStorage()
 
 	WaitSecond(2)
@@ -185,9 +264,64 @@ func main() {
 	logger.Info(color.GreenString("===================== :: Passed Scenario 6 :: ====================="))
 
 	// 9. 合意形成を行うPeerが切り替わる. fin
-	for {
-		WaitSecond(5)
+	for i := 0; i < 5; i++ {
+		WaitSecond(3)
 		authorizer.QueryAccountsBalances()
-		logger.Info(color.GreenString("===================== :: Waiting 5 seconds :: ====================="))
+		logger.Info(color.GreenString("===================== :: Waiting 3 seconds :: ====================="))
+	}
+
+	// 10. 全クリエータが2を集中フォロー
+	logger.Info(color.BlueString("================== Scenario 7 :: Follow 2 Creator  =================="))
+	WaitSecond(1)
+	for _, cm := range creators {
+		go cm.AddEdge(cm.Authorizer, creators[2].Authorizer)
+	}
+	logger.Info(color.GreenString("===================== :: Passed Scenario 7 :: ====================="))
+
+	for i := 0; i < 5; i++ {
+		WaitSecond(3)
+		authorizer.QueryAccountsBalances()
+		logger.Info(color.GreenString("===================== :: Waiting 3 seconds :: ====================="))
+	}
+
+	// 11. Peer もインセンティブが得られるように変更
+	logger.Info(color.BlueString("=========== Scenario 8 :: Propose NewConsensusAlgorithm2 ==========="))
+	{
+		newIncY2, err := ioutil.ReadFile("example/new_rep_incentive.yaml")
+		RequireNoError(err)
+		err = pr.ConvertFromYaml(newIncY2)
+		RequireNoError(err)
+		newInc2, err := pr.Marshal()
+		RequireNoError(err)
+
+		proposer := creators[1]
+		proposer.ProposeNewAlgorithm(core.IncentiveKey, newInc2) // proposer is creators[1]
+		proposer.CreateProslSignStorage()
+
+		WaitSecond(2)
+		proposer.QueryProslPassed(core.IncentiveKey, newInc2)
+
+		incStj2 := fc.NewObjectBuilder().Storage(proposer.QueryStorage(MakeIncentiveWalletId(proposer.Authorizer).Id()))
+		for _, cm := range creators {
+			if cm.Authorizer == proposer.Authorizer {
+				continue
+			}
+			cm.VoteNewConsensus(proposer.Authorizer, core.IncentiveKey, incStj2)
+		}
+
+		WaitSecond(2)
+		proposer.QueryCollectSigsPassed(core.IncentiveKey, incStj2, 9)
+
+		proposer.CheckAndCommitInc()
+		WaitSecond(2)
+		proposer.QueryRootProslPassed(incStj2.GetStorage())
+	}
+	logger.Info(color.GreenString("===================== :: Passed Scenario 8 :: ====================="))
+
+	// 12. Peer にもインセンティブが配られる。
+	for {
+		WaitSecond(3)
+		authorizer.QueryAccountsBalances()
+		logger.Info(color.GreenString("===================== :: Waiting 3 seconds :: ====================="))
 	}
 }

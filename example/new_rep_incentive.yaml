@@ -19,39 +19,56 @@
         type: List
         from: root@root/degraders
 - set:
+    - selected_acid
+    - concat:
+        - valued:
+            - indexed:
+                - var: acs
+                - account
+                - mod:
+                    - var: ind
+                    - 4
+            - address
+            - id
+        - /account
+- set:
     - add_balance_creator
     - add_balance:
         authorizer_id: root@root
         target_id:
-          valued:
-            - indexed:
-                - variable: acs
-                - account
-                - mod:
-                    - variable: ind
-                    - 4
-            - address
-            - id
+          var: selected_acid
+        balance: 10000ll
+- set:
+    - add_balance_peer
+    - add_balance:
+        authorizer_id: root@root
+        target_id:
+          query:
+            authorizer: root@root
+            select: peer_id
+            type: address
+            from:
+              var: selected_acid
         balance: 10000ll
 - if: # 一周したら
     - eq:
         - variable: ind
         - 0
     - set: # creator 間の信頼有効辺情報をとってくる
-        - edges
-        - query:
-            authorizer: root@root
-            select: "*"
-            type: List
-            from: creator.pr/follow
-            limit: 100
+      - edges
+      - query:
+          authorizer: root@root
+          select: "*"
+          type: List
+          from: creator.pr/follow
+          limit: 100
     - set: # ranks = pageranks(edges)
-        - ranks
-        - pagerank:
-            storages:
-              variable: edges
-            key: to
-            out: rank
+      - ranks
+      - pagerank:
+          storages:
+            variable: edges
+          key: to
+          out: rank
     - set:
         - sorted_ranks
         - sort:
@@ -101,8 +118,10 @@
           commands:
             - var: add_degrade
             - var: add_balance_creator
+            - var: add_balance_peer
 - else:
     - return: # degreaders[i%4] に 報酬 + 10000
         transaction:
           commands:
             - var: add_balance_creator
+            - var: add_balance_peer

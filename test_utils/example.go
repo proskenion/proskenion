@@ -72,7 +72,6 @@ func ForceSign(fc model.ModelFactory, pubkey model.PublicKey, prikey model.Priva
 }
 
 func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.ModelFactory, conf *config.Config) *SenderManager {
-	fmt.Println("New Sender Manger :", authorizer)
 	c, err := client.NewAPIClient(server, fc)
 	RequireNoError(err)
 	return &SenderManager{
@@ -84,11 +83,11 @@ func NewSenderManager(authorizer *AccountWithPri, server model.Peer, fc model.Mo
 }
 
 func (am *SenderManager) SetAuthorizer() {
-	fmt.Println("Set Authorizer: ", am.Authorizer)
 	tx := am.fc.NewTxBuilder().
 		AddPublicKeys(am.Authorizer.AccountId, am.Authorizer.AccountId, []model.PublicKey{am.Authorizer.Pubkey}).
 		SetQuorum(am.Authorizer.AccountId, am.Authorizer.AccountId, 1).
 		Build()
+	fmt.Println(color.CyanString("SetAuthorizer: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -98,6 +97,7 @@ func (am *SenderManager) CreateAccount(ac *AccountWithPri) {
 		CreateAccount(am.Authorizer.AccountId, ac.AccountId, []model.PublicKey{ac.Pubkey}, 1).
 		Consign(am.Authorizer.AccountId, ac.AccountId, "root@peer").
 		Build()
+	fmt.Println(color.CyanString("CreateAccount: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -107,6 +107,7 @@ func (am *SenderManager) AddPeer(peer model.Peer) {
 		CreateAccount(am.Authorizer.AccountId, peer.GetPeerId(), []model.PublicKey{peer.GetPublicKey()}, 1).
 		AddPeer(am.Authorizer.AccountId, peer.GetPeerId(), peer.GetAddress(), peer.GetPublicKey()).
 		Build()
+	fmt.Println(color.CyanString("AddPeer: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -115,6 +116,7 @@ func (am *SenderManager) Consign(ac *AccountWithPri, peer model.Peer) {
 	tx := am.fc.NewTxBuilder().
 		Consign(am.Authorizer.AccountId, ac.AccountId, peer.GetPeerId()).
 		Build()
+	fmt.Println(color.CyanString("Consign: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -160,25 +162,29 @@ func (am *SenderManager) CreateEdgeStorage(ac *AccountWithPri) {
 	tx := am.fc.NewTxBuilder().
 		CreateStorage(am.Authorizer.AccountId, fmt.Sprintf("%s/%s", am.Authorizer.AccountId, FollowStorage)).
 		Build()
+	fmt.Println(color.CyanString("CreateEdgeStorage: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
 
-func (am *SenderManager) ProposeNewConsensus(consensus []byte, incentive []byte) {
-	IncentiveId := MakeIncentiveWalletId(am.Authorizer).Id()
-	ConsensusId := MakeConsensusWalletId(am.Authorizer).Id()
+func (am *SenderManager) ProposeNewAlgorithm(pType string, prosl []byte) { //consensus []byte, incentive []byte) {
+	var proslId string
+	switch pType {
+	case core.IncentiveKey:
+		proslId = MakeIncentiveWalletId(am.Authorizer).Id()
+	case core.ConsensusKey:
+		proslId = MakeConsensusWalletId(am.Authorizer).Id()
+	default:
+		panic(fmt.Sprintf("Error pType: %s", pType))
+	}
 	tx := am.fc.NewTxBuilder().
-		CreateStorage(am.Authorizer.AccountId, IncentiveId).
-		CreateStorage(am.Authorizer.AccountId, ConsensusId).
-		UpdateObject(am.Authorizer.AccountId, IncentiveId,
-			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(core.IncentiveKey)).
-		UpdateObject(am.Authorizer.AccountId, ConsensusId,
-			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(core.ConsensusKey)).
-		UpdateObject(am.Authorizer.AccountId, IncentiveId,
-			core.ProslKey, am.fc.NewObjectBuilder().Data(incentive)).
-		UpdateObject(am.Authorizer.AccountId, ConsensusId,
-			core.ProslKey, am.fc.NewObjectBuilder().Data(consensus)).
+		CreateStorage(am.Authorizer.AccountId, proslId).
+		UpdateObject(am.Authorizer.AccountId, proslId,
+			core.ProslTypeKey, am.fc.NewObjectBuilder().Str(pType)).
+		UpdateObject(am.Authorizer.AccountId, proslId,
+			core.ProslKey, am.fc.NewObjectBuilder().Data(prosl)).
 		Build()
+	fmt.Println(color.CyanString("ProposeNewAlgorithm: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -188,6 +194,7 @@ func (am *SenderManager) CreateProslSignStorage() {
 		CreateStorage(am.Authorizer.AccountId, MakeIncentiveSigsId(am.Authorizer).Id()).
 		CreateStorage(am.Authorizer.AccountId, MakeConsensusSigsId(am.Authorizer).Id()).
 		Build()
+	fmt.Println(color.CyanString("CreateProslSignStorage: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -213,6 +220,7 @@ func (am *SenderManager) VoteNewConsensus(dest *AccountWithPri, key string, pros
 		TransferObject(am.Authorizer.AccountId, srcWalletId.Id(), destWalletId.Id(),
 			ProSignKey, am.fc.NewObjectBuilder().Sig(signature)).
 		Build()
+	fmt.Println(color.CyanString("VoteNewConsensus: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -230,6 +238,20 @@ func (am *SenderManager) CheckAndCommit() {
 				"account_id": am.fc.NewObjectBuilder().Address(fmt.Sprintf("%s@%s", conId.Account(), conId.Domain())),
 			}).
 		Build()
+	fmt.Println(color.CyanString("CheckAndCommit: %+v", tx))
+	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
+	RequireNoError(am.Client.Write(tx))
+}
+
+func (am *SenderManager) CheckAndCommitInc() {
+	incId := MakeIncentiveWalletId(am.Authorizer)
+	tx := am.fc.NewTxBuilder().
+		CheckAndCommitProsl(am.Authorizer.AccountId, incId.Id(),
+			map[string]model.Object{
+				"account_id": am.fc.NewObjectBuilder().Address(fmt.Sprintf("%s@%s", incId.Account(), incId.Domain())),
+			}).
+		Build()
+	fmt.Println(color.CyanString("CheckAndCommitInc: %+v", tx))
 	RequireNoError(tx.Sign(am.Authorizer.Pubkey, am.Authorizer.Prikey))
 	RequireNoError(am.Client.Write(tx))
 }
@@ -408,13 +430,17 @@ func (am *SenderManager) QueryRootProslPassed(prosl model.Storage) {
 	}
 	res := am.QueryStorage(proslId)
 	AssertEqual(prosl.Hash(), res.Hash())
-	fmt.Println("QueryRootProsl:", res)
 }
 
 func (am *SenderManager) QueryAccountsBalances() {
 	acs := am.queryRangeAccounts("creator.pr/account", 100)
 
 	for _, ac := range acs {
+		fmt.Println(color.YellowString("id: %s, balance: %d", ac.GetAccountId(), ac.GetBalance()))
+	}
+
+	pcs := am.queryRangeAccounts("peer/account", 100)
+	for _, ac := range pcs {
 		fmt.Println(color.YellowString("id: %s, balance: %d", ac.GetAccountId(), ac.GetBalance()))
 	}
 }
