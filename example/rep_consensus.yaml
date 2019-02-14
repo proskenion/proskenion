@@ -1,4 +1,4 @@
-- set:
+- set: # block の高さを取得
     - height
     - valued:
         - variable: top
@@ -13,14 +13,14 @@
             - 4ll
 - set:
     - acs
-    - query:
+    - query: # root@root/degader に保存されている account 列を取得
         authorizer: root@root
         select: acs
         type: List
         from: root@root/degraders
         limit: 100
 - set:
-    - res
+    - res # acs[:ind] + acs[ind:]
     - concat:
         - slice:
             list:

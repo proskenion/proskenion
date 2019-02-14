@@ -34,5 +34,13 @@ dockerup:
 .PHONY: build-docker
 build-docker: build-linux dockerup
 
+.PHONY: build-example
+build-example:
+	go build -o ./bin/example ./example/example.go
+
+.PHONY: ipset
+ipset:
+	source ./script/ipset.sh
+
 .PHONY: example
-example: build build-docker
+example: build-example ipset build-docker

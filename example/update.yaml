@@ -31,23 +31,20 @@
           select: "*"
           type: List
           from: creator.pr/account
-- set:
+- set: # num = verified な署名の数
     - num
-    - 0
-- each: # verified な署名の数を++
-    - variable: sigs
-    - sig
-    - if:
-        - verify:
-            sig:
-              variable: sig
-            hasher:
-              variable: prosl
-        - set:
-            - num
-            - plus:
-                - variable: num
-                - 1
+    - len:
+        list_comp:
+          list:
+            var: sigs
+          if:
+            verify:
+              sig:
+                var: sig
+              hasher:
+                var: prosl
+          var: sig
+          element: 1
 - if: # verifiedな署名の数 >= creatorの数/3*2 ならば True
     - ge:
         - variable: num
