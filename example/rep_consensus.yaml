@@ -20,7 +20,7 @@
         from: root@root/degraders
         limit: 100
 - set:
-    - res # acs[:ind] + acs[ind:]
+    - res # acs[:ind] + acs[ind:] (順繰りに回る取ってくる)
     - concat:
         - slice:
             list:

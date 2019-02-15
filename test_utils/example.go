@@ -104,7 +104,6 @@ func (am *SenderManager) CreateAccount(ac *AccountWithPri) {
 
 func (am *SenderManager) AddPeer(peer model.Peer) {
 	tx := am.fc.NewTxBuilder().
-		CreateAccount(am.Authorizer.AccountId, peer.GetPeerId(), []model.PublicKey{peer.GetPublicKey()}, 1).
 		AddPeer(am.Authorizer.AccountId, peer.GetPeerId(), peer.GetAddress(), peer.GetPublicKey()).
 		Build()
 	fmt.Println(color.CyanString("AddPeer: %+v", tx))

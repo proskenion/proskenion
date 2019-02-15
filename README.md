@@ -18,16 +18,19 @@ docker run proskenion
 ### Example
 ```$xslt
 make example
-export LOCAL_HOST_IP=`ifconfig en0 | grep inet | grep -v inet6 | sed -E "s/inet ([0-9]{1,3}.[0-9]{1,3}.[0-9].{1,3}.[0-9]{1,3}) .*$/\1/" | tr -d "\t"`
+make ipset
 docker run -p $LOCAL_HOST_IP:50052:50052 proskenion -c example/configRoot.yaml
 ```
 ```
+make ipset
 docker run -p $LOCAL_HOST_IP:50053:50053 proskenion:latest -c example/config1.yaml
 ```
 ```
+make ipset
 docker run -p $LOCAL_HOST_IP:50054:50054 proskenion:latest -c example/config2.yaml
 ```
 ```
+make ipset
 docker run-p $LOCAL_HOST_IP:50055:50055 proskenion:latest -c example/config3.yaml
 ```
 ```$xslt

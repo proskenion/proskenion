@@ -300,6 +300,7 @@ func main() {
 
 		WaitSecond(2)
 		proposer.QueryProslPassed(core.IncentiveKey, newInc2)
+		proposer.QueryProslPassed(core.IncentiveKey, newInc2)
 
 		incStj2 := fc.NewObjectBuilder().Storage(proposer.QueryStorage(MakeIncentiveWalletId(proposer.Authorizer).Id()))
 		for _, cm := range creators {
