@@ -68,7 +68,12 @@ func (c *CommitSystem) ValidateCommit(block model.Block, txList core.TxList) err
 		return errors.Wrapf(core.ErrCommitSystemValidateCommitRoundOutOfRange,
 			"round: %d", block.GetPayload().GetRound())
 	}
-	peerId := model.MustAddress(model.MustAddress(acs[block.GetPayload().GetRound()].GetDelegatePeerId()).PeerId())
+
+	dPeerId, err := model.NewAddress(acs[block.GetPayload().GetRound()].GetDelegatePeerId())
+	if err != nil {
+		return err
+	}
+	peerId := model.MustAddress(dPeerId.PeerId())
 	_, wsv, top, err := getTopWSV(c.rp)
 	defer core.CommitTx(wsv)
 	peer := c.factory.NewEmptyPeer()

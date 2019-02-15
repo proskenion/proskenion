@@ -76,7 +76,7 @@ message ReturnOperator {
     ValueOperator op = 1;
 }
 
-message EachOperator {
+message EachOperator { // Deprecated...
     ValueOperator list = 1;
     string variableName = 2;
     Prosl do = 3;

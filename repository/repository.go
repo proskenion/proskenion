@@ -90,7 +90,7 @@ func (r *Repository) GetDelegatedAccounts() ([]model.Account, error) {
 		return nil, err
 	}
 	defer core.CommitTx(wsv)
-	st := ProslStorage(r.fc, r.conf)
+	st := proslStorage(r.fc)
 	id := model.MustAddress(r.conf.Prosl.Consensus.Id)
 	if err := wsv.Query(id, st); err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func (r *Repository) Commit(block model.Block, txList core.TxList) (err error) {
 	return core.CommitTx(dtx)
 }
 
-func ProslStorage(fc model.ModelFactory, conf *config.Config) model.Storage {
+func proslStorage(fc model.ModelFactory) model.Storage {
 	return fc.NewStorageBuilder().
 		Data(core.ProslKey, nil).
 		Str(core.ProslTypeKey, "none").
@@ -328,7 +328,7 @@ func (r *Repository) getProslBytes(filename string, pr core.Prosl) ([]byte, erro
 }
 
 func (r *Repository) genesisProslSetting() (model.Transaction, error) {
-	proSt := ProslStorage(r.fc, r.conf)
+	proSt := proslStorage(r.fc)
 	pr := prosl.NewProsl(r.fc, r.cryptor, r.conf)
 	incPr, err := r.getProslBytes(r.conf.Prosl.Incentive.Path, pr)
 	if err != nil {

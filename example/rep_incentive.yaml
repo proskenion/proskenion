@@ -11,47 +11,25 @@
         - mod:
             - variable: height
             - 8ll
-- set:
-    - acs
-    - query:
-        authorizer: root@root
-        select: acs
-        type: List
-        from: root@root/degraders
-- set:
-    - add_balance_creator
-    - add_balance:
-        authorizer_id: root@root
-        target_id:
-          valued:
-            - indexed:
-                - variable: acs
-                - account
-                - mod:
-                    - variable: ind
-                    - 4
-            - address
-            - id
-        balance: 10000ll
 - if: # 一周したら
     - eq:
         - variable: ind
         - 0
     - set: # creator 間の信頼有効辺情報をとってくる
-        - edges
-        - query:
-            authorizer: root@root
-            select: "*"
-            type: List
-            from: creator.pr/follow
-            limit: 100
+      - edges
+      - query:
+          authorizer: root@root
+          select: "*"
+          type: List
+          from: creator.pr/follow
+          limit: 100
     - set: # ranks = pageranks(edges)
-        - ranks
-        - pagerank:
-            storages:
-              variable: edges
-            key: to
-            out: rank
+      - ranks
+      - pagerank:
+          storages:
+            variable: edges
+          key: to
+          out: rank
     - set:
         - sorted_ranks
         - sort:
@@ -73,8 +51,8 @@
                 - var: rank
                 - address
                 - account_id
-    - set: # new_acs = List()
-        - new_acs
+    - set: # acs = List()
+        - acs
         - list_comp:
             var: acid
             list:
@@ -95,14 +73,43 @@
             wallet_id: root@root/degraders
             key: acs
             object:
-              variable: new_acs
+              variable: acs
     - return: # degreaders[0] に 報酬 + 10000
         transaction:
           commands:
             - var: add_degrade
-            - var: add_balance_creator
+            - add_balance:
+                authorizer_id: root@root
+                account_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - 0
+                    - address
+                    - id
+                balance: 10000ll
 - else:
+    - set:
+        - acs
+        - query:
+            authorizer: root@root
+            select: acs
+            type: List
+            from: root@root/degraders
     - return: # degreaders[i%4] に 報酬 + 10000
         transaction:
           commands:
-            - var: add_balance_creator
+            - add_balance:
+                authorizer_id: root@root
+                target_id:
+                  valued:
+                    - indexed:
+                        - variable: acs
+                        - account
+                        - mod:
+                            - variable: ind
+                            - 4
+                    - address
+                    - id
+                balance: 10000ll

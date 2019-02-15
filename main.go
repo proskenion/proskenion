@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/hex"
-	"flag"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/inconshreveable/log15"
+	"github.com/jessevdk/go-flags"
+	"github.com/mattn/go-colorable"
 	"github.com/proskenion/proskenion/client"
 	"github.com/proskenion/proskenion/command"
 	"github.com/proskenion/proskenion/commit"
@@ -25,26 +25,36 @@ import (
 	"github.com/proskenion/proskenion/repository"
 	"github.com/proskenion/proskenion/synchronize"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 )
 
-func main() {
-	logger := log15.New()
-	logger.Info("=================== boot proskenion ==========================")
+var opts struct {
+	// save to file name
+	ConfigPath string `short:"c" long:"config" description:"A config path." value-name:"config/config.yaml" default-mask:"-"`
+}
 
-	// Arguents ====
-	configFile := "config/config.yaml"
-	if len(flag.Args()) != 0 {
-		configFile = flag.Arg(0)
+func main() {
+	// ======= Arguents =======
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	// 1. set config
+	configFile := "config/config.yaml"
+	if opts.ConfigPath != "" {
+		configFile = opts.ConfigPath
+	}
 	conf := config.NewConfig(configFile)
-	cryptor := crypto.NewEd25519Sha256Cryptor()
 
-	// WIP : set public key and private key, this peer
-	pub, pri := cryptor.NewKeyPairs()
-	conf.Peer.PublicKey = hex.EncodeToString(pub)
-	conf.Peer.PrivateKey = hex.EncodeToString(pri)
+	// ========= loger setting ===========
+	logger := log15.New("peerId", conf.Peer.Id)
+	logger.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StreamHandler(colorable.NewColorableStdout(), log15.TerminalFormat())))
+
+	logger.Info("=================== boot proskenion ==========================")
+
+	cryptor := crypto.NewEd25519Sha256Cryptor()
 
 	db := dba.NewDBSQLite(conf)
 	cmdExecutor := command.NewCommandExecutor(conf)
@@ -54,7 +64,6 @@ func main() {
 
 	rp := repository.NewRepository(db.DBA("kvstore"), cryptor, fc, conf)
 	txQueue := repository.NewProposalTxQueueOnMemory(conf)
-	blockQueue := repository.NewProposalBlockQueueOnMemory(conf)
 	bq := repository.NewProposalBlockQueueOnMemory(conf)
 	txListCache := repository.NewTxListCache(conf)
 
@@ -78,7 +87,7 @@ func main() {
 	sync := synchronize.NewSynchronizer(rp, cf, fc)
 
 	// consensus
-	csc := consensus.NewConsensus(rp, fc,cs,sync,bq, txListCache, gossip, pr, logger, conf, commitChan)
+	csc := consensus.NewConsensus(rp, fc, cs, sync, bq, txListCache, gossip, pr, logger, conf, commitChan)
 
 	// Genesis Commit
 	logger.Info("================= Genesis Commit =================")
@@ -106,7 +115,7 @@ func main() {
 	}...)
 	api := gate.NewAPI(rp, txQueue, qp, qv, gossip, logger)
 	proskenion.RegisterAPIServer(s, controller.NewAPIServer(fc, api, logger))
-	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, blockQueue, conf)
+	cg := gate.NewConsensusGate(fc, cryptor, txQueue, txListCache, bq, conf)
 	proskenion.RegisterConsensusServer(s, controller.NewConsensusServer(fc, cg, cryptor, logger, conf))
 	sg := gate.NewSyncGate(rp, fc, cryptor, conf)
 	proskenion.RegisterSyncServer(s, controller.NewSyncServer(fc, sg, cryptor, logger, conf))

@@ -105,3 +105,9 @@ bin/
 ## database ##
 *.sqlite
 *.sqlite*
+
+## png ##
+*.png
+
+## dot ##
+_demo_graph*

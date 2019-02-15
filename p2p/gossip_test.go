@@ -28,7 +28,8 @@ func TestGossip_GossipBlock(t *testing.T) {
 
 	b := fc.NewTxBuilder()
 	for _, p := range ps {
-		b = b.AddPeer("root@root", p.GetPeerId(), p.GetAddress(), RandomPublicKey())
+		b = b.AddPeer("root@root", p.GetPeerId(), p.GetAddress(), RandomPublicKey()).
+			ActivatePeer("root@root", p.GetPeerId())
 	}
 	CommitTxWrapBlock(t, rp, fc, b.Build())
 

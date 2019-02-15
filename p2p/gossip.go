@@ -42,6 +42,9 @@ func (g *BroadCastGossip) GossipBlock(block model.Block, txList core.TxList) err
 		if peer.GetPeerId() == g.rp.Me().GetPeerId() {
 			continue
 		}
+		if !peer.GetActive() {
+			continue
+		}
 		client, err := g.cf.ConsensusClient(peer)
 		if err != nil {
 			errs = multierr.Append(errs, err)
@@ -84,6 +87,9 @@ func (g *BroadCastGossip) GossipTx(tx model.Transaction) error {
 	for _, unmarshaler := range unmarshalers {
 		peer := unmarshaler.(model.Peer)
 		if peer.GetPeerId() == g.rp.Me().GetPeerId() {
+			continue
+		}
+		if !peer.GetActive() {
 			continue
 		}
 		client, err := g.cf.ConsensusClient(peer)

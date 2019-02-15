@@ -38,6 +38,7 @@ func (s *ConsensusServer) PropagateTx(ctx context.Context, tx *proskenion.Transa
 	modelTx := s.fc.NewEmptyTx()
 	modelTx.(*convertor.Transaction).Transaction = tx
 
+	s.logger.Debug("ConsensusServer.PropagateTx:", tx)
 	if err := s.cg.PropagateTx(modelTx); err != nil {
 		s.logger.Error(err.Error())
 		if errors.Cause(err) == core.ErrConsensusGatePropagateTxVerifyError {
@@ -54,6 +55,7 @@ func (s *ConsensusServer) internalError(err error) error {
 }
 
 func (s *ConsensusServer) PropagateBlock(stream proskenion.Consensus_PropagateBlockServer) error {
+	s.logger.Debug("ConsensusServer.PropagateBlock")
 	req, err := stream.Recv()
 	if err != nil {
 		s.logger.Error(err.Error())
@@ -120,5 +122,6 @@ func (s *ConsensusServer) PropagateBlock(stream proskenion.Consensus_PropagateBl
 		}
 		return s.internalError(err)
 	}
+	s.logger.Debug("Close ConsensusServer.PropagateBlock")
 	return nil
 }

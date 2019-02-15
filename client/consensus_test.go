@@ -1,8 +1,9 @@
-package client
+package client_test
 
 import (
 	"github.com/proskenion/proskenion/config"
 	. "github.com/proskenion/proskenion/test_utils"
+	. "github.com/proskenion/proskenion/client"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"testing"

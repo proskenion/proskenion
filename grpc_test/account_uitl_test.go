@@ -63,34 +63,6 @@ func (am *AccountManager) Consign(t *testing.T, ac *AccountWithPri, peer model.P
 	require.NoError(t, am.client.Write(tx))
 }
 
-const (
-	FollowStorage  = "follow"
-	FollowEdge     = "to"
-	ProslStorage   = "prosl"
-	ProSignStorage = "prsign"
-	ProSignKey     = "sigs"
-)
-
-func MakeConsensusWalletId(ac *AccountWithPri) model.Address {
-	id := model.MustAddress(ac.AccountId)
-	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProslStorage))
-}
-
-func MakeIncentiveWalletId(ac *AccountWithPri) model.Address {
-	id := model.MustAddress(ac.AccountId)
-	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProslStorage))
-}
-
-func MakeConsensusSigsId(ac *AccountWithPri) model.Address {
-	id := model.MustAddress(ac.AccountId)
-	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.ConsensusKey, id.Domain(), ProSignStorage))
-}
-
-func MakeIncentiveSigsId(ac *AccountWithPri) model.Address {
-	id := model.MustAddress(ac.AccountId)
-	return model.MustAddress(fmt.Sprintf("%s@%s.%s/%s", id.Account(), core.IncentiveKey, id.Domain(), ProSignStorage))
-}
-
 func (am *AccountManager) AddEdge(t *testing.T, ac *AccountWithPri, to *AccountWithPri) {
 	obj := am.fc.NewObjectBuilder().Address(to.AccountId)
 	tx := am.fc.NewTxBuilder().
