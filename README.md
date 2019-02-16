@@ -12,6 +12,8 @@ A decentralized and creator-based management system can be realized with Prosken
 
 Proskenion's incentive/consensus algorithm is designed by [Prosl](https://github.com/proskenion/proskenion/tree/master/prosl).
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/UyQdHKpAxJ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Develop Environment
 - glide version 0.13.1
 - go version go1.11
