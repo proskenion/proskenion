@@ -65,7 +65,7 @@ func (b *Block) GetFromKey(key string) model.Object {
 	case "tx_history_hash", "tx_history":
 		return BytesObject(b.GetPayload().GetTxHistoryHash(), b.cryptor)
 	case "txs_hash", "txs":
-		return BytesObject(b.GetPayload().GetTxsHash(), b.cryptor)
+		return BytesObject(b.GetPayload().GetTxListHash(), b.cryptor)
 	case "round":
 		return Int32Object(b.GetPayload().GetRound(), b.cryptor)
 	}
@@ -110,9 +110,9 @@ func (p *BlockPayload) GetTxHistoryHash() model.Hash {
 	return p.Block_Payload.GetTxHistoryHash()
 }
 
-func (p *BlockPayload) GetTxsHash() model.Hash {
+func (p *BlockPayload) GetTxListHash() model.Hash {
 	if p.Block_Payload == nil {
 		return nil
 	}
-	return p.Block_Payload.GetTxsHash()
+	return p.Block_Payload.GetTxListHash()
 }

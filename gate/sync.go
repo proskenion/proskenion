@@ -49,7 +49,7 @@ func (c *SyncGate) Sync(blockHash model.Hash, blockChan chan model.Block, txList
 			return err
 		}
 		blockChan <- block
-		txList, err := txHistory.GetTxList(block.GetPayload().GetTxsHash())
+		txList, err := txHistory.GetTxList(block.GetPayload().GetTxListHash())
 		if err != nil {
 			return err
 		}

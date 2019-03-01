@@ -43,4 +43,4 @@ ipset:
 	source ./script/ipset.sh
 
 .PHONY: example
-example: build-example ipset build-docker
+example: proto build-example ipset build-docker

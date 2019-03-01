@@ -29,7 +29,7 @@ type BlockPayload interface {
 	GetCreatedTime() int64
 	GetWSVHash() Hash
 	GetTxHistoryHash() Hash
-	GetTxsHash() Hash
+	GetTxListHash() Hash
 	GetRound() int32
 	Modelor
 }
