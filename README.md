@@ -12,6 +12,8 @@ A decentralized and creator-based management system can be realized with Prosken
 
 Proskenion's incentive/consensus algorithm is designed by [Prosl](https://github.com/proskenion/proskenion/tree/master/prosl).
 
+Proskenion documentations is [here](https://proskenion.github.io).
+
 [![demo movie](http://img.youtube.com/vi/UyQdHKpAxJ0/1.jpg)](https://www.youtube.com/embed/UyQdHKpAxJ0)
 
 ## Develop Environment
