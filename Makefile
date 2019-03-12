@@ -4,6 +4,10 @@ SHELL := /bin/bash
 proto:
 	script/proto.sh
 
+.PHONY: proto-doc
+proto-doc:
+	script/proto_doc.sh
+
 .PHONY: build
 build:
 	go build -o ./bin/proskenion main.go
@@ -43,4 +47,4 @@ ipset:
 	source ./script/ipset.sh
 
 .PHONY: example
-example: build-example ipset build-docker
+example: proto build-example ipset build-docker

@@ -13,6 +13,7 @@ message TxResponse {}
 service API {
     /**
      * Write は Transaction を受け付ける。
+     * 受け取った Transaction は ProposalTxQueue に挿入した後、他のPeerに伝搬する。
      *
      * InvalidArgument (code = 3) : One of following conditions:
      *  1 ) StatelessValidator で落ちる場合
@@ -20,6 +21,17 @@ service API {
      *  1 ) 既に同じ Transaction を受け取っていた場合
      **/
     rpc Write (Transaction) returns (TxResponse);
+
+    /**
+     * Read は Query を受け付ける。
+     * 受け取った Query の規則に従ってデータを取得し Peer の署名を添付した QueryResponse を返す。
+     *
+     * InvalidArgument (code = 3) : One of following conditions:
+     *  1 ) Verify で落ちる場合
+     *  2 ) Validate で落ちる場合
+     * NotFound (code = 5) : One of following conditions:
+     *  1 ) 検索結果が見つからなかった場合
+     **/
     rpc Read (Query) returns (QueryResponse);
 }
 

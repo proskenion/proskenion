@@ -6,11 +6,13 @@ It is a BlockChain platform that bases between the content provider and the spec
 
 - Having a high expression power by a combination of primitive instruction sets.
 - Easy to customize incentive / consensus algorithm.
-- Can change the incentive / consensus algorithm without hard fork.
+- Can change the incentive / consensus algorithm without hard forks.
 
 A decentralized and creator-based management system can be realized with Proskenion.
 
 Proskenion's incentive/consensus algorithm is designed by [Prosl](https://github.com/proskenion/proskenion/tree/master/prosl).
+
+Proskenion documentations is [here](https://proskenion.github.io).
 
 [![demo movie](http://img.youtube.com/vi/UyQdHKpAxJ0/1.jpg)](https://www.youtube.com/embed/UyQdHKpAxJ0)
 

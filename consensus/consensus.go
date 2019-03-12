@@ -146,7 +146,7 @@ func (c *Consensus) Receiver() {
 		if !ok {
 			continue
 		}
-		txList, ok := c.tc.Get(block.GetPayload().GetTxsHash())
+		txList, ok := c.tc.Get(block.GetPayload().GetTxListHash())
 		if !ok {
 			continue
 		}

@@ -552,8 +552,8 @@ func (b *BlockBuilder) TxHistoryHash(hash model.Hash) model.BlockBuilder {
 	b.Block.Payload.TxHistoryHash = hash
 	return b
 }
-func (b *BlockBuilder) TxsHash(hash model.Hash) model.BlockBuilder {
-	b.Block.Payload.TxsHash = hash
+func (b *BlockBuilder) TxListHash(hash model.Hash) model.BlockBuilder {
+	b.Block.Payload.TxListHash = hash
 	return b
 }
 

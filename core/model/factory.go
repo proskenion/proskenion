@@ -97,7 +97,7 @@ type BlockBuilder interface {
 	CreatedTime(int64) BlockBuilder
 	WSVHash(Hash) BlockBuilder
 	TxHistoryHash(Hash) BlockBuilder
-	TxsHash(Hash) BlockBuilder
+	TxListHash(Hash) BlockBuilder
 	Round(int32) BlockBuilder
 	Build() Block
 }

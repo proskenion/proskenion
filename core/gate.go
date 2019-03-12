@@ -27,7 +27,7 @@ var (
 
 	ErrConsensusGatePropagateBlockVerifyError   = fmt.Errorf("Failed ConsensusGate PropagateBlock Verify error")
 	ErrConsensusGatePropagateBlockAlreadyExist  = fmt.Errorf("Failed ConsensusGate PropagateBlock block is already exists")
-	ErrConsensusGatePropagateBlockDifferentHash = fmt.Errorf("Failed ConsensusGate PropagateBlock txList hash and block's txsHash is different")
+	ErrConsensusGatePropagateBlockDifferentHash = fmt.Errorf("Failed ConsensusGate PropagateBlock txList hash and block's txListHash is different")
 )
 
 type ConsensusGate interface {

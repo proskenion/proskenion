@@ -140,7 +140,7 @@ func RandomBlock() model.Block {
 		TxHistoryHash(RandomByte()).
 		PreBlockHash(RandomByte()).
 		CreatedTime(rand.Int63()).
-		TxsHash(RandomByte()).
+		TxListHash(RandomByte()).
 		Build()
 }
 
@@ -153,7 +153,7 @@ func RandomSignedBlock(t *testing.T) model.Block {
 		TxHistoryHash(RandomByte()).
 		PreBlockHash(RandomByte()).
 		CreatedTime(rand.Int63()).
-		TxsHash(RandomByte()).
+		TxListHash(RandomByte()).
 		Build()
 	require.NoError(t, ret.Sign(pub, pri))
 	return ret
@@ -169,7 +169,7 @@ func RandomValidSignedBlockAndTxList(t *testing.T) (model.Block, core.TxList) {
 		TxHistoryHash(RandomByte()).
 		PreBlockHash(RandomByte()).
 		CreatedTime(rand.Int63()).
-		TxsHash(txList.Hash()).
+		TxListHash(txList.Hash()).
 		Build()
 	require.NoError(t, ret.Sign(pub, pri))
 	return ret, txList

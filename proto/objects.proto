@@ -1,6 +1,7 @@
 syntax = "proto3";
 package proskenion;
 
+// Object の識別コード。
 enum ObjectCode {
     AnythingObjectCode = 0;
     BoolObjectCode = 1;
@@ -23,62 +24,88 @@ enum ObjectCode {
     BlockObjectCode = 18;
 }
 
+// 順序の識別コード。DESC(降順), ASC(昇順)。
 enum OrderCode {
     DESC = 0;
     ASC = 1;
 }
 
+// ソートのキーと順序の識別オブジェクト。
 message OrderBy {
     string key = 1;
     OrderCode order = 2;
 }
 
+// Proskenion 上のオブジェクトにアクセスするためのオブジェクト。
 message Address {
     string address = 1;
 }
 
+// 署名を表すオブジェクト。
 message Signature {
+    // 公開鍵を base64 エンコードしたもの。
     bytes publicKey = 1;
+    // 秘密鍵でハッシュ値を署名したもの。
     bytes signature = 2;
 }
 
+// アカウントを表すオブジェクト。
 message Account {
+    // アカウントを特定するユニークなアドレス。
     string accountId = 1;
+    // アカウントの表示名。
     string accountName = 2;
+    // アカウントを操作するための鍵の列。
     repeated bytes publicKeys = 3;
+    // アカウントを操作するために必要最小限の鍵の数。
     int32 quorum = 4;
+    // アカウントの保有する基軸通貨の数。
     int64 balance = 5;
+    // アカウントが信頼しているピアのアドレス。
     string delegatePeerId = 6;
 }
 
+// ピアを表すオブジェクト。
 message Peer {
+    // ピアを特定するユニークなアドレス。
     string peerId = 1;
+    // ピアにアクセスするためのグローバルアドレス。(ex. ip:port)
     string address = 2;
+    // ピアの公開鍵。
     bytes publicKey = 3;
+    // ピアが同期して活動しているかの真偽値。
     bool active = 4;
+    // ピアがチェーン上から排斥されているかの真偽値。
     bool ban = 5;
 }
 
+// オブジェクトのリストを表すオブジェクト。
 message ObjectList {
+    // オブジェクトの列。
     repeated Object list = 1;
 }
 
+// オブジェクトの辞書を表すオブジェクト。
 message ObjectDict {
+    // 文字列をキー値、オブジェクトをバリュー値に持つ辞書。
     map<string, Object> dict = 1;
 }
 
+// ストレージを表すオブジェクト。
 message Storage {
+    // ストレージを特定するユニークなアドレス。
     string id = 1;
+    // ストレージの中身を表すキーバリューデータ構造。
     map<string, Object> object = 2;
 }
 
+// 未実装。
 message MegaStorage {
     map<string, Object> meta = 1;
-    // MerkleTree で管理
     bytes megaBinaryHash = 2;
 }
 
-// 参考 : https://triple-underscore.github.io/RFC2616-ja.html#section-3.6.1
+// 未実装。 (参考 : https://triple-underscore.github.io/RFC2616-ja.html#section-3.6.1)
 message MegaBinaryChunk {
     // 全体
     int64 chunkSize = 1;
@@ -88,11 +115,11 @@ message MegaBinaryChunk {
 }
 
 
-/**
- * ================ Command ================
- **/
+// Proskenion を操作するためのプリミティブな命令。
 message Command {
+    // 誰の権限で命令を実行するかを AccountId で指定する。
     string  authorizerId = 1;
+    // どの対象に命令を実行するかを指定する。
     string targetId = 2;
     oneof command {
         CreateAccount createAccount = 3;
@@ -119,179 +146,217 @@ message Command {
 
 /**
  * CerateAccount は TargetId の アカウントの生成を行う。
+ * TargetId には AccountId を指定する。
  **/
 message CreateAccount {
+    // アカウントに登録する公開鍵のリスト。
     repeated bytes publicKeys = 1;
+    // アカウントの権限を行使するために必要な最小の鍵の数。
     int32 quorum = 2;
 }
 
 /**
- * AddBalance は targetId の amount を増やす。
+ * AddBalance は targetId の balance を増やす。
+ * TargetId は AccountId を指定する。
  **/
 message AddBalance {
+    // 増やす balance の量。
     int64 balance = 1;
 }
 
 /**
  * Transfer Command は送金を行う。
- * targetId -> destAccountId
+ * targetId は 送金元の AccountId を示す。
  **/
 message TransferBalance {
+    // 送金先の AccountId。
     string destAccountId = 2;
+    // 送金する balance の量。
     int64 balance = 3;
 }
 
 /**
- * AddPublicKey は TragetId アカウントに鍵を追加する。
- *
+ * AddPublicKey は TragetId で指定したアカウントに鍵を追加する。
+ * TargetId は AccountId を指定する。
  **/
 message AddPublicKeys {
+    // アカウントに登録する公開鍵のリスト。
     repeated bytes publicKeys = 1;
 }
 
 /**
- * RemovePublicKey は targetId アカウントの鍵を削除する。
- *
+ * RemovePublicKey は TargetId で指定したアカウントの鍵を削除する。
+ * TargetId は AccountId を指定する。
  **/
 message RemovePublicKeys {
+    // アカウントから削除する公開鍵のリスト。
     repeated bytes publicKeys = 1;
 }
 
 /**
  * SetAccountQuorum は TargetId アカウントの quorum を更新する。
+ * TargetId は AccountId を指定する。
  **/
 message SetQuorum {
+    // アカウントの権限を行使するために必要な最小の鍵の数。
     int32 quorum = 1;
 }
 
 /**
  * DefineStorage は Storage を定義する。
+ * TargetId は StorageId を指定する。
  */
 message DefineStorage {
+    // Storage の key とそのデフォルトの value。
     Storage storage = 1;
 }
 
 /**
- * CreateStorage は 定義された Storage を target_id で指定されたアカウントで実体化
+ * CreateStorage は定義された Storage を TargetId で指定されたアカウントで実体化する。
+ * TargetId は WalletId を指定する。
  */
 message CreateStorage {}
 
 /**
- * UpdateObject Command は Storage 内のObjectを更新する。
+ * UpdateObject は Storage 内の Object を更新する。
+ * TargetId は WalletId を指定する。
  **/
 message UpdateObject {
+    // Storage 内の要素を指定するためのキー値。
     string key = 1;
+    // 変更後の Object。
     Object object = 2;
 }
 
 /**
- * AddObject Command は target_id で指定した Storage に Object を追加する。（list or dict)
+ * AddObject は TargetId で指定した Storage に Object を追加する。（list or dict)
+ * TargetId は WalletId を指定する。
  **/
 message AddObject {
+    // Storage 内の要素を指定するためのキー値。
     string key = 1;
+    // 指定した List Object に追加する Object。
     Object object = 2;
 }
 
 /**
- * TransferObject Command は Storage 内の Object を key を指定して送る。（list or dict)
+ * TransferObject は Storage 内の key で指定された要素内の Object を送信する。（list or dict)
+ * TargetId は WalletId を指定する。
  **/
 message TransferObject {
+    // Storage 内の要素を指定するためのキー値。
     string key = 1;
+    // 送信先の AccountId。
     string destAccountId = 2;
+    // 送信する Object の内容（存在しない場合は失敗する）。
     Object object = 3;
 }
 
 /**
- * AddPeer Command は Peer を追加する。
- * targetId は Peer を一位に特定する id
+ * AddPeer はネットワークに Peer を追加する。
+ * TargetId は AccountId(PeerId) を指定する。
  **/
 message AddPeer {
+    // Peer にアクセスするためのグローバルアドレス。
     string address = 1;
+    // Peer を操作するための公開鍵。
     bytes publicKey = 2;
 }
 
 /**
- * ActivatePeer Command は Peer を active 状態にする。
- * targetId は Peer を一意に特定する。
- * active 状態の Peer は合意形成に参加できる。
+ * ActivatePeer は Peer を active 状態にする。
+ * TargetId は AccountId(PeerId) を指定する。
+ * Active 状態の Peer は合意形成に参加できる。
  **/
 message ActivatePeer {}
 
 /**
- * SuspendPeer Command は Peer を 非active 状態にする。
- * targetId は Peer を一意に特定する。
- * 非active 状態の Peer は合意形成に参加しない。(Consign できない)
+ * SuspendPeer は Peer を 非active 状態にする。
+ * TargetId は AccountId(PeerId) を指定する。
+ * 非active 状態の Peer は合意形成に参加しない。(Consign の対象にできない）
  **/
 message SuspendPeer{}
 
 /**
- * BanPeer Command は Peer を使用禁止にする。
- * targetId は Peer を一意に特定する。
- * ban された Peer は金輪際合意形成/同期に参加できない。
+ * BanPeer は Peer を使用禁止にする。
+ * TargetId は AccountId(PeerId) を指定する。
+ * Ban された Peer は金輪際合意形成/同期に参加できない。
  **/
 message BanPeer{}
 
 /**
- * Consign Command は Account と Peer を紐付ける
+ * Consign は Account と Peer を紐付ける
+ * TargetId は AccountId を指定する。
  **/
 message Consign {
+    // アカウントが信頼する Peer の id。
     string peerId = 1;
 }
 
 /**
- * CheckAndCommitProsl は target_id で指定した prosl を
- *  variables に引数列を渡して change_update prosl が true を返した時
- *  incentive or consensus or change_update として再定義する。
- *
+ * CheckAndCommitProsl は TargetId で指定した ProSL を検証して妥当であれば適用する。
+ * TargetId は WalletId を指定する。
+ * 具体的には variables を引数列として渡して Update ProSL を実行し真を返した時、
+ * 新たな incentive or consensus or update アルゴリズムとして実際に適用する。
  **/
 message CheckAndCommitProsl {
+    // Update ProSL を実行する際の引数列。
     map<string, Object> variables = 2;
 }
 
 /**
- * ForceUpdateStorage は target_id で指定した Storage を強制上書きする。
- *  ForceUpdateStorage は Validate で必ず false が返る。
+ * ForceUpdateStorage は TargetId で指定した Storage を強制上書きする。
+ * TargetId は WalletId を指定する。
+ * ForceUpdateStorage は Validate で必ず false が返る。
  **/
 message ForceUpdateStorage {
+    // 上書き後の Storage の定義。
     Storage storage = 1;
 }
 
 /**
- * Transaction は Client が送信する取引の内容を記述したもの。
+ * Transaction は Client が送信する取引の内容を記述したものである。
  **/
 message Transaction {
     message Payload {
+        // Transaction を生成した時間(UnixTime)。
         int64 createdTime = 1;
+        // Transaction が逐次実行するコマンド列。
         repeated Command commands = 2;
     }
     Payload payload = 1;
+    // Paylaod をコマンドの操作者達によって署名した Signature のリスト。
     repeated Signature signatures = 2;
 }
 
 /**
- * Block の構造
- * height : 現在のBlockのHeight+1
- * transactions : Transaction の集合（列)
- * createdTime : Blockを生成した時間(リーダーがProposalを生成した時間であり、Commitされた時間ではない)
- * commitTime : BlockをCommitされるべき時間(合意形成におけるそのRoundの終わりの時間)
- * preBlockHash : 現在の Block の Hash
- * signature : 現在のラウンドにおけるリーダーのSignature (hash = headerのHash + transactionsの累積Hash)
+ * Block の構造。
  **/
 message Block {
     message Payload {
+        // 現在のBlockのHeight+1。
         int64 height = 1;
+        // 現在の Block のハッシュ値。
         bytes preBlockHash = 2;
+        // Blockを生成した時間(リーダーがProposalを生成した時間であり、Commitされた時間ではない)。
         int64 createdTime = 3;
+        // Block 実行後の WSV のルートハッシュ値。
         bytes wsvHash = 4;
+        // Block 実行後の TxHistory のルートハッシュ値。
         bytes txHistoryHash = 5;
-        bytes txsHash = 6;
+        // Transaction の集合（列)のハッシュ値。
+        bytes txListHash = 6;
+        // 現在の Round。
         int32 round = 7;
     }
     Payload payload = 1;
+    // Payload を現在のラウンドにおけるリーダーが署名したもの。
     Signature signature = 3;
 }
 
+// Proskenion で扱えるデータ構造をまとめたオブジェクト。
 message Object {
+    // オブジェクトの識別子。
     ObjectCode type = 1;
     oneof object {
         bool boolean = 2;

@@ -111,3 +111,9 @@ bin/
 
 ## dot ##
 _demo_graph*
+
+## docs ##
+docs/
+
+## Mac ##
+.DS_Store

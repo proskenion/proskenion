@@ -3,22 +3,35 @@ package proskenion;
 
 import "objects.proto";
 
+// Query は Proskenion 上のデータを取得するためのフォーマットである。
 message Query {
     message Payload {
+        // 誰の権限で Query を発行するかを AccountId で指定する。
         string authorizerId = 1;
+        // 取得したい要素の名前を指定する。
         string select = 2;
+        // 取得する Object の型を指定する。
         ObjectCode requstCode = 3;
+        // 検索対象となる id を指定する。
         string fromId = 4;
+        // TODO: fromId が範囲指定だった場合、取得した Object に filter をかける条件式を記述する。
         string where = 5;
+        // fromId が範囲指定だった場合、取得したリストをソートするルールを指定する。
         OrderBy orderBy = 6;
+        // fromId が範囲指定だった場合、取得したリストを何番目まで返すかを指定する。
         int32 limit = 7;
+        // Query を発行した時間を指定する。
         int64 createdTime = 8;
     }
     Payload payload = 1;
+    // Payload を Query 発行者が署名したもの。
     Signature signature = 2;
 }
 
+// QueryResponse は Read RPC の返り値である。
 message QueryResponse {
+    // Query で取得したデータ。
     Object object = 1;
+    // Object を Query を実行した Peer が署名したもの。
     Signature signature = 2;
 }

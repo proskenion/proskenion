@@ -25,7 +25,6 @@ message Prosl {
     repeated ProslOperator ops = 1;
 }
 
-// === ProslOperator ====
 message ProslOperator {
     oneof op {
         SetOperator setOp = 1;
@@ -76,7 +75,8 @@ message ReturnOperator {
     ValueOperator op = 1;
 }
 
-message EachOperator { // Deprecated...
+// Deprecated...
+message EachOperator {
     ValueOperator list = 1;
     string variableName = 2;
     Prosl do = 3;
@@ -114,7 +114,6 @@ message LenOperator {
     ValueOperator list = 1;
 }
 
-// === ValueOperator ===
 message ValueOperator {
     oneof op {
         QueryOperator queryOp = 1;
@@ -255,7 +254,6 @@ message SliceOperator {
     ValueOperator right = 3;
 }
 
-// === CodntionalFormula ====
 message ConditionalFormula {
     oneof op {
         OrFormula or = 1; // ||

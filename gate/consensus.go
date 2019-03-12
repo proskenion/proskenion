@@ -77,10 +77,10 @@ func (c *ConsensusGate) PropagateBlockStreamTx(block model.Block, txChan chan mo
 	}
 afterFor:
 
-	if !bytes.Equal(block.GetPayload().GetTxsHash(), txList.Hash()) {
+	if !bytes.Equal(block.GetPayload().GetTxListHash(), txList.Hash()) {
 		return errors.Wrapf(core.ErrConsensusGatePropagateBlockDifferentHash,
-			"txsHash: %x, txListHash: %x",
-			block.GetPayload().GetTxsHash(), txList.Hash())
+			"txListHash: %x, txListHash: %x",
+			block.GetPayload().GetTxListHash(), txList.Hash())
 	}
 
 	if err := c.txListCache.Set(txList); err != nil {

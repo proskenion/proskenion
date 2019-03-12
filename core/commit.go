@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrCommitSystemVerifyCommitBlockVerify       = fmt.Errorf("Failed Verify Commit block verify.")
-	ErrCommitSystemVerifyCommitNotMatchedTxsHash = fmt.Errorf("Failed Verify Commit not matched txsHash.")
+	ErrCommitSystemVerifyCommitNotMatchedTxListHash = fmt.Errorf("Failed Verify Commit not matched txListHash.")
 	ErrCommitSystemVerifyCommitTxVerify          = fmt.Errorf("Failed Verify Commit tx verify.")
 )
 

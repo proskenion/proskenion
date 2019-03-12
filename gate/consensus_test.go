@@ -54,7 +54,7 @@ func TestConsensus_PropagateBlockStreamTx(t *testing.T) {
 	cg := newRandomConsensusGate()
 	t.Run("case 1 : correct", func(t *testing.T) {
 		txList := RandomTxList()
-		block := RandomFactory().NewBlockBuilder().TxsHash(txList.Hash()).Build()
+		block := RandomFactory().NewBlockBuilder().TxListHash(txList.Hash()).Build()
 
 		txChan := make(chan model.Transaction)
 		errChan := make(chan error)

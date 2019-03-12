@@ -18,7 +18,7 @@ func TestBlockFactory(t *testing.T) {
 		expectedCreatedTime   int64
 		expectedWSVHash       model.Hash
 		expectedTxHistoryHash model.Hash
-		expectedTxsHash       model.Hash
+		expectedTxListHash       model.Hash
 		expectedRound         int32
 	}{
 		{
@@ -70,7 +70,7 @@ func TestBlockFactory(t *testing.T) {
 				CreatedTime(c.expectedCreatedTime).
 				WSVHash(c.expectedWSVHash).
 				TxHistoryHash(c.expectedTxHistoryHash).
-				TxsHash(c.expectedTxsHash).
+				TxListHash(c.expectedTxListHash).
 				Round(c.expectedRound).
 				Build()
 			assert.Equal(t, c.expectedHeight, block.GetPayload().GetHeight())
@@ -78,7 +78,7 @@ func TestBlockFactory(t *testing.T) {
 			assert.Equal(t, c.expectedCreatedTime, block.GetPayload().GetCreatedTime())
 			assert.Equal(t, c.expectedWSVHash, block.GetPayload().GetWSVHash())
 			assert.Equal(t, c.expectedTxHistoryHash, block.GetPayload().GetTxHistoryHash())
-			assert.Equal(t, c.expectedTxsHash, block.GetPayload().GetTxsHash())
+			assert.Equal(t, c.expectedTxListHash, block.GetPayload().GetTxListHash())
 			assert.Equal(t, c.expectedRound, block.GetPayload().GetRound())
 		})
 	}
