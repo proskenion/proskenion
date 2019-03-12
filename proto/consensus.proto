@@ -6,19 +6,22 @@ import "objects.proto";
 
 // Error は GRPC Error Code で返す
 message ConsensusResponse {}
-message CollectTxRequest {
-    bytes blockHash = 1;
-}
+
+// PropagateBlock において伝搬する側が送信するデータである。
 message PropagateBlockRequest {
     oneof req {
+        // 伝搬する Block。最初に Block を送信する。
         Block block = 1;
+        // 伝搬する Block が持っている Transaction。Block を送信した後に順番に送信する。
         Transaction transaction = 2;
     }
 }
+
+// PropagateBlock において伝搬される側が送信するデータである。
 message PropagateBlockResponse {
+    // Block を正しく受け取ったことを伝搬する側に伝えるために署名を送信する。
     Signature signature = 1;
 }
-// WIP
 
 /**
  * ConsensusGate は合意形成に使用する rpc を定義する。
